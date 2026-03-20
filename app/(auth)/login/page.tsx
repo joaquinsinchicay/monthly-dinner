@@ -1,52 +1,91 @@
 import { AuthShell } from '@/components/layout/auth-shell';
 import { GoogleSignInButton } from '@/components/google-sign-in-button';
-import { Logo } from '@/components/shared/logo';
-import { Card } from '@/components/ui';
+import Link from 'next/link';
+import type { Route } from 'next';
 
-export default function LoginPage({
+function CutleryIcon() {
+  return (
+    <svg
+      width="32"
+      height="32"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"
+        fill="#2563EB"
+      />
+    </svg>
+  );
+}
+
+export default async function LoginPage({
   searchParams,
 }: {
-  searchParams?: { next?: string; message?: string; error?: string };
+  searchParams?: Promise<{ next?: string; message?: string; error?: string }>;
 }) {
+  const params = await searchParams;
   const infoMessage =
-    searchParams?.message === 'cancelled'
-      ? 'Cancelaste la autorización de Google. Cuando quieras, podés intentarlo de nuevo.'
+    params?.message === 'cancelled'
+      ? 'You cancelled Google authorization. You can try again whenever you want.'
       : null;
   const errorMessage =
-    searchParams?.error === 'oauth_failed'
-      ? 'Hubo un problema al conectar con Google. Reintentá para continuar.'
+    params?.error === 'oauth_failed'
+      ? 'There was a problem connecting to Google. Please try again.'
       : null;
 
   return (
     <AuthShell>
-      <Card className="space-y-6 p-8 md:p-10">
-        <div className="space-y-4">
-          <Logo />
-          <div className="space-y-3">
-            <p className="text-sm font-medium uppercase tracking-[0.24em] text-on-surface-variant">
-              Monthly Dinner · US-01
-            </p>
-            <h1 className="text-4xl font-semibold tracking-tight text-on-surface md:text-5xl">
-              Entrá con Google y empezá a organizar tu cena mensual.
-            </h1>
-            <p className="text-base leading-7 text-on-surface-variant">
-              Este acceso crea o reutiliza tu perfil en Supabase Auth, deja lista la sesión del MVP y prepara la base
-              para grupos, invitaciones y eventos.
-            </p>
+      <div
+        className="rounded-xl p-10 shadow-md"
+        style={{ backgroundColor: '#FFFFFF' }}
+      >
+        <div className="flex flex-col items-center text-center">
+          <h1
+            className="text-2xl font-extrabold"
+            style={{ color: '#000000', fontFamily: 'Inter, sans-serif' }}
+          >
+            monthly-dinner
+          </h1>
+          <p className="mt-2 text-base" style={{ color: '#6B7280' }}>
+            Coordinate your monthly dinners, effortlessly
+          </p>
+
+          <div
+            className="mt-6 flex h-20 w-20 items-center justify-center rounded-full"
+            style={{ backgroundColor: '#F3F4F6' }}
+          >
+            <CutleryIcon />
           </div>
+
+          <div className="mt-8 w-full">
+            {infoMessage ? (
+              <p className="mb-4 rounded-lg bg-gray-100 px-4 py-3 text-sm text-gray-600">
+                {infoMessage}
+              </p>
+            ) : null}
+            {errorMessage ? (
+              <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                {errorMessage}
+              </p>
+            ) : null}
+
+            <GoogleSignInButton nextPath={params?.next} />
+          </div>
+
+          <p className="mt-6 text-sm" style={{ color: '#6B7280' }}>
+            New here?{' '}
+            <Link
+              href={"/about" as Route}
+              className="underline"
+              style={{ color: '#1A1A1A' }}
+            >
+              Learn about our curation
+            </Link>
+          </p>
         </div>
-
-        <div className="grid gap-4 rounded-xl bg-surface-container-low p-5 text-sm text-on-surface-variant">
-          <p>• Si tu email ya existe, iniciarás sesión sin perfiles duplicados.</p>
-          <p>• Si cancelás el popup, volverás acá con un mensaje suave.</p>
-          <p>• Si Google falla, podrás reintentar sin sesiones parciales.</p>
-        </div>
-
-        {infoMessage ? <p className="rounded-xl bg-surface-container px-4 py-3 text-sm text-secondary">{infoMessage}</p> : null}
-        {errorMessage ? <p className="rounded-xl border border-error/20 bg-red-50 px-4 py-3 text-sm text-error">{errorMessage}</p> : null}
-
-        <GoogleSignInButton nextPath={searchParams?.next} />
-      </Card>
+      </div>
     </AuthShell>
   );
 }
