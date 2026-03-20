@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
+
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Monthly Dinner',
-  description: 'Registro con Google para coordinar tus grupos de cena.',
+  title: 'Cenas del Jueves',
+  description: 'MVP para coordinar cenas mensuales con eventos, confirmaciones, votación e historial.',
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

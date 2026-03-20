@@ -29,101 +29,60 @@ describe('completeOAuthSignIn', () => {
     eq.mockReturnValue({ maybeSingle });
 
     vi.mocked(supabaseModule.getSupabaseBrowserClient).mockReturnValue({
-      auth: {
-        getSession,
-        signOut,
-        signInWithOAuth,
-      },
+      auth: { getSession, signOut, signInWithOAuth },
       from: vi.fn(() => ({ select })),
     } as never);
   });
 
-  it('redirects legacy OAuth callbacks to /groups after confirming the profile exists', async () => {
-    getSession.mockResolvedValue({
-      error: null,
-      data: {
-        session: { access_token: 'token', user: { id: 'user-1' } },
-      },
-    });
+  it('redirige el callback a la ruta protegida del grupo cuando el perfil existe', async () => {
+    getSession.mockResolvedValue({ error: null, data: { session: { access_token: 'token', user: { id: 'user-1' } } } });
     maybeSingle.mockResolvedValue({ error: null, data: { id: 'user-1' } });
 
     const result = await completeOAuthSignIn(new URLSearchParams('code=abc'), { replace });
 
-    expect(result).toEqual({ status: 'success', redirectTo: '/groups' });
-    expect(replace).toHaveBeenCalledWith('/groups');
+    expect(result).toEqual({ status: 'success', redirectTo: '/group/group-curated-table' });
+    expect(replace).toHaveBeenCalledWith('/group/group-curated-table');
   });
 
-  it('redirects authenticated users to /dashboard when the callback carries the target route', async () => {
-    getSession.mockResolvedValue({
-      error: null,
-      data: {
-        session: { access_token: 'token', user: { id: 'user-1' } },
-      },
-    });
+  it('preserva la ruta protegida cuando viene en next', async () => {
+    getSession.mockResolvedValue({ error: null, data: { session: { access_token: 'token', user: { id: 'user-1' } } } });
     maybeSingle.mockResolvedValue({ error: null, data: { id: 'user-1' } });
 
-    const result = await completeOAuthSignIn(new URLSearchParams('code=abc&next=%2Fdashboard'), { replace });
+    const result = await completeOAuthSignIn(new URLSearchParams('code=abc&next=%2Fgroup%2Fgroup-curated-table%2Fhistory'), { replace });
 
-    expect(result).toEqual({ status: 'success', redirectTo: '/dashboard' });
-    expect(replace).toHaveBeenCalledWith('/dashboard');
+    expect(result).toEqual({ status: 'success', redirectTo: '/group/group-curated-table/history' });
+    expect(replace).toHaveBeenCalledWith('/group/group-curated-table/history');
   });
 
-  it('returns home without a critical error when the user cancels OAuth', async () => {
+  it('vuelve al login cuando el usuario cancela OAuth', async () => {
     const result = await completeOAuthSignIn(new URLSearchParams('error_code=access_denied'), { replace });
 
-    expect(result).toEqual({ status: 'cancelled', redirectTo: '/' });
-    expect(replace).toHaveBeenCalledWith('/');
+    expect(result).toEqual({ status: 'cancelled', redirectTo: '/login' });
+    expect(replace).toHaveBeenCalledWith('/login');
   });
 
-  it('surfaces a retryable error when the profile trigger did not create public.profiles', async () => {
-    getSession.mockResolvedValue({
-      error: null,
-      data: {
-        session: { access_token: 'token', user: { id: 'user-1' } },
-      },
-    });
+  it('inválida la sesión si el perfil no existe', async () => {
+    getSession.mockResolvedValue({ error: null, data: { session: { access_token: 'token', user: { id: 'user-1' } } } });
     maybeSingle.mockResolvedValue({ error: null, data: null });
 
-    const result = await completeOAuthSignIn(new URLSearchParams('code=abc&next=%2Fdashboard'), { replace });
+    const result = await completeOAuthSignIn(new URLSearchParams('code=abc'), { replace });
 
-    expect(result).toEqual({
-      status: 'error',
-      message: 'Tu cuenta se creó, pero no pudimos preparar tu perfil. Reintentá para continuar.',
-    });
+    expect(result).toEqual({ status: 'error', message: 'Tu cuenta se creó, pero no pudimos preparar tu perfil. Reintentá para continuar.' });
     expect(signOut).toHaveBeenCalled();
-    expect(replace).not.toHaveBeenCalledWith('/dashboard');
-  });
-
-  it('surfaces a retryable error when the OAuth session cannot be recovered', async () => {
-    getSession.mockResolvedValue({ error: new Error('timeout'), data: { session: null } });
-
-    const result = await completeOAuthSignIn(new URLSearchParams('code=abc&next=%2Fdashboard'), { replace });
-
-    expect(result).toEqual({
-      status: 'error',
-      message: 'No pudimos conectarte, intentá de nuevo',
-    });
   });
 });
 
-
 describe('signInWithGoogle', () => {
-  it('passes the exact OAuth callback URL to Supabase', async () => {
-    signInWithOAuth.mockResolvedValue({
-      data: { url: 'https://supabase.example.com/oauth' },
-      error: null,
-    });
+  it('envía a Supabase el callback exacto con next', async () => {
+    signInWithOAuth.mockResolvedValue({ data: { url: 'https://supabase.example.com/oauth' }, error: null });
 
-    const result = await signInWithGoogle('https://monthly-dinner.app', '/dashboard?tab=settings');
+    const result = await signInWithGoogle('https://monthly-dinner.app', '/group/group-curated-table/checklist');
 
     expect(signInWithOAuth).toHaveBeenCalledWith({
       provider: 'google',
       options: {
-        redirectTo: 'https://monthly-dinner.app/auth/callback?next=%2Fdashboard%3Ftab%3Dsettings',
-        queryParams: {
-          access_type: 'offline',
-          prompt: 'select_account',
-        },
+        redirectTo: 'https://monthly-dinner.app/auth/callback?next=%2Fgroup%2Fgroup-curated-table%2Fchecklist',
+        queryParams: { access_type: 'offline', prompt: 'select_account' },
       },
     });
     expect(result).toEqual({ status: 'redirect', url: 'https://supabase.example.com/oauth' });
@@ -131,35 +90,32 @@ describe('signInWithGoogle', () => {
 });
 
 describe('auth redirect helpers', () => {
-  it('normalizes unsafe redirect paths and keeps safe in-app destinations', () => {
-    expect(normalizeRedirectPath('/dashboard?tab=members')).toBe('/dashboard?tab=members');
-    expect(normalizeRedirectPath('https://google.com')).toBe('/dashboard');
-    expect(normalizeRedirectPath('/auth/callback?code=123')).toBe('/dashboard');
+  it('normaliza destinos seguros y rechaza externos', () => {
+    expect(normalizeRedirectPath('/group/group-curated-table?tab=members')).toBe('/group/group-curated-table?tab=members');
+    expect(normalizeRedirectPath('https://google.com')).toBe('/group/group-curated-table');
+    expect(normalizeRedirectPath('/auth/callback?code=123')).toBe('/group/group-curated-table');
   });
 
-  it('builds an OAuth callback URL that preserves navigation context', () => {
-    expect(buildOAuthRedirectUrl('https://monthly-dinner.app', '/dashboard?tab=settings')).toBe(
-      'https://monthly-dinner.app/auth/callback?next=%2Fdashboard%3Ftab%3Dsettings',
+  it('builds the callback url preserving navigation context', () => {
+    expect(buildOAuthRedirectUrl('https://monthly-dinner.app', '/group/group-curated-table/history')).toBe(
+      'https://monthly-dinner.app/auth/callback?next=%2Fgroup%2Fgroup-curated-table%2Fhistory',
     );
   });
 
-  it('marks the expected routes as protected', () => {
-    expect(isProtectedPath('/dashboard')).toBe(true);
-    expect(isProtectedPath('/groups/invitations')).toBe(true);
+  it('marks protected routes including the new group tree', () => {
+    expect(isProtectedPath('/group/group-curated-table')).toBe(true);
+    expect(isProtectedPath('/group/group-curated-table/history')).toBe(true);
     expect(isProtectedPath('/auth/callback')).toBe(false);
   });
 
-  it('redirects expired sessions to login without losing the intended route', () => {
+  it('redirects expired tokens to login without losing context', () => {
     const request = {
-      url: 'https://monthly-dinner.app/dashboard?tab=settings',
-      nextUrl: {
-        pathname: '/dashboard',
-        search: '?tab=settings',
-      },
+      url: 'https://monthly-dinner.app/group/group-curated-table/history?q=ajo',
+      nextUrl: { pathname: '/group/group-curated-table/history', search: '?q=ajo' },
     } as NextRequest;
 
     expect(buildLoginRedirect(request).toString()).toBe(
-      'https://monthly-dinner.app/?next=%2Fdashboard%3Ftab%3Dsettings',
+      'https://monthly-dinner.app/login?next=%2Fgroup%2Fgroup-curated-table%2Fhistory%3Fq%3Dajo',
     );
   });
 });

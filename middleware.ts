@@ -2,43 +2,28 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-import { getSupabaseEnv } from '@/lib/env';
 import { normalizeRedirectPath } from '@/lib/auth';
+import { getSupabaseEnv } from '@/lib/env';
 
-const PROTECTED_PATH_PREFIXES = ['/dashboard', '/groups'];
+const PROTECTED_PATH_PREFIXES = ['/dashboard', '/groups', '/group'];
 
-/**
- * Returns true when the requested pathname requires an authenticated Supabase
- * session. Login and OAuth callback routes are intentionally excluded.
- */
+/** Returns true when the requested pathname requires an authenticated Supabase session. */
 export function isProtectedPath(pathname: string) {
   return PROTECTED_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 
-/**
- * Creates the login redirect used when a token is missing or expired. The
- * original pathname and query string are preserved in `next` so the app can
- * restore navigation context after the user signs in again.
- */
+/** Creates the login redirect for expired or missing sessions while preserving navigation context. */
 export function buildLoginRedirect(request: NextRequest) {
-  const loginUrl = new URL('/', request.url);
+  const loginUrl = new URL('/login', request.url);
   const requestedPath = `${request.nextUrl.pathname}${request.nextUrl.search}`;
   loginUrl.searchParams.set('next', normalizeRedirectPath(requestedPath));
   return loginUrl;
 }
 
-/**
- * Middleware protects application routes backed by Supabase Auth. When the
- * refresh token can no longer yield a valid user, the request is redirected to
- * the login screen without losing the original destination.
- */
+/** Protects authenticated group routes and restores the intended destination after re-login. */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
+  let response = NextResponse.next({ request: { headers: request.headers } });
 
   const { supabaseUrl, supabaseAnonKey } = getSupabaseEnv();
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
@@ -55,16 +40,13 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (pathname === '/') {
+  if (pathname === '/' || pathname === '/login') {
     if (user) {
       const next = normalizeRedirectPath(request.nextUrl.searchParams.get('next'));
       return NextResponse.redirect(new URL(next, request.url));
     }
-
     return response;
   }
 
@@ -80,5 +62,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/dashboard/:path*', '/groups/:path*'],
+  matcher: ['/', '/login', '/dashboard/:path*', '/groups/:path*', '/group/:path*'],
 };
