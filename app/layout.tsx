@@ -2,14 +2,14 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Monthly Dinner',
-  description: 'Registro con Google para coordinar tus grupos de cena.',
+  title: 'monthly-dinner',
+  description: 'Registro con Google OAuth y base estructural del MVP de Monthly Dinner.',
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body className="bg-surface text-on-surface min-h-screen font-sans">{children}</body>
     </html>
   );
 }

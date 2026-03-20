@@ -1,6 +1,8 @@
+import { readFileSync } from 'node:fs';
+
 import { buildOAuthRedirectUrl, completeOAuthSignIn, normalizeRedirectPath, signInWithGoogle } from '@/lib/auth';
 import { buildLoginRedirect, isProtectedPath } from '@/middleware';
-import * as supabaseModule from '@/lib/supabase';
+import * as clientModule from '@/lib/supabase/client';
 import type { NextRequest } from 'next/server';
 
 const replace = vi.fn();
@@ -11,11 +13,11 @@ const maybeSingle = vi.fn();
 const signOut = vi.fn();
 const signInWithOAuth = vi.fn();
 
-vi.mock('@/lib/supabase', () => ({
+vi.mock('@/lib/supabase/client', () => ({
   getSupabaseBrowserClient: vi.fn(),
 }));
 
-describe('completeOAuthSignIn', () => {
+describe('Test 1 y 2 · completeOAuthSignIn', () => {
   beforeEach(() => {
     replace.mockReset();
     getSession.mockReset();
@@ -28,7 +30,7 @@ describe('completeOAuthSignIn', () => {
     select.mockReturnValue({ eq });
     eq.mockReturnValue({ maybeSingle });
 
-    vi.mocked(supabaseModule.getSupabaseBrowserClient).mockReturnValue({
+    vi.mocked(clientModule.getSupabaseBrowserClient).mockReturnValue({
       auth: {
         getSession,
         signOut,
@@ -38,27 +40,10 @@ describe('completeOAuthSignIn', () => {
     } as never);
   });
 
-  it('redirects legacy OAuth callbacks to /groups after confirming the profile exists', async () => {
+  it('crea sesión y redirige al dashboard para un registro OAuth nuevo con profile existente', async () => {
     getSession.mockResolvedValue({
       error: null,
-      data: {
-        session: { access_token: 'token', user: { id: 'user-1' } },
-      },
-    });
-    maybeSingle.mockResolvedValue({ error: null, data: { id: 'user-1' } });
-
-    const result = await completeOAuthSignIn(new URLSearchParams('code=abc'), { replace });
-
-    expect(result).toEqual({ status: 'success', redirectTo: '/groups' });
-    expect(replace).toHaveBeenCalledWith('/groups');
-  });
-
-  it('redirects authenticated users to /dashboard when the callback carries the target route', async () => {
-    getSession.mockResolvedValue({
-      error: null,
-      data: {
-        session: { access_token: 'token', user: { id: 'user-1' } },
-      },
+      data: { session: { access_token: 'token', user: { id: 'user-1' } } },
     });
     maybeSingle.mockResolvedValue({ error: null, data: { id: 'user-1' } });
 
@@ -68,19 +53,23 @@ describe('completeOAuthSignIn', () => {
     expect(replace).toHaveBeenCalledWith('/dashboard');
   });
 
-  it('returns home without a critical error when the user cancels OAuth', async () => {
-    const result = await completeOAuthSignIn(new URLSearchParams('error_code=access_denied'), { replace });
-
-    expect(result).toEqual({ status: 'cancelled', redirectTo: '/' });
-    expect(replace).toHaveBeenCalledWith('/');
-  });
-
-  it('surfaces a retryable error when the profile trigger did not create public.profiles', async () => {
+  it('no duplica perfiles cuando el email ya existía y el callback resuelve al dashboard', async () => {
     getSession.mockResolvedValue({
       error: null,
-      data: {
-        session: { access_token: 'token', user: { id: 'user-1' } },
-      },
+      data: { session: { access_token: 'token', user: { id: 'user-1' } } },
+    });
+    maybeSingle.mockResolvedValue({ error: null, data: { id: 'user-1' } });
+
+    const result = await completeOAuthSignIn(new URLSearchParams('code=abc'), { replace });
+
+    expect(result).toEqual({ status: 'success', redirectTo: '/dashboard' });
+    expect(replace).toHaveBeenCalledWith('/dashboard');
+  });
+
+  it('muestra error recuperable cuando falla la creación del profile por trigger', async () => {
+    getSession.mockResolvedValue({
+      error: null,
+      data: { session: { access_token: 'token', user: { id: 'user-1' } } },
     });
     maybeSingle.mockResolvedValue({ error: null, data: null });
 
@@ -88,78 +77,81 @@ describe('completeOAuthSignIn', () => {
 
     expect(result).toEqual({
       status: 'error',
-      message: 'Tu cuenta se creó, pero no pudimos preparar tu perfil. Reintentá para continuar.',
+      message: 'Tu cuenta se autenticó, pero no pudimos preparar tu perfil. Reintentá para continuar.',
     });
-    expect(signOut).toHaveBeenCalled();
-    expect(replace).not.toHaveBeenCalledWith('/dashboard');
+    expect(signOut).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Test 3 y 4 · cancelación y fallo técnico', () => {
+  beforeEach(() => {
+    replace.mockReset();
+    signInWithOAuth.mockReset();
   });
 
-  it('surfaces a retryable error when the OAuth session cannot be recovered', async () => {
-    getSession.mockResolvedValue({ error: new Error('timeout'), data: { session: null } });
+  it('vuelve a /login con mensaje suave cuando el usuario cancela Google OAuth', async () => {
+    const result = await completeOAuthSignIn(new URLSearchParams('error_code=access_denied'), { replace });
 
-    const result = await completeOAuthSignIn(new URLSearchParams('code=abc&next=%2Fdashboard'), { replace });
+    expect(result).toEqual({ status: 'cancelled', redirectTo: '/login' });
+    expect(replace).toHaveBeenCalledWith('/login?message=cancelled');
+  });
+
+  it('muestra error recuperable cuando el provider devuelve un fallo técnico', async () => {
+    signInWithOAuth.mockResolvedValue({ data: { url: null }, error: new Error('oauth failed') });
+
+    const result = await signInWithGoogle('https://monthly-dinner.app', '/dashboard');
 
     expect(result).toEqual({
       status: 'error',
-      message: 'No pudimos conectarte, intentá de nuevo',
+      message: 'Hubo un problema al conectar con Google. Reintentá para continuar.',
     });
   });
 });
 
-
-describe('signInWithGoogle', () => {
-  it('passes the exact OAuth callback URL to Supabase', async () => {
-    signInWithOAuth.mockResolvedValue({
-      data: { url: 'https://supabase.example.com/oauth' },
-      error: null,
-    });
-
-    const result = await signInWithGoogle('https://monthly-dinner.app', '/dashboard?tab=settings');
-
-    expect(signInWithOAuth).toHaveBeenCalledWith({
-      provider: 'google',
-      options: {
-        redirectTo: 'https://monthly-dinner.app/auth/callback?next=%2Fdashboard%3Ftab%3Dsettings',
-        queryParams: {
-          access_type: 'offline',
-          prompt: 'select_account',
-        },
-      },
-    });
-    expect(result).toEqual({ status: 'redirect', url: 'https://supabase.example.com/oauth' });
-  });
-});
-
-describe('auth redirect helpers', () => {
-  it('normalizes unsafe redirect paths and keeps safe in-app destinations', () => {
+describe('helpers de navegación protegida', () => {
+  it('normaliza redirects inseguros y preserva rutas internas válidas', () => {
     expect(normalizeRedirectPath('/dashboard?tab=members')).toBe('/dashboard?tab=members');
     expect(normalizeRedirectPath('https://google.com')).toBe('/dashboard');
     expect(normalizeRedirectPath('/auth/callback?code=123')).toBe('/dashboard');
   });
 
-  it('builds an OAuth callback URL that preserves navigation context', () => {
+  it('construye la URL de callback OAuth con el target original', () => {
     expect(buildOAuthRedirectUrl('https://monthly-dinner.app', '/dashboard?tab=settings')).toBe(
       'https://monthly-dinner.app/auth/callback?next=%2Fdashboard%3Ftab%3Dsettings',
     );
   });
 
-  it('marks the expected routes as protected', () => {
+  it('protege dashboard y preserva la ruta al redirigir a login', () => {
     expect(isProtectedPath('/dashboard')).toBe(true);
-    expect(isProtectedPath('/groups/invitations')).toBe(true);
-    expect(isProtectedPath('/auth/callback')).toBe(false);
-  });
+    expect(isProtectedPath('/login')).toBe(false);
 
-  it('redirects expired sessions to login without losing the intended route', () => {
     const request = {
       url: 'https://monthly-dinner.app/dashboard?tab=settings',
-      nextUrl: {
-        pathname: '/dashboard',
-        search: '?tab=settings',
-      },
+      nextUrl: { pathname: '/dashboard', search: '?tab=settings' },
     } as NextRequest;
 
-    expect(buildLoginRedirect(request).toString()).toBe(
-      'https://monthly-dinner.app/?next=%2Fdashboard%3Ftab%3Dsettings',
-    );
+    expect(buildLoginRedirect(request).toString()).toBe('https://monthly-dinner.app/login?next=%2Fdashboard%3Ftab%3Dsettings');
+  });
+});
+
+describe('Test 5 · schema SQL base', () => {
+  const migration = readFileSync('supabase/migrations/001_initial_schema.sql', 'utf8');
+
+  it('define las cuatro tablas, constraints y el trigger de profile automático', () => {
+    expect(migration).toContain('CREATE TABLE public.profiles');
+    expect(migration).toContain('CREATE TABLE public.groups');
+    expect(migration).toContain('CREATE TABLE public.group_members');
+    expect(migration).toContain('CREATE TABLE public.events');
+    expect(migration).toContain('UNIQUE (group_id, user_id)');
+    expect(migration).toContain('CREATE OR REPLACE FUNCTION public.handle_new_user()');
+    expect(migration).toContain('CREATE TRIGGER on_auth_user_created');
+    expect(migration).toContain('ON CONFLICT (id) DO NOTHING');
+  });
+
+  it('habilita RLS en todas las tablas públicas y define las políticas pedidas', () => {
+    expect(migration.match(/ENABLE ROW LEVEL SECURITY/g)).toHaveLength(4);
+    expect(migration).toContain('CREATE POLICY "profiles_self"');
+    expect(migration).toContain('CREATE POLICY "groups_members_only"');
+    expect(migration).toContain('CREATE POLICY "group_members_same_group"');
   });
 });

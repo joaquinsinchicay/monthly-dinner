@@ -1,78 +1,46 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 
-import { getSupabaseEnv } from '@/lib/env';
-import { normalizeRedirectPath } from '@/lib/auth';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 
-const PROTECTED_PATH_PREFIXES = ['/dashboard', '/groups'];
+const PUBLIC_PATHS = ['/login', '/auth/callback'];
+const PROTECTED_PATHS = ['/dashboard'];
 
-/**
- * Returns true when the requested pathname requires an authenticated Supabase
- * session. Login and OAuth callback routes are intentionally excluded.
- */
 export function isProtectedPath(pathname: string) {
-  return PROTECTED_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+  return PROTECTED_PATHS.some((path) => pathname.startsWith(path));
 }
 
-/**
- * Creates the login redirect used when a token is missing or expired. The
- * original pathname and query string are preserved in `next` so the app can
- * restore navigation context after the user signs in again.
- */
 export function buildLoginRedirect(request: NextRequest) {
-  const loginUrl = new URL('/', request.url);
+  const url = new URL('/login', request.url);
   const requestedPath = `${request.nextUrl.pathname}${request.nextUrl.search}`;
-  loginUrl.searchParams.set('next', normalizeRedirectPath(requestedPath));
-  return loginUrl;
+  url.searchParams.set('next', requestedPath);
+  return url;
 }
 
-/**
- * Middleware protects application routes backed by Supabase Auth. When the
- * refresh token can no longer yield a valid user, the request is redirected to
- * the login screen without losing the original destination.
- */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  let response = NextResponse.next({
+  const response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   });
 
-  const { supabaseUrl, supabaseAnonKey } = getSupabaseEnv();
-  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-      setAll(cookiesToSet: Array<{ name: string; value: string; options: CookieOptions }>) {
-        cookiesToSet.forEach(({ name, value, options }) => {
-          request.cookies.set(name, value);
-          response.cookies.set(name, value, options);
-        });
-      },
-    },
-  });
+  // Public routes stay accessible without a session so OAuth can begin and return safely.
+  if (PUBLIC_PATHS.some((path) => pathname.startsWith(path))) {
+    return response;
+  }
 
+  const supabase = createSupabaseServerClient(request, response);
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // The root route acts as a friendly alias: active sessions go to the dashboard, otherwise to /login.
   if (pathname === '/') {
-    if (user) {
-      const next = normalizeRedirectPath(request.nextUrl.searchParams.get('next'));
-      return NextResponse.redirect(new URL(next, request.url));
-    }
-
-    return response;
+    return NextResponse.redirect(new URL(user ? '/dashboard' : '/login', request.url));
   }
 
-  if (!isProtectedPath(pathname)) {
-    return response;
-  }
-
-  if (!user) {
+  // Protected routes share the same guard list so future MVP pages can be added without rewriting logic.
+  if (isProtectedPath(pathname) && !user) {
     return NextResponse.redirect(buildLoginRedirect(request));
   }
 
@@ -80,5 +48,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/dashboard/:path*', '/groups/:path*'],
+  matcher: ['/', '/login', '/auth/callback', '/dashboard/:path*'],
 };

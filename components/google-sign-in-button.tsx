@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 
-import { Button } from '@/components/ui';
 import { signInWithGoogle } from '@/lib/auth';
+import { Button } from '@/components/ui';
 
 export function GoogleSignInButton({ nextPath }: { nextPath?: string }) {
   const [message, setMessage] = useState<string | null>(null);
@@ -14,6 +14,7 @@ export function GoogleSignInButton({ nextPath }: { nextPath?: string }) {
     setMessage(null);
 
     const result = await signInWithGoogle(window.location.origin, nextPath);
+
     if (result.status === 'error') {
       setMessage(result.message);
       setLoading(false);
@@ -24,14 +25,15 @@ export function GoogleSignInButton({ nextPath }: { nextPath?: string }) {
   }
 
   return (
-    <div className="auth-card">
-      <Button onClick={handleClick} disabled={loading}>
-        {loading ? 'Conectando…' : 'Ingresar con Google'}
+    <div className="space-y-4">
+      <Button onClick={handleClick} disabled={loading} className="w-full justify-center gap-3">
+        <span className="material-symbols-outlined text-xl">login</span>
+        {loading ? 'Conectando con Google…' : 'Ingresar con Google'}
       </Button>
       {message ? (
-        <div className="error-panel" role="alert">
+        <div className="space-y-3 rounded-xl border border-error/20 bg-red-50 p-4 text-sm text-error" role="alert">
           <p>{message}</p>
-          <Button variant="secondary" onClick={handleClick} disabled={loading}>
+          <Button variant="secondary" onClick={handleClick} disabled={loading} className="w-full justify-center">
             Reintentar
           </Button>
         </div>
