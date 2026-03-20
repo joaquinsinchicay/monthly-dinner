@@ -1,34 +1,51 @@
-# monthly-dinner
+# monthly-dinner · Cenas del Jueves MVP
 
-## Autenticación
+Aplicación Next.js 14 App Router para coordinar cenas mensuales entre amigos con autenticación Google vía Supabase, eventos mensuales, confirmaciones de asistencia, votación de restaurantes, historial y checklist del organizador.
 
-La app usa Google OAuth mediante Supabase Auth. El botón **Ingresar con Google** invoca `supabase.auth.signInWithOAuth`, redirige al usuario a Google y vuelve a `/auth/callback` para validar la sesión en el navegador. El frontend no inserta filas en `public.profiles`; esa responsabilidad sigue en el trigger `on_auth_user_created` configurado en Supabase.
+## Stack
 
-### Flujo de login
-
-1. La pantalla de inicio recibe opcionalmente `?next=` cuando el usuario intentó abrir una ruta protegida.
-2. El botón de Google envía ese destino al callback OAuth para restaurar el contexto después del intercambio.
-3. En `/auth/callback`, la app confirma que Supabase dejó una sesión activa y que `public.profiles` ya existe para `auth.users.id`.
-4. Si todo sale bien, el usuario entra al `/dashboard`. Para compatibilidad con US-01, los callbacks antiguos que no mandan `next` aún pueden resolver a `/groups`, que hoy redirige al dashboard.
-
-### Persistencia de sesión y expiración
-
-- Si la sesión de Supabase sigue vigente en el dispositivo, `middleware.ts` redirige automáticamente desde `/` al panel y evita pedir un nuevo login.
-- Las rutas protegidas son `/dashboard` y el alias histórico `/groups`.
-- Si el token expiró o ya no puede resolverse un usuario válido, `middleware.ts` redirige a `/?next=<ruta original>` para que el contexto de navegación previo no se pierda.
-- Si el usuario cancela el consentimiento en Google, vuelve a `/` sin mostrar un error crítico ni crear una sesión nueva.
+- Next.js 14 App Router
+- React 18
+- Supabase (`@supabase/ssr` + `@supabase/supabase-js`)
+- Vitest + Testing Library
+- CSS global con el sistema visual **The Curated Table**
 
 ## Variables de entorno
 
-Definí las siguientes variables en `.env.local` y sin valores reales en `.env.example`:
+Crear `.env.local` con:
 
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+```bash
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+```
 
-## Desarrollo
+## Setup local
 
 ```bash
 npm install
-npm run test
-npm run build
+npm run dev
 ```
+
+Abrí `http://localhost:3000/login`.
+
+## Flujo de desarrollo
+
+1. Definir el schema y RLS en `supabase/schema.sql` y `supabase/rls.sql`.
+2. Mantener los tipos de Supabase centralizados en `types/database.ts`.
+3. Implementar server actions con `createServerClient` desde `@supabase/ssr`.
+4. Probar lógica crítica con Vitest / Testing Library antes de commitear.
+
+## Rutas del MVP
+
+- `/login`
+- `/invite/[token]`
+- `/group/[groupId]`
+- `/group/[groupId]/event/[eventId]`
+- `/group/[groupId]/event/[eventId]/poll`
+- `/group/[groupId]/history`
+- `/group/[groupId]/checklist`
+
+## Notas
+
+- La app incluye datos mockeados para representar el MVP greenfield sin depender de infraestructura manual.
+- Supabase Realtime queda reservado para `attendances`, `poll_votes` y `monthly_events`.

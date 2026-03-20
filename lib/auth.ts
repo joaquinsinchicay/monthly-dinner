@@ -3,53 +3,30 @@ import { getSupabaseBrowserClient } from './supabase';
 
 const GENERIC_OAUTH_ERROR = 'No pudimos conectarte, intentá de nuevo';
 const MISSING_PROFILE_ERROR = 'Tu cuenta se creó, pero no pudimos preparar tu perfil. Reintentá para continuar.';
-const DEFAULT_POST_LOGIN_REDIRECT = '/dashboard';
-const LEGACY_POST_LOGIN_REDIRECT = '/groups';
+const DEFAULT_POST_LOGIN_REDIRECT = '/group/group-curated-table';
+const LEGACY_POST_LOGIN_REDIRECT = '/group/group-curated-table';
 
 export type AuthResult =
   | { status: 'success'; redirectTo: string }
-  | { status: 'cancelled'; redirectTo: '/' }
+  | { status: 'cancelled'; redirectTo: '/login' }
   | { status: 'error'; message: string };
 
-/**
- * Returns a safe in-app redirect target. It preserves the navigation context for
- * protected routes, rejects external URLs, and falls back to the dashboard when
- * the callback does not include a valid target.
- */
-export function normalizeRedirectPath(
-  candidate: string | null,
-  fallback = DEFAULT_POST_LOGIN_REDIRECT,
-) {
-  if (!candidate) {
-    return fallback;
-  }
-
-  if (!candidate.startsWith('/') || candidate.startsWith('//')) {
-    return fallback;
-  }
-
-  if (candidate.startsWith('/auth/callback')) {
-    return fallback;
-  }
-
+/** Returns a safe in-app redirect target and preserves the navigation context for protected routes. */
+export function normalizeRedirectPath(candidate: string | null, fallback = DEFAULT_POST_LOGIN_REDIRECT) {
+  if (!candidate) return fallback;
+  if (!candidate.startsWith('/') || candidate.startsWith('//')) return fallback;
+  if (candidate.startsWith('/auth/callback')) return fallback;
   return candidate;
 }
 
-/**
- * Builds the Supabase OAuth callback URL and carries the intended in-app target
- * so the user can resume the same navigation context after authentication.
- */
+/** Builds the OAuth callback URL carrying the protected destination to restore after sign-in. */
 export function buildOAuthRedirectUrl(origin: string, nextPath?: string | null) {
   const callbackUrl = new URL('/auth/callback', origin);
   callbackUrl.searchParams.set('next', normalizeRedirectPath(nextPath ?? null));
   return callbackUrl.toString();
 }
 
-/**
- * Starts the Google OAuth flow and delegates profile creation to Supabase Auth.
- * The frontend never inserts into public.profiles directly; it only redirects to
- * the provider and later verifies that the auth trigger created the profile.
- */
+/** Starts Google OAuth for both registration and login and leaves profile creation to Supabase Auth. */
 export async function signInWithGoogle(origin: string, nextPath?: string | null) {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
@@ -62,25 +39,20 @@ export async function signInWithGoogle(origin: string, nextPath?: string | null)
       },
     },
   });
+
   if (error) {
     return { status: 'error' as const, message: GENERIC_OAUTH_ERROR };
   }
+
   return { status: 'redirect' as const, url: data.url };
 }
 
-/**
- * Resolves the post-login destination from the OAuth callback. The legacy
- * `/groups` target remains as a fallback for earlier US-01 callers that did not
- * send an explicit `next` parameter.
- */
+/** Resolves the destination that the user should see immediately after OAuth completes. */
 export function resolvePostLoginRedirect(params: URLSearchParams) {
   return normalizeRedirectPath(params.get('next'), LEGACY_POST_LOGIN_REDIRECT);
 }
 
-/**
- * Verifies the active Supabase session after OAuth redirect, confirms the
- * profile exists, and redirects the user back to the intended protected screen.
- */
+/** Confirms the recovered session and profile, then redirects back to the intended protected page. */
 export async function completeOAuthSignIn(
   params: URLSearchParams,
   router: Pick<AppRouterInstance, 'replace'>,
@@ -89,16 +61,12 @@ export async function completeOAuthSignIn(
   const errorDescription = params.get('error_description');
 
   if (errorCode === 'access_denied' || errorDescription?.toLowerCase().includes('cancel')) {
-    router.replace('/');
-    return { status: 'cancelled', redirectTo: '/' };
+    router.replace('/login');
+    return { status: 'cancelled', redirectTo: '/login' };
   }
 
   const supabase = getSupabaseBrowserClient();
-
-  const {
-    data: { session },
-    error,
-  } = await supabase.auth.getSession();
+  const { data: { session }, error } = await supabase.auth.getSession();
 
   if (error || !session) {
     return { status: 'error', message: GENERIC_OAUTH_ERROR };

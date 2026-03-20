@@ -23,13 +23,13 @@ export function GoogleSignInButton({ nextPath }: { nextPath?: string }) {
   }
 
   return (
-    <div className="auth-card__actions">
+    <div className="stack-gap-sm">
       <button className="primary-button" onClick={handleClick} disabled={loading}>
-        {loading ? 'Conectando…' : 'Continue with Google'}
+        {loading ? 'Conectando con Google…' : 'Ingresar con Google'}
       </button>
       {message ? (
-        <div className="error-panel" role="alert">
-          <p>{message}</p>
+        <div className="soft-panel" role="alert">
+          <p className="body-sm">{message}</p>
           <button className="secondary-button" onClick={handleClick} disabled={loading}>
             Reintentar
           </button>
