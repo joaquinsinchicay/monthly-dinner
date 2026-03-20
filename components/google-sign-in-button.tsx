@@ -23,9 +23,9 @@ export function GoogleSignInButton({ nextPath }: { nextPath?: string }) {
   }
 
   return (
-    <div className="auth-card">
+    <div className="auth-card__actions">
       <button className="primary-button" onClick={handleClick} disabled={loading}>
-        {loading ? 'Conectando…' : 'Ingresar con Google'}
+        {loading ? 'Conectando…' : 'Continue with Google'}
       </button>
       {message ? (
         <div className="error-panel" role="alert">
