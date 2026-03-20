@@ -1,6 +1,9 @@
 import type { PropsWithChildren } from 'react';
-import { PageShell } from '@/components/ui';
 
 export function AuthShell({ children }: PropsWithChildren) {
-  return <PageShell className="page-shell--auth">{children}</PageShell>;
+  return (
+    <main className="bg-surface text-on-surface min-h-screen px-6 pb-12 pt-24">
+      <div className="mx-auto max-w-4xl">{children}</div>
+    </main>
+  );
 }

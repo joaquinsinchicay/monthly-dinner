@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
 
-export default function GroupsPage() {
+export default function GroupsLegacyPage() {
   redirect('/dashboard');
 }
