@@ -12,6 +12,7 @@ Definí las siguientes variables en `.env.local` y sin valores reales en `.env.e
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- 
 
 ## Desarrollo
 
