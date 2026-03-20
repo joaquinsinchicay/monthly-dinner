@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import { Button } from '@/components/ui';
 import { signInWithGoogle } from '@/lib/auth';
 
 export function GoogleSignInButton({ nextPath }: { nextPath?: string }) {
@@ -24,15 +25,15 @@ export function GoogleSignInButton({ nextPath }: { nextPath?: string }) {
 
   return (
     <div className="auth-card">
-      <button className="primary-button" onClick={handleClick} disabled={loading}>
+      <Button onClick={handleClick} disabled={loading}>
         {loading ? 'Conectando…' : 'Ingresar con Google'}
-      </button>
+      </Button>
       {message ? (
         <div className="error-panel" role="alert">
           <p>{message}</p>
-          <button className="secondary-button" onClick={handleClick} disabled={loading}>
+          <Button variant="secondary" onClick={handleClick} disabled={loading}>
             Reintentar
-          </button>
+          </Button>
         </div>
       ) : null}
     </div>
