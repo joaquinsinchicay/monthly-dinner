@@ -1,6 +1,10 @@
 import { GoogleSignInButton } from '@/components/google-sign-in-button';
 
-export default function HomePage() {
+export default function HomePage({
+  searchParams,
+}: {
+  searchParams?: { next?: string };
+}) {
   return (
     <main>
       <section className="hero">
@@ -10,7 +14,11 @@ export default function HomePage() {
           Si ya existe una cuenta con tu email, Supabase iniciará sesión en el usuario existente sin duplicar
           perfiles.
         </p>
-        <GoogleSignInButton />
+        <p>
+          Si tu sesión sigue vigente en este dispositivo, te llevaremos directamente al panel sin pedirte volver
+          a autenticarte.
+        </p>
+        <GoogleSignInButton nextPath={searchParams?.next} />
       </section>
     </main>
   );
