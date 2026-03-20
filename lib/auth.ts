@@ -1,5 +1,4 @@
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-
 import { getSupabaseBrowserClient } from './supabase';
 
 const GENERIC_OAUTH_ERROR = 'No pudimos conectarte, intentá de nuevo';
@@ -27,17 +26,16 @@ export async function signInWithGoogle(origin: string) {
       },
     },
   });
-
   if (error) {
     return { status: 'error' as const, message: GENERIC_OAUTH_ERROR };
   }
-
   return { status: 'redirect' as const, url: data.url };
 }
 
 /**
- * Exchanges the OAuth code, handles user cancellations gracefully, and routes a
- * valid session to /groups only after confirming the profile exists.
+ * Verifies the active Supabase session after OAuth redirect.
+ * Supabase PKCE exchanges the code automatically — this function
+ * only reads the resulting session and confirms the profile exists.
  */
 export async function completeOAuthSignIn(
   params: URLSearchParams,
@@ -51,22 +49,19 @@ export async function completeOAuthSignIn(
     return { status: 'cancelled', redirectTo: '/' };
   }
 
-  const code = params.get('code');
-  if (!code) {
-    return { status: 'error', message: GENERIC_OAUTH_ERROR };
-  }
-
   const supabase = getSupabaseBrowserClient();
-  const exchange = await supabase.auth.exchangeCodeForSession(code);
-  if (exchange.error || !exchange.data.session) {
+
+  // Supabase PKCE ya intercambió el código — solo leemos la sesión resultante
+  const { data: { session }, error } = await supabase.auth.getSession();
+
+  if (error || !session) {
     return { status: 'error', message: GENERIC_OAUTH_ERROR };
   }
 
-  const userId = exchange.data.user.id;
   const profile = await supabase
     .from('profiles')
     .select('id')
-    .eq('id', userId)
+    .eq('id', session.user.id)
     .maybeSingle();
 
   if (profile.error || !profile.data) {
