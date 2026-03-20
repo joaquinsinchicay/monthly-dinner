@@ -1,4 +1,4 @@
-import { buildOAuthRedirectUrl, completeOAuthSignIn, normalizeRedirectPath } from '@/lib/auth';
+import { buildOAuthRedirectUrl, completeOAuthSignIn, normalizeRedirectPath, signInWithGoogle } from '@/lib/auth';
 import { buildLoginRedirect, isProtectedPath } from '@/middleware';
 import * as supabaseModule from '@/lib/supabase';
 import type { NextRequest } from 'next/server';
@@ -9,6 +9,7 @@ const select = vi.fn();
 const eq = vi.fn();
 const maybeSingle = vi.fn();
 const signOut = vi.fn();
+const signInWithOAuth = vi.fn();
 
 vi.mock('@/lib/supabase', () => ({
   getSupabaseBrowserClient: vi.fn(),
@@ -22,6 +23,7 @@ describe('completeOAuthSignIn', () => {
     eq.mockReset();
     maybeSingle.mockReset();
     signOut.mockReset();
+    signInWithOAuth.mockReset();
 
     select.mockReturnValue({ eq });
     eq.mockReturnValue({ maybeSingle });
@@ -30,6 +32,7 @@ describe('completeOAuthSignIn', () => {
       auth: {
         getSession,
         signOut,
+        signInWithOAuth,
       },
       from: vi.fn(() => ({ select })),
     } as never);
@@ -100,6 +103,30 @@ describe('completeOAuthSignIn', () => {
       status: 'error',
       message: 'No pudimos conectarte, intentá de nuevo',
     });
+  });
+});
+
+
+describe('signInWithGoogle', () => {
+  it('passes the exact OAuth callback URL to Supabase', async () => {
+    signInWithOAuth.mockResolvedValue({
+      data: { url: 'https://supabase.example.com/oauth' },
+      error: null,
+    });
+
+    const result = await signInWithGoogle('https://monthly-dinner.app', '/dashboard?tab=settings');
+
+    expect(signInWithOAuth).toHaveBeenCalledWith({
+      provider: 'google',
+      options: {
+        redirectTo: 'https://monthly-dinner.app/auth/callback?next=%2Fdashboard%3Ftab%3Dsettings',
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'select_account',
+        },
+      },
+    });
+    expect(result).toEqual({ status: 'redirect', url: 'https://supabase.example.com/oauth' });
   });
 });
 
