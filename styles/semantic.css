@@ -1,0 +1,19 @@
+:root {
+  --app-bg: var(--color-surface-50);
+  --surface-default: var(--color-surface-0);
+  --surface-muted: var(--color-surface-100);
+  --text-primary: var(--color-ink-900);
+  --text-secondary: var(--color-ink-500);
+  --text-inverse: #ffffff;
+  --border-default: var(--color-border-subtle);
+  --action-primary-bg: var(--color-brand-500);
+  --action-primary-bg-hover: var(--color-brand-700);
+  --action-primary-text: var(--text-inverse);
+  --action-secondary-bg: var(--color-surface-100);
+  --action-secondary-text: var(--color-ink-900);
+  --status-danger-bg: var(--color-danger-50);
+  --status-danger-border: var(--color-danger-300);
+  --status-danger-text: var(--color-danger-700);
+  --status-success-bg: var(--color-success-50);
+  --status-success-text: var(--color-success-700);
+}
