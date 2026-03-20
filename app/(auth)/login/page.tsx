@@ -1,6 +1,7 @@
 import { AuthShell } from '@/components/layout/auth-shell';
 import { GoogleSignInButton } from '@/components/google-sign-in-button';
 import Link from 'next/link';
+import type { Route } from 'next';
 
 function CutleryIcon() {
   return (
@@ -76,7 +77,7 @@ export default async function LoginPage({
           <p className="mt-6 text-sm" style={{ color: '#6B7280' }}>
             New here?{' '}
             <Link
-              href="/about"
+              href={"/about" as Route}
               className="underline"
               style={{ color: '#1A1A1A' }}
             >
