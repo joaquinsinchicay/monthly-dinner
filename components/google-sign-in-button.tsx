@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import { signInWithGoogle } from '@/lib/auth';
 
-export function GoogleSignInButton() {
+export function GoogleSignInButton({ nextPath }: { nextPath?: string }) {
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -12,7 +12,7 @@ export function GoogleSignInButton() {
     setLoading(true);
     setMessage(null);
 
-    const result = await signInWithGoogle(window.location.origin);
+    const result = await signInWithGoogle(window.location.origin, nextPath);
     if (result.status === 'error') {
       setMessage(result.message);
       setLoading(false);
