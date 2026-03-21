@@ -54,9 +54,13 @@ const css = `
     z-index: 1;
     width: 100%;
     max-width: 720px;
+    display: grid;
+    justify-items: stretch;
   }
 
   .card {
+    position: relative;
+    z-index: 1;
     width: 100%;
     border-radius: 20px;
     background: ${t.surfaceLowest};
@@ -234,6 +238,8 @@ const css = `
   }
 
   .quote-card {
+    position: relative;
+    z-index: 1;
     width: 100%;
     max-width: 400px;
     margin-top: 20px;
@@ -264,6 +270,7 @@ const css = `
   }
 
   .bg-orb--blue {
+    z-index: 0;
     width: 320px;
     height: 320px;
     top: -80px;
@@ -412,7 +419,7 @@ export function LoginCard({ redirectTo, status }: { redirectTo: string; status: 
       <div className="bg-orb bg-orb--green" aria-hidden="true" />
 
       <section className="login-shell">
-        <div className="card">
+        <div className="card" style={{ boxShadow: t.shadowMd }}>
           <div className="stack-sm">
             <p className="eyebrow fade-up">{authCopy.landing.eyebrow}</p>
             <h1 className="headline fade-up-1">
@@ -448,11 +455,12 @@ export function LoginCard({ redirectTo, status }: { redirectTo: string; status: 
             {authCopy.landing.invite_prompt} <Link className="invite-link" href="/invite/demo-token">{authCopy.landing.invite_cta}</Link>
           </p>
 
-          <blockquote className="quote-card fade-up-4">
-            <p className="quote-copy">{authCopy.landing.quote_text}</p>
-            <footer className="quote-author">{authCopy.landing.quote_author}</footer>
-          </blockquote>
         </div>
+
+        <blockquote className="quote-card fade-up-4">
+          <p className="quote-copy">{authCopy.landing.quote_text}</p>
+          <footer className="quote-author">{authCopy.landing.quote_author}</footer>
+        </blockquote>
       </section>
     </main>
   );
