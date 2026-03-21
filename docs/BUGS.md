@@ -13,3 +13,10 @@
 ## Hallazgo adicional durante E02
 
 - El proyecto no incluía todavía una referencia local `e02-panel-evento.jsx`, así que la implementación visual se adaptó al design system documentado en `AGENTS.md` y a los primitives existentes de la app.
+
+## Gap de onboarding detectado entre E01 y E02
+
+- **Descripción:** el backlog MVP original no incluía la creación de grupo, por lo que usuarios nuevos autenticados quedaban sin camino para habilitar el dashboard y las historias de eventos.
+- **Causa raíz:** se asumió que el grupo ya existía antes del primer login o que el usuario siempre entraría por invitación.
+- **Solución aplicada:** se agregó US-21 entre E01 y E02 con onboarding explícito, pantalla de decisión y RPC atómica para crear `groups` y `members` sin estados inconsistentes.
+

@@ -24,7 +24,12 @@ export interface Database {
       checklist_items: { Row: { id: string; event_id: string; template_id: string | null; label: string; is_done: boolean; order_index: number; completed_at: string | null; }; Insert: { id?: string; event_id: string; template_id?: string | null; label: string; is_done?: boolean; order_index?: number; completed_at?: string | null; }; Update: { id?: string; event_id?: string; template_id?: string | null; label?: string; is_done?: boolean; order_index?: number; completed_at?: string | null; }; Relationships: []; };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      create_group_with_admin: {
+        Args: { group_name: string };
+        Returns: Json;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };
