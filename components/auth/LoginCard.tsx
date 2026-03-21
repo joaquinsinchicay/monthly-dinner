@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { AuthSubmitButton } from "@/components/auth/AuthSubmitButton";
+import { LoginButton } from "@/components/auth/LoginButton";
 
 export function LoginCard({ error, next }: { error?: string; next?: string }) {
   return (
@@ -11,10 +11,7 @@ export function LoginCard({ error, next }: { error?: string; next?: string }) {
           <p className="text-sm text-secondary">Entra con Google y deja la coordinación fuera de WhatsApp.</p>
         </div>
         <div className="rounded-2xl bg-surface-low p-5">
-          <form className="space-y-4">
-            <input type="hidden" name="next" value={next ?? ""} />
-            <AuthSubmitButton />
-          </form>
+          <LoginButton next={next} />
           <p className="mt-4 text-sm text-secondary">Si te invitaron, usa el link que recibiste.</p>
           {error ? <p className="mt-4 rounded-2xl bg-error-cont px-4 py-3 text-sm text-error">{error}</p> : null}
         </div>

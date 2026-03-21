@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { createBrowserClient } from "@supabase/ssr";
 import { useRouter } from "next/navigation";
 
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export function SignOutButton() {
   const router = useRouter();
@@ -16,7 +16,11 @@ export function SignOutButton() {
   async function handleConfirm(): Promise<void> {
     setLoading(true);
     setError(null);
-    const supabase = createSupabaseBrowserClient();
+
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
 
     const firstAttempt = await supabase.auth.signOut();
 
@@ -47,7 +51,9 @@ export function SignOutButton() {
         title="Cerrar sesión"
         description="Confirma para cerrar la sesión actual en este dispositivo."
         onCancel={() => setOpen(false)}
-        onConfirm={() => { void handleConfirm(); }}
+        onConfirm={() => {
+          void handleConfirm();
+        }}
         confirmLabel="Sí, cerrar"
         cancelLabel="Seguir dentro"
       />
