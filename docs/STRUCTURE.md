@@ -1,59 +1,29 @@
-# Estructura del módulo de autenticación
+# Estructura del proyecto
 
-## Árbol de directorios
+## Ruta creada para E02
 
-```text
-app/
-  (auth)/
-    login/
-      LoginCard.tsx
-      page.tsx
-    invite/
-      [token]/
-        InviteJoin.tsx
-        page.tsx
-  auth/
-    callback/
-      route.ts
-components/
-  auth/
-    LogoutButton.tsx
-lib/
-  auth-copy.ts
-  auth.ts
-  invite.ts
-  supabase.ts
-  supabase/
-    server.ts
-public/
-  locales/
-    auth.json
-middleware.ts
-supabase/
-  schema.sql
-  rls.sql
-```
+- `app/(dashboard)/events/page.tsx`: panel mensual E02 creado desde el prototipo `e02-panel-evento.jsx` e integrado al App Router.
+- `app/(dashboard)/layout.tsx`: protección básica SSR para las rutas del route group `(dashboard)` que todavía no cubre el matcher del middleware.
+- `tests/e02-events.test.tsx`: suite específica del panel E02.
 
-## Descripción de archivos
+## Componentes de `app/(dashboard)/events/page.tsx`
 
-- `app/(auth)/login/page.tsx`: Server Component; valida sesión SSR y redirige a `/dashboard` si ya existe usuario autenticado.
-- `app/(auth)/login/LoginCard.tsx`: Client Component; renderiza la landing, estados OAuth y dispara `signInWithGoogle()`.
-- `app/(auth)/invite/[token]/page.tsx`: Server Component; valida `invitation_links`, decide entre `InviteExpired`, `AlreadyMember` o `InviteJoin`.
-- `app/(auth)/invite/[token]/InviteJoin.tsx`: Client Component; inicia OAuth con el token de invitación embebido en el callback.
-- `components/auth/LogoutButton.tsx`: Client Component reutilizable; muestra el bottom sheet de confirmación y ejecuta `signOut()`.
-- `lib/auth-copy.ts`: helper para importar el JSON tipado y resolver estados de UI.
-- `lib/auth.ts`: helpers de redirect seguro y construcción de callback OAuth.
-- `lib/invite.ts`: validación tipada de `invitation_links` y membresía actual.
-- `lib/supabase/server.ts`: inicializa el cliente SSR con cookies de Next.js.
-- `public/locales/auth.json`: fuente única de todos los textos visibles del flujo auth.
-- `middleware.ts`: protege rutas, restaura contexto y evita mostrar `/login` a usuarios autenticados.
+- `EventsPage`: componente raíz; maneja navegación entre pantallas y estado local del prototipo.
+- `SinEvento`: estado vacío cuando todavía no hay convocatoria.
+- `CrearEvento`: formulario con validación obligatoria de fecha.
+- `EventoExistente`: aviso de duplicado mensual con CTA para ver o editar.
+- `PanelOrganizador`: vista completa del organizador con resumen, notificación y compartir.
+- `PanelMiembro`: vista del miembro con confirmación de asistencia.
+- `Notificando`: estado de carga durante el envío de convocatoria.
+- `NotifOk`: confirmación final del flujo de publicación/guardado.
+- `Renotif`: decisión de guardar o guardar y notificar tras cambios.
+- `EditEvento`: edición posterior del evento.
 
-## `public/locales/auth.json`
+## Componentes compartidos del archivo
 
-El JSON se organiza por secciones del flujo (`landing`, `oauth_progress`, `invite`, `logout`, etc.). Se importa como módulo con `resolveJsonModule` y se expone centralizado a través de `lib/auth-copy.ts`.
-
-Para extenderlo:
-
-1. agregar la nueva sección o clave en `public/locales/auth.json`;
-2. tipar o exponer el acceso desde `lib/auth-copy.ts` si hace falta helper adicional;
-3. consumir esa clave desde el componente sin hardcodear copy visible.
+- `OrgHeader`: contexto del grupo y rol.
+- `InfoRow`: fila icono + label + valor.
+- `EventoCard`: resumen principal del evento.
+- `ConfirmBar`: barra de progreso de confirmaciones.
+- `Stat`: contador por categoría.
+- `ConfirmRow`: fila individual de asistencia.

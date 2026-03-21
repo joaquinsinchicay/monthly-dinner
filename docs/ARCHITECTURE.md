@@ -1,59 +1,38 @@
-# Arquitectura del flujo de autenticación
+# Arquitectura del MVP
 
-## Descripción general
+## E01 · Autenticación
 
-El flujo de autenticación arranca en la landing `/login`, dispara Google OAuth mediante Supabase, vuelve por `/auth/callback`, provisiona el perfil del usuario y finalmente redirige a `/dashboard` o a la ruta protegida preservada en el parámetro `redirect`.
+El flujo de autenticación arranca en `/login`, dispara Google OAuth mediante Supabase, vuelve por `/auth/callback`, provisiona el perfil del usuario y finalmente redirige a `/dashboard` o a la ruta protegida preservada en el parámetro `redirect`.
 
-## Diagrama en texto plano
+## E02 · Panel de evento mensual
 
-```text
-/login
-  └─ LoginCard (client)
-      └─ supabase.auth.signInWithOAuth(provider=google, redirectTo=/auth/callback?redirect=...&invite=...)
-          └─ Google OAuth popup / redirect
-              └─ /auth/callback
-                  ├─ exchangeCodeForSession(code)
-                  ├─ upsert profiles
-                  ├─ if invite token => validate invitation_links + upsert members
-                  └─ redirect /dashboard or original ?redirect=
+El módulo E02 vive en `app/(dashboard)/events/page.tsx` y cubre un panel de evento mensual único con dos roles principales:
 
-/invite/[token]
-  ├─ validate invitation_links on server
-  ├─ expired => InviteExpired
-  ├─ already member => AlreadyMember
-  └─ valid => InviteJoin (client) => Google OAuth
+- **Organizador:** crea el evento, lo edita, lo publica y comparte el resumen.
+- **Miembro:** visualiza fecha/lugar/organizador y confirma asistencia en tiempo real.
 
-Any /dashboard or /group route
-  └─ middleware.ts
-      ├─ valid session => continue
-      └─ missing/expired session => /login?redirect=<original>
-
-Any authenticated screen
-  └─ LogoutButton
-      ├─ open bottom sheet
-      ├─ confirm => supabase.auth.signOut()
-      ├─ clear session/local storage
-      └─ redirect /login
-```
-
-## Decisión: textos en JSON
-
-Se centralizan los textos en `public/locales/auth.json` para desacoplar copy y lógica. Esto reduce riesgo en cambios de producto, facilita QA de contenido, prepara la base para i18n y evita que el equipo tenga que tocar JSX para cambios editoriales.
-
-## Decisión: middleware para proteger rutas
-
-`middleware.ts` concentra la validación de sesión en el borde de la aplicación. Eso evita duplicar checks en cada página protegida, garantiza consistencia para expiración de token y permite preservar automáticamente el contexto de navegación con `?redirect=`.
-
-## Integración Supabase Auth
-
-El `redirect_url` de OAuth se arma en `buildOAuthRedirectUrl()`. Siempre apunta a `/auth/callback` y agrega:
-
-- `redirect`: destino seguro interno luego del login.
-- `invite`: token opcional para completar el join al grupo dentro del callback.
-
-En Supabase debe registrarse el callback de la app, por ejemplo:
+### Flujo de navegación
 
 ```text
-https://tu-dominio.com/auth/callback
-http://localhost:3000/auth/callback
+sin_evento --> crear_evento --> [guardar ok]   --> panel_organiz
+                           --> [fecha vacia]   --> form_error (misma pantalla)
+                           --> [ya existe]     --> evento_existente --> edit_evento
+
+panel_organiz --> [notificar]      --> notificando --> notif_ok
+              --> [editar]         --> edit_evento --> panel_organiz
+              --> [cambiar lugar]  --> renotif     --> notif_ok
+
+panel_miembro: actualizacion automatica via useEffect (stub de Realtime)
 ```
+
+### ADR inline · separar `PanelOrganizador` y `PanelMiembro`
+
+Se eligieron dos componentes distintos en lugar de un panel único con muchas condicionales porque las prioridades visuales y de interacción cambian por rol:
+
+- el organizador necesita CTA de publicación, edición y resumen;
+- el miembro necesita foco en confirmar asistencia rápidamente;
+- separar responsabilidades reduce ramas condicionales y simplifica testing por escenario.
+
+### Patrón de tiempo real
+
+Hoy el archivo usa un `useEffect` con `setTimeout` para simular confirmaciones en desarrollo. En producción ese efecto debe reemplazarse por `supabase.channel('attendances-' + eventId)` con `postgres_changes` filtrado por `event_id`, para respetar RLS y evitar eventos cruzados entre grupos.

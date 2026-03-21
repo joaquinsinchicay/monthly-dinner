@@ -53,6 +53,14 @@ Todos los textos visibles del flujo de autenticación viven en `public/locales/a
 3. Implementar server actions con `createServerClient` desde `@supabase/ssr`.
 4. Probar lógica crítica con Vitest / Testing Library antes de commitear.
 
+
+## E02 · Panel de evento mensual
+
+- URL: `/events`
+- Pantallas disponibles: `sin_evento`, `crear_evento`, `form_error`, `evento_existente`, `panel_miembro`, `panel_organiz`, `notificando`, `notif_ok`, `renotif`, `edit_evento`.
+- En desarrollo, la `ScenarioBar` aparece solo cuando `NODE_ENV=development` y permite saltar entre escenarios del prototipo integrado.
+- El módulo usa stubs documentados para `members`, `attendances`, inserción/edición de `events`, notificaciones push y Supabase Realtime.
+
 ## Rutas del MVP
 
 - `/login`
