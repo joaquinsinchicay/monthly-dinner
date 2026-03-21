@@ -16,11 +16,11 @@ export function isProtectedPath(pathname: string) {
 export function buildLoginRedirect(request: NextRequest) {
   const loginUrl = new URL('/login', request.url);
   const requestedPath = `${request.nextUrl.pathname}${request.nextUrl.search}`;
-  loginUrl.searchParams.set('next', normalizeRedirectPath(requestedPath));
+  loginUrl.searchParams.set('redirect', normalizeRedirectPath(requestedPath));
   return loginUrl;
 }
 
-/** Protects authenticated group routes and restores the intended destination after re-login. */
+/** Protects authenticated routes and redirects login traffic based on the current session state. */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   let response = NextResponse.next({ request: { headers: request.headers } });
@@ -40,20 +40,25 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
+  // If the user is already authenticated, keep the login entry points out of the happy path.
   if (pathname === '/' || pathname === '/login') {
     if (user) {
-      const next = normalizeRedirectPath(request.nextUrl.searchParams.get('next'));
-      return NextResponse.redirect(new URL(next, request.url));
+      const redirectTo = normalizeRedirectPath(request.nextUrl.searchParams.get('redirect'), '/dashboard');
+      return NextResponse.redirect(new URL(redirectTo, request.url));
     }
     return response;
   }
 
+  // Allow public routes such as the invite landing and OAuth callback without auth gating.
   if (!isProtectedPath(pathname)) {
     return response;
   }
 
+  // Missing or expired sessions are always sent back to login with the original destination preserved.
   if (!user) {
     return NextResponse.redirect(buildLoginRedirect(request));
   }

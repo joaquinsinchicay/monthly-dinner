@@ -28,6 +28,24 @@ npm run dev
 
 Abrí `http://localhost:3000/login`.
 
+## Autenticación
+
+El flujo E01 quedó refactorizado para Next.js 14 App Router con Supabase Auth SSR:
+
+1. `GET /login` valida la sesión en servidor y redirige a `/dashboard` si el usuario ya está autenticado.
+2. `LoginCard` inicia Google OAuth con `supabase.auth.signInWithOAuth` y envía al callback `/auth/callback`.
+3. El callback intercambia el `code`, crea o actualiza `profiles`, procesa el `invite_token` si existe y redirige a `/dashboard` o a la ruta preservada en `?redirect=`.
+4. `middleware.ts` protege `/dashboard`, `/groups` y `/group`, además de restaurar el contexto cuando la sesión expiró.
+5. `LogoutButton` confirma el cierre en un bottom sheet, ejecuta `supabase.auth.signOut()` y limpia el estado local antes de volver a `/login`.
+
+## Textos de UI
+
+Todos los textos visibles del flujo de autenticación viven en `public/locales/auth.json`.
+
+- Editá ese archivo para cambiar títulos, subtítulos, botones, disclaimers o mensajes de estado.
+- Los componentes de auth importan el JSON vía `lib/auth-copy.ts`, por lo que no hace falta tocar JSX para actualizar copy.
+- Para extender a otro idioma, usá la misma estructura de claves y agregá otro archivo de locale paralelo.
+
 ## Flujo de desarrollo
 
 1. Definir el schema y RLS en `supabase/schema.sql` y `supabase/rls.sql`.
@@ -39,6 +57,7 @@ Abrí `http://localhost:3000/login`.
 
 - `/login`
 - `/invite/[token]`
+- `/dashboard`
 - `/group/[groupId]`
 - `/group/[groupId]/event/[eventId]`
 - `/group/[groupId]/event/[eventId]/poll`

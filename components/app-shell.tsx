@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
+import { LogoutButton } from '@/components/auth/LogoutButton';
 import { useAuth } from '@/lib/hooks/use-auth';
 
 export function AppShell({ children, groupId }: { children: ReactNode; groupId?: string }) {
@@ -17,6 +18,7 @@ export function AppShell({ children, groupId }: { children: ReactNode; groupId?:
         <div className="header-meta">
           <span className="notification-chip">{unreadNotifications} nuevas</span>
           <span className="avatar-pill">{profile?.full_name?.slice(0, 2).toUpperCase() ?? 'MD'}</span>
+          <LogoutButton />
         </div>
       </header>
 

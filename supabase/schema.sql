@@ -1,41 +1,40 @@
 -- monthly-dinner MVP schema for Supabase Postgres.
--- The schema keeps every addition backward-compatible by using defaults or nullable columns.
+-- Auth refactor note: the repository previously used `invitations`, `profiles.full_name`, and `group_members.user_id`.
+-- The auth flow now standardizes on `invite_tokens`, `profiles.display_name`, and `group_members.profile_id`.
 
 create extension if not exists pgcrypto;
 
 create table if not exists public.profiles (
-  id uuid primary key references auth.users on delete cascade,
+  id uuid primary key references auth.users(id) on delete cascade,
+  display_name text not null,
   email text not null unique,
-  full_name text,
   avatar_url text,
-  created_at timestamptz not null default now()
+  created_at timestamptz default now()
 );
 
 create table if not exists public.groups (
   id uuid primary key default gen_random_uuid(),
   name text not null,
-  created_by uuid references public.profiles(id),
-  created_at timestamptz not null default now()
+  created_at timestamptz default now()
 );
 
 create table if not exists public.group_members (
   id uuid primary key default gen_random_uuid(),
   group_id uuid not null references public.groups(id) on delete cascade,
-  user_id uuid not null references public.profiles(id) on delete cascade,
-  role text not null default 'miembro' check (role in ('organizador', 'miembro')),
-  rotation_order integer,
-  joined_at timestamptz not null default now(),
-  unique (group_id, user_id)
+  profile_id uuid not null references public.profiles(id) on delete cascade,
+  role text not null default 'member' check (role in ('member', 'organizer')),
+  joined_at timestamptz default now(),
+  unique (group_id, profile_id)
 );
 
-create table if not exists public.invitations (
+create table if not exists public.invite_tokens (
   id uuid primary key default gen_random_uuid(),
-  group_id uuid not null references public.groups(id) on delete cascade,
   token text not null unique,
-  created_by uuid references public.profiles(id),
-  expires_at timestamptz,
+  group_id uuid not null references public.groups(id) on delete cascade,
+  created_by uuid not null references public.profiles(id) on delete cascade,
+  expires_at timestamptz not null,
   used_at timestamptz,
-  created_at timestamptz not null default now()
+  created_at timestamptz default now()
 );
 
 create table if not exists public.monthly_events (
@@ -118,7 +117,7 @@ create table if not exists public.notifications (
 alter table public.profiles enable row level security;
 alter table public.groups enable row level security;
 alter table public.group_members enable row level security;
-alter table public.invitations enable row level security;
+alter table public.invite_tokens enable row level security;
 alter table public.monthly_events enable row level security;
 alter table public.attendances enable row level security;
 alter table public.polls enable row level security;

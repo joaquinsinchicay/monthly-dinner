@@ -1,40 +1,44 @@
--- RLS policies for monthly-dinner MVP.
+-- RLS policies for monthly-dinner MVP auth refactor.
 
-create policy "profiles_select_self" on public.profiles
+alter table public.profiles enable row level security;
+alter table public.group_members enable row level security;
+alter table public.invite_tokens enable row level security;
+
+create policy "profiles_self" on public.profiles
 for select using (auth.uid() = id);
 
-create policy "profiles_update_self" on public.profiles
-for update using (auth.uid() = id);
+create policy "profiles_self_insert" on public.profiles
+for insert with check (auth.uid() = id);
+
+create policy "profiles_self_update" on public.profiles
+for update using (auth.uid() = id)
+with check (auth.uid() = id);
 
 create policy "groups_select_member_groups" on public.groups
 for select using (
   exists (
     select 1 from public.group_members gm
-    where gm.group_id = groups.id and gm.user_id = auth.uid()
+    where gm.group_id = groups.id and gm.profile_id = auth.uid()
   )
 );
 
-create policy "group_members_select_member_groups" on public.group_members
+create policy "group_members_read" on public.group_members
 for select using (
-  exists (
-    select 1 from public.group_members gm
-    where gm.group_id = group_members.group_id and gm.user_id = auth.uid()
-  )
+  profile_id = auth.uid() or
+  group_id in (select group_id from public.group_members where profile_id = auth.uid())
 );
 
-create policy "invitations_select_group_members" on public.invitations
-for select using (
-  exists (
-    select 1 from public.group_members gm
-    where gm.group_id = invitations.group_id and gm.user_id = auth.uid()
-  )
-);
+create policy "group_members_insert_self" on public.group_members
+for insert with check (profile_id = auth.uid());
+
+create policy "invite_tokens_read" on public.invite_tokens
+for select using (true);
 
 create policy "monthly_events_select_group_members" on public.monthly_events
 for select using (
   exists (
     select 1 from public.group_members gm
-    where gm.group_id = monthly_events.group_id and gm.user_id = auth.uid()
+    where gm.group_id = monthly_events.group_id and gm.profile_id = auth.uid()
   )
 );
 
@@ -50,7 +54,7 @@ for select using (
     select 1
     from public.monthly_events me
     join public.group_members gm on gm.group_id = me.group_id
-    where me.id = attendances.event_id and gm.user_id = auth.uid()
+    where me.id = attendances.event_id and gm.profile_id = auth.uid()
   )
 );
 
@@ -64,7 +68,7 @@ for select using (
     select 1
     from public.monthly_events me
     join public.group_members gm on gm.group_id = me.group_id
-    where me.id = polls.event_id and gm.user_id = auth.uid()
+    where me.id = polls.event_id and gm.profile_id = auth.uid()
   )
 );
 
@@ -78,7 +82,7 @@ for select using (
     from public.polls p
     join public.monthly_events me on me.id = p.event_id
     join public.group_members gm on gm.group_id = me.group_id
-    where p.id = poll_options.poll_id and gm.user_id = auth.uid()
+    where p.id = poll_options.poll_id and gm.profile_id = auth.uid()
   )
 );
 
@@ -96,7 +100,7 @@ for select using (
     from public.polls p
     join public.monthly_events me on me.id = p.event_id
     join public.group_members gm on gm.group_id = me.group_id
-    where p.id = poll_votes.poll_id and gm.user_id = auth.uid()
+    where p.id = poll_votes.poll_id and gm.profile_id = auth.uid()
   )
 );
 
@@ -108,7 +112,7 @@ create policy "rotation_history_select_group_members" on public.rotation_history
 for select using (
   exists (
     select 1 from public.group_members gm
-    where gm.group_id = rotation_history.group_id and gm.user_id = auth.uid()
+    where gm.group_id = rotation_history.group_id and gm.profile_id = auth.uid()
   )
 );
 

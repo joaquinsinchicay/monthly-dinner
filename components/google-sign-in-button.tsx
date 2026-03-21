@@ -12,7 +12,7 @@ export function GoogleSignInButton({ nextPath }: { nextPath?: string }) {
     setLoading(true);
     setMessage(null);
 
-    const result = await signInWithGoogle(window.location.origin, nextPath);
+    const result = await signInWithGoogle({ origin: window.location.origin, nextPath });
     if (result.status === 'error') {
       setMessage(result.message);
       setLoading(false);

@@ -1,14 +1,13 @@
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+
 import { getSupabaseBrowserClient } from './supabase';
 
-const GENERIC_OAUTH_ERROR = 'No pudimos conectarte, intentá de nuevo';
-const MISSING_PROFILE_ERROR = 'Tu cuenta se creó, pero no pudimos preparar tu perfil. Reintentá para continuar.';
-const DEFAULT_POST_LOGIN_REDIRECT = '/group/group-curated-table';
-const LEGACY_POST_LOGIN_REDIRECT = '/group/group-curated-table';
+const DEFAULT_POST_LOGIN_REDIRECT = '/dashboard';
+const GENERIC_OAUTH_ERROR = 'oauth_error';
 
 export type AuthResult =
   | { status: 'success'; redirectTo: string }
-  | { status: 'cancelled'; redirectTo: '/login' }
+  | { status: 'cancelled'; redirectTo: '/login?status=oauth_cancelled' }
   | { status: 'error'; message: string };
 
 /** Returns a safe in-app redirect target and preserves the navigation context for protected routes. */
@@ -19,20 +18,31 @@ export function normalizeRedirectPath(candidate: string | null, fallback = DEFAU
   return candidate;
 }
 
-/** Builds the OAuth callback URL carrying the protected destination to restore after sign-in. */
-export function buildOAuthRedirectUrl(origin: string, nextPath?: string | null) {
+/** Builds the OAuth callback URL carrying the protected destination and optional invite token. */
+export function buildOAuthRedirectUrl(origin: string, nextPath?: string | null, inviteToken?: string | null) {
   const callbackUrl = new URL('/auth/callback', origin);
-  callbackUrl.searchParams.set('next', normalizeRedirectPath(nextPath ?? null));
+  callbackUrl.searchParams.set('redirect', normalizeRedirectPath(nextPath ?? null));
+  if (inviteToken) {
+    callbackUrl.searchParams.set('invite', inviteToken);
+  }
   return callbackUrl.toString();
 }
 
-/** Starts Google OAuth for both registration and login and leaves profile creation to Supabase Auth. */
-export async function signInWithGoogle(origin: string, nextPath?: string | null) {
+/** Starts Google OAuth for both registration and login and delegates profile provisioning to the callback route. */
+export async function signInWithGoogle({
+  origin,
+  nextPath,
+  inviteToken,
+}: {
+  origin: string;
+  nextPath?: string | null;
+  inviteToken?: string | null;
+}) {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: buildOAuthRedirectUrl(origin, nextPath),
+      redirectTo: buildOAuthRedirectUrl(origin, nextPath, inviteToken),
       queryParams: {
         access_type: 'offline',
         prompt: 'select_account',
@@ -40,7 +50,7 @@ export async function signInWithGoogle(origin: string, nextPath?: string | null)
     },
   });
 
-  if (error) {
+  if (error || !data.url) {
     return { status: 'error' as const, message: GENERIC_OAUTH_ERROR };
   }
 
@@ -49,10 +59,10 @@ export async function signInWithGoogle(origin: string, nextPath?: string | null)
 
 /** Resolves the destination that the user should see immediately after OAuth completes. */
 export function resolvePostLoginRedirect(params: URLSearchParams) {
-  return normalizeRedirectPath(params.get('next'), LEGACY_POST_LOGIN_REDIRECT);
+  return normalizeRedirectPath(params.get('redirect'), DEFAULT_POST_LOGIN_REDIRECT);
 }
 
-/** Confirms the recovered session and profile, then redirects back to the intended protected page. */
+/** Confirms the recovered session and redirects back to the intended protected page after browser-side recovery. */
 export async function completeOAuthSignIn(
   params: URLSearchParams,
   router: Pick<AppRouterInstance, 'replace'>,
@@ -61,22 +71,18 @@ export async function completeOAuthSignIn(
   const errorDescription = params.get('error_description');
 
   if (errorCode === 'access_denied' || errorDescription?.toLowerCase().includes('cancel')) {
-    router.replace('/login');
-    return { status: 'cancelled', redirectTo: '/login' };
+    router.replace('/login?status=oauth_cancelled');
+    return { status: 'cancelled', redirectTo: '/login?status=oauth_cancelled' };
   }
 
   const supabase = getSupabaseBrowserClient();
-  const { data: { session }, error } = await supabase.auth.getSession();
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession();
 
   if (error || !session) {
     return { status: 'error', message: GENERIC_OAUTH_ERROR };
-  }
-
-  const profile = await supabase.from('profiles').select('id').eq('id', session.user.id).maybeSingle();
-
-  if (profile.error || !profile.data) {
-    await supabase.auth.signOut();
-    return { status: 'error', message: MISSING_PROFILE_ERROR };
   }
 
   const redirectTo = resolvePostLoginRedirect(params);
