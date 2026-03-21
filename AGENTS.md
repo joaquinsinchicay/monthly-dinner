@@ -100,4 +100,4 @@ monthly-dinner es una app mobile-first para coordinar cenas mensuales grupales. 
 
 - Post-login: `login -> /api/auth/callback -> verificar members -> /dashboard | /onboarding`.
 - `/onboarding` y `/onboarding/new-group` requieren sesión activa, pero no membresía previa.
-- La creación de grupo usa la RPC `create_group_with_admin` para mantener atomicidad entre `groups` y `members`.
+- La creación de grupo inserta `groups` y luego `members` desde la Server Action usando `user.id` obtenido en el servidor de Next.js.

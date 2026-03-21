@@ -37,6 +37,6 @@ Login con Google
 
 - El middleware protege `/onboarding` y `/onboarding/new-group` con sesión activa, pero no decide membresía.
 - La decisión de enviar a `/dashboard` o `/onboarding` vive en el callback OAuth y se refuerza en los Server Components de onboarding.
-- La RPC `create_group_with_admin(group_name text)` usa `SECURITY DEFINER` porque necesita insertar en `groups` y `members` dentro del mismo bloque transaccional de Postgres, evitando estados parciales si falla el segundo insert.
-- Las políticas RLS siguen aplicando para lecturas y para inserts directos, mientras la RPC encapsula el alta inicial del grupo administrador.
+- La Server Action `createGroup` obtiene `user.id` desde `supabase.auth.getUser()` y lo pasa explícitamente a los inserts de `groups` y `members`, evitando depender de `auth.uid()` dentro de Postgres para este flujo.
+- Las políticas RLS siguen aplicando para lecturas y para los inserts directos realizados desde el servidor de Next.js.
 

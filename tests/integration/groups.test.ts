@@ -23,17 +23,25 @@ describe("group onboarding integration", () => {
     jest.clearAllMocks();
   });
 
-  it("creates the group via RPC and redirects to dashboard", async () => {
-    const supabase = {
-      auth: { getUser: jest.fn().mockResolvedValue({ data: { user: { id: "user-1" } }, error: null }) },
-      from: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            limit: jest.fn().mockReturnValue({ maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }) })
-          })
+  it("creates the group with direct inserts and redirects to dashboard", async () => {
+    const membersTable = {
+      select: jest.fn().mockReturnValue({
+        eq: jest.fn().mockReturnValue({
+          limit: jest.fn().mockReturnValue({ maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }) })
         })
       }),
-      rpc: jest.fn().mockResolvedValue({ data: { group_id: "group-1", name: "Cena mensual" }, error: null })
+      insert: jest.fn().mockResolvedValue({ error: null })
+    };
+    const groupsTable = {
+      insert: jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          single: jest.fn().mockResolvedValue({ data: { id: "group-1" }, error: null })
+        })
+      })
+    };
+    const supabase = {
+      auth: { getUser: jest.fn().mockResolvedValue({ data: { user: { id: "user-1" } }, error: null }) },
+      from: jest.fn((table: string) => (table === "groups" ? groupsTable : membersTable))
     };
     createSupabaseServerClientMock.mockReturnValue(supabase);
 
@@ -42,29 +50,38 @@ describe("group onboarding integration", () => {
 
     await createGroup(formData);
 
-    expect(supabase.rpc).toHaveBeenCalledWith("create_group_with_admin", { group_name: "Cena mensual" });
+    expect(groupsTable.insert).toHaveBeenCalledWith({ name: "Cena mensual", created_by: "user-1" });
+    expect(membersTable.insert).toHaveBeenCalledWith({ group_id: "group-1", user_id: "user-1", role: "admin" });
     expect(revalidatePathMock).toHaveBeenCalledWith("/dashboard");
     expect(redirectMock).toHaveBeenCalledWith("/dashboard");
   });
 
-  it("returns an error when the RPC fails so the UI can preserve the typed value", async () => {
-    const supabase = {
-      auth: { getUser: jest.fn().mockResolvedValue({ data: { user: { id: "user-1" } }, error: null }) },
-      from: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            limit: jest.fn().mockReturnValue({ maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }) })
-          })
+  it("returns an error when the member insert fails", async () => {
+    const membersTable = {
+      select: jest.fn().mockReturnValue({
+        eq: jest.fn().mockReturnValue({
+          limit: jest.fn().mockReturnValue({ maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }) })
         })
       }),
-      rpc: jest.fn().mockResolvedValue({ data: null, error: { message: "second insert failed" } })
+      insert: jest.fn().mockResolvedValue({ error: { message: "insert member failed" } })
+    };
+    const groupsTable = {
+      insert: jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          single: jest.fn().mockResolvedValue({ data: { id: "group-1" }, error: null })
+        })
+      })
+    };
+    const supabase = {
+      auth: { getUser: jest.fn().mockResolvedValue({ data: { user: { id: "user-1" } }, error: null }) },
+      from: jest.fn((table: string) => (table === "groups" ? groupsTable : membersTable))
     };
     createSupabaseServerClientMock.mockReturnValue(supabase);
 
     const formData = new FormData();
     formData.set("name", "Cena mensual");
 
-    await expect(createGroup(formData)).resolves.toEqual({ error: "No se pudo crear el grupo. Intentalo de nuevo." });
+    await expect(createGroup(formData)).resolves.toEqual({ error: "No se pudo crear la membresía administradora. Intentalo de nuevo." });
   });
 
   it("redirects members away from /onboarding/new-group", async () => {
@@ -95,7 +112,7 @@ describe("group onboarding integration", () => {
         if (table === "profiles") {
           return {
             select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({ maybeSingle: jest.fn().mockResolvedValue({ data: { id: "user-1", email: "user@example.com", full_name: null, avatar_url: null, created_at: "", updated_at: "" }, error: null }) })
+              eq: jest.fn().mockReturnValue({ maybeSingle: jest.fn().mockResolvedValue({ data: { id: "user-1", email: "user@example.com", full_name: null, avatar_url: null, display_name: null, created_at: "", updated_at: "" }, error: null }) })
             })
           };
         }

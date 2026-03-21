@@ -9,7 +9,7 @@ import type { Database } from "@/types";
 type ActionResult = { error: string } | void;
 type SupabaseErrorLike = { message: string } | null;
 type MembershipLookup = Pick<Database["public"]["Tables"]["members"]["Row"], "id">;
-type RpcResponse = { group_id: string; name: string };
+type CreatedGroup = Pick<Database["public"]["Tables"]["groups"]["Row"], "id">;
 
 type MembersTable = {
   select(columns: string): {
@@ -19,18 +19,26 @@ type MembersTable = {
       };
     };
   };
+  insert(values: Database["public"]["Tables"]["members"]["Insert"]): Promise<{ error: SupabaseErrorLike }>;
 };
 
-type SupabaseWithRpc = ReturnType<typeof createSupabaseServerClient> & {
-  rpc(fn: "create_group_with_admin", args: { group_name: string }): Promise<{ data: RpcResponse | null; error: SupabaseErrorLike }>;
+type GroupsTable = {
+  insert(values: Database["public"]["Tables"]["groups"]["Insert"]): {
+    select(columns: string): {
+      single(): Promise<{ data: CreatedGroup | null; error: SupabaseErrorLike }>;
+    };
+  };
 };
 
 export async function createGroup(formData: FormData): Promise<ActionResult> {
-  const supabase = createSupabaseServerClient() as SupabaseWithRpc;
-  const { data: authData, error: authError } = await supabase.auth.getUser();
+  const supabase = createSupabaseServerClient();
+  const {
+    data: { user },
+    error: authError
+  } = await supabase.auth.getUser();
 
-  if (authError || !authData.user) {
-    return { error: "Debes iniciar sesión para crear un grupo" };
+  if (authError || !user) {
+    return { error: "No autenticado" };
   }
 
   const rawName = formData.get("name");
@@ -45,9 +53,11 @@ export async function createGroup(formData: FormData): Promise<ActionResult> {
   }
 
   const members = supabase.from("members") as unknown as MembersTable;
+  const groups = supabase.from("groups") as unknown as GroupsTable;
+
   const { data: existingMembership, error: membershipError } = await members
     .select("id")
-    .eq("user_id", authData.user.id)
+    .eq("user_id", user.id)
     .limit(1)
     .maybeSingle();
 
@@ -60,11 +70,25 @@ export async function createGroup(formData: FormData): Promise<ActionResult> {
     return { error: "Ya sos miembro de un grupo" };
   }
 
-  const { data, error } = await supabase.rpc("create_group_with_admin", { group_name: name });
+  const { data: createdGroup, error: groupError } = await groups
+    .insert({ name, created_by: user.id })
+    .select("id")
+    .single();
 
-  if (error || !data) {
-    console.error("groups.create_group_error", error?.message ?? "missing data");
+  if (groupError || !createdGroup) {
+    console.error("groups.insert_group_error", groupError?.message ?? "missing group");
     return { error: "No se pudo crear el grupo. Intentalo de nuevo." };
+  }
+
+  const { error: memberError } = await members.insert({
+    group_id: createdGroup.id,
+    user_id: user.id,
+    role: "admin"
+  });
+
+  if (memberError) {
+    console.error("groups.insert_member_error", memberError.message);
+    return { error: "No se pudo crear la membresía administradora. Intentalo de nuevo." };
   }
 
   revalidatePath("/dashboard");

@@ -17,8 +17,7 @@
 - [Added] Server Actions: createEvent, updateEvent, publishEvent, notifyGroupOfUpdate, updateAttendance.
 - [Added] E00/US-21: pantalla de onboarding con opción crear grupo o unirse.
 - [Added] Formulario de creación de grupo con validación y feedback inline.
-- [Added] Server Action createGroup usando RPC atómica de Postgres.
-- [Added] Función RPC create_group_with_admin con SECURITY DEFINER.
+- [Changed] Server Action createGroup ahora usa inserts directos con `user.id` obtenido desde Next.js.
 - [Added] Políticas RLS para groups y members.
 - [Changed] app/api/auth/callback/route.ts: redirige a /onboarding si el usuario no tiene grupo.
 - [Fixed] Sincronización de nombres de columna entre código y schema real de Supabase.
