@@ -2,6 +2,18 @@ import { NextResponse } from "next/server";
 
 import { clearInvitationToken, ensureProfile, readInvitationToken } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { Database } from "@/types";
+
+type MembershipLookup = Pick<Database["public"]["Tables"]["members"]["Row"], "id">;
+type MembersTable = {
+  select(columns: string): {
+    eq(column: "user_id", value: string): {
+      limit(count: number): {
+        maybeSingle(): Promise<{ data: MembershipLookup | null; error: { message: string } | null }>;
+      };
+    };
+  };
+};
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -30,5 +42,12 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL(`/join/${redirectedFromInvite}`, request.url));
   }
 
-  return NextResponse.redirect(new URL(next, request.url));
+  if (!ensured.profile) {
+    return NextResponse.redirect(new URL("/onboarding", request.url));
+  }
+
+  const members = supabase.from("members") as unknown as MembersTable;
+  const { data: membership } = await members.select("id").eq("user_id", ensured.profile.id).limit(1).maybeSingle();
+
+  return NextResponse.redirect(new URL(membership ? next : "/onboarding", request.url));
 }
