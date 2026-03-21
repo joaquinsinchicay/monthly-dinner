@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 
 import { LoginCard } from "@/components/auth/LoginCard";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { loginWithGoogle } from "./actions";
 
 export default async function LoginPage({ searchParams }: { searchParams: { error?: string; next?: string } }) {
   const supabase = createSupabaseServerClient();
@@ -15,9 +14,7 @@ export default async function LoginPage({ searchParams }: { searchParams: { erro
   return (
     <main className="flex min-h-screen items-center justify-center bg-surface px-4 py-10">
       <div className="w-full max-w-md">
-        <form action={loginWithGoogle}>
-          <LoginCard error={searchParams.error} next={searchParams.next} />
-        </form>
+        <LoginCard error={searchParams.error} next={searchParams.next} />
       </div>
     </main>
   );
