@@ -29,7 +29,8 @@ function profilePayload(user: { id: string; email?: string; user_metadata?: Reco
     id: user.id,
     email: user.email ?? "",
     full_name: typeof metadata.full_name === "string" ? metadata.full_name : typeof metadata.name === "string" ? metadata.name : null,
-    avatar_url: typeof metadata.avatar_url === "string" ? metadata.avatar_url : typeof metadata.picture === "string" ? metadata.picture : null
+    avatar_url: typeof metadata.avatar_url === "string" ? metadata.avatar_url : typeof metadata.picture === "string" ? metadata.picture : null,
+    display_name: typeof metadata.name === "string" ? metadata.name : typeof metadata.full_name === "string" ? metadata.full_name : null
   };
 }
 
@@ -44,7 +45,7 @@ export async function ensureProfile(): Promise<{ profile: Profile | null; error:
   const user = userData.user;
   const profiles = supabase.from("profiles") as unknown as ProfileInsertTable;
   const { data: existingProfile, error: selectError } = await profiles
-    .select("id, email, full_name, avatar_url, created_at, updated_at")
+    .select("id, email, full_name, avatar_url, display_name, created_at, updated_at")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -59,7 +60,7 @@ export async function ensureProfile(): Promise<{ profile: Profile | null; error:
   const payload = profilePayload(user);
   const { data: insertedProfile, error: insertError } = await profiles
     .upsert(payload, { onConflict: "email" })
-    .select("id, email, full_name, avatar_url, created_at, updated_at")
+    .select("id, email, full_name, avatar_url, display_name, created_at, updated_at")
     .single();
 
   if (insertError) {

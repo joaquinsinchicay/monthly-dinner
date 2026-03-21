@@ -12,22 +12,23 @@ monthly-dinner es una app mobile-first para coordinar cenas mensuales grupales. 
 - **Tailwind CSS + primitives estilo shadcn/ui**: velocidad para construir UI consistente sin intervención de diseño dedicada.
 - **Vercel + GitHub**: deploy automático sin carga DevOps manual.
 
-## Schema base de datos (14 tablas)
+## Schema base de datos (14 tablas + 1 RPC)
 
-1. `profiles`: `id uuid`, `email text unique`, `full_name text`, `avatar_url text`, `created_at timestamptz`, `updated_at timestamptz`.
+1. `profiles`: `id uuid`, `email text unique`, `full_name text`, `avatar_url text`, `display_name text`, `created_at timestamptz`, `updated_at timestamptz`.
 2. `groups`: `id uuid`, `name text`, `created_by uuid`, `created_at timestamptz`.
-3. `members`: `id uuid`, `group_id uuid`, `user_id uuid`, `role text`, `joined_at timestamptz`, `unique(group_id, user_id)`.
-4. `invitation_links`: `id uuid`, `group_id uuid`, `token text unique`, `created_by uuid`, `expires_at timestamptz`, `created_at timestamptz`.
-5. `events`: `id uuid`, `group_id uuid`, `organizer_id uuid`, `title text`, `event_date date`, `location text`, `description text`, `status text`, `created_at timestamptz`, `updated_at timestamptz`.
+3. `members`: `id uuid`, `group_id uuid`, `user_id uuid`, `full_name text`, `avatar_url text`, `role text`, `joined_at timestamptz`, `unique(group_id, user_id)`.
+4. `invitation_links`: `id uuid`, `group_id uuid`, `token text unique`, `created_by uuid`, `expires_at timestamptz`, `revoked boolean`, `created_at timestamptz`.
+5. `events`: `id uuid`, `group_id uuid`, `organizer_id uuid`, `title text`, `event_date date`, `event_year integer`, `event_month integer`, `location text`, `description text`, `status text`, `restaurant_name text`, `created_at timestamptz`, `updated_at timestamptz`.
 6. `attendances`: `id uuid`, `event_id uuid`, `member_id uuid`, `status text`, `updated_at timestamptz`, `unique(event_id, member_id)`.
-7. `rotation`: `id uuid`, `group_id uuid`, `user_id uuid`, `month date`, `is_current boolean`, `unique(group_id, month)`.
-8. `polls`: `id uuid`, `event_id uuid`, `created_by uuid`, `closes_at timestamptz`, `is_closed boolean`, `created_at timestamptz`.
-9. `poll_options`: `id uuid`, `poll_id uuid`, `label text`, `order_index integer`.
+7. `rotation`: `id uuid`, `group_id uuid`, `user_id uuid`, `order_index integer`, `cycle integer`, `month date`, `is_current boolean`, `unique(group_id, month)`.
+8. `polls`: `id uuid`, `event_id uuid`, `created_by uuid`, `closes_at timestamptz`, `status text`, `created_at timestamptz`.
+9. `poll_options`: `id uuid`, `poll_id uuid`, `label text`, `created_at timestamptz`.
 10. `poll_votes`: `id uuid`, `poll_id uuid`, `option_id uuid`, `user_id uuid`, `voted_at timestamptz`, `unique(poll_id, user_id)`.
-11. `restaurant_history`: `id uuid`, `group_id uuid`, `event_id uuid`, `restaurant_name text`, `visited_at date`, `attendees_count integer`, `created_by uuid`, `created_at timestamptz`.
+11. `restaurant_history`: `id uuid`, `group_id uuid`, `event_id uuid`, `restaurant_name text`, `visited_at date`, `attendees_count integer`, `created_by uuid nullable`, `created_at timestamptz`.
 12. `checklist_templates`: `id uuid`, `group_id uuid nullable`, `label text`, `order_index integer`, `is_active boolean`.
-13. `checklist_items`: `id uuid`, `event_id uuid`, `template_id uuid nullable`, `label text`, `is_done boolean`, `order_index integer`, `completed_at timestamptz`.
+13. `checklist_items`: `id uuid`, `event_id uuid`, `template_id uuid nullable`, `label text`, `order_index integer`, `is_done boolean`, `completed_at timestamptz`.
 14. `notifications`: `id uuid`, `group_id uuid`, `event_id uuid`, `user_id uuid`, `type text`, `is_read boolean`, `created_at timestamptz`.
+15. `create_group_with_admin(group_name text)`: RPC `SECURITY DEFINER` que crea `groups` + `members` usando `members.user_id` y retorna `group_id` + `name`.
 
 ## RLS resumido por tabla
 
@@ -64,6 +65,7 @@ monthly-dinner es una app mobile-first para coordinar cenas mensuales grupales. 
 - E01 US-02 Login con Google — **Done**.
 - E01 US-03 Cerrar sesión — **Done**.
 - E01 US-04 Join por invitación — **Done**.
+- E00 US-21 Crear grupo — **Completada**.
 - E02 US-05 Crear evento del mes — **Completada**.
 - E02 US-06 Notificar al grupo — **Completada**.
 - E02 US-07 Ver estado del evento en tiempo real — **Completada**.
@@ -93,3 +95,9 @@ monthly-dinner es una app mobile-first para coordinar cenas mensuales grupales. 
 - No hardcodear IDs de grupos, usuarios o eventos.
 - No crear `.env.local` en el repositorio.
 - No romper el contrato del schema sin migración explícita.
+
+## Arquitectura de onboarding
+
+- Post-login: `login -> /api/auth/callback -> verificar members -> /dashboard | /onboarding`.
+- `/onboarding` y `/onboarding/new-group` requieren sesión activa, pero no membresía previa.
+- La creación de grupo usa la RPC `create_group_with_admin` para mantener atomicidad entre `groups` y `members`.
