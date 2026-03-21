@@ -5,6 +5,7 @@ create table public.profiles (
   email text not null unique,
   full_name text,
   avatar_url text,
+  display_name text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -20,6 +21,8 @@ create table public.members (
   id uuid primary key default gen_random_uuid(),
   group_id uuid not null references public.groups(id) on delete cascade,
   user_id uuid not null references public.profiles(id) on delete cascade,
+  full_name text,
+  avatar_url text,
   role text not null default 'member' check (role in ('member', 'admin')),
   joined_at timestamptz not null default now(),
   unique(group_id, user_id)
@@ -31,6 +34,7 @@ create table public.invitation_links (
   token text not null unique,
   created_by uuid not null references public.profiles(id) on delete cascade,
   expires_at timestamptz,
+  revoked boolean not null default false,
   created_at timestamptz not null default now()
 );
 
@@ -40,9 +44,12 @@ create table public.events (
   organizer_id uuid not null references public.profiles(id) on delete cascade,
   title text,
   event_date date not null,
+  event_year integer,
+  event_month integer,
   location text,
   description text,
   status text not null default 'draft' check (status in ('draft', 'published', 'closed')),
+  restaurant_name text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -96,7 +103,9 @@ create table public.rotation (
   id uuid primary key default gen_random_uuid(),
   group_id uuid not null references public.groups(id) on delete cascade,
   user_id uuid not null references public.profiles(id) on delete cascade,
-  month date not null,
+  order_index integer not null,
+  cycle integer not null,
+  month date,
   is_current boolean not null default false,
   unique(group_id, month)
 );
@@ -116,7 +125,7 @@ create table public.polls (
   event_id uuid not null references public.events(id) on delete cascade,
   created_by uuid not null references public.profiles(id) on delete cascade,
   closes_at timestamptz not null,
-  is_closed boolean not null default false,
+  status text not null default 'open',
   created_at timestamptz not null default now()
 );
 
@@ -124,7 +133,7 @@ create table public.poll_options (
   id uuid primary key default gen_random_uuid(),
   poll_id uuid not null references public.polls(id) on delete cascade,
   label text not null,
-  order_index integer not null default 0
+  created_at timestamptz not null default now()
 );
 
 create table public.poll_votes (
@@ -143,7 +152,7 @@ create table public.restaurant_history (
   restaurant_name text not null,
   visited_at date not null,
   attendees_count integer,
-  created_by uuid not null references public.profiles(id) on delete cascade,
+  created_by uuid references public.profiles(id) on delete cascade,
   created_at timestamptz not null default now()
 );
 

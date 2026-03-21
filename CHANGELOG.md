@@ -21,4 +21,4 @@
 - [Added] Función RPC create_group_with_admin con SECURITY DEFINER.
 - [Added] Políticas RLS para groups y members.
 - [Changed] app/api/auth/callback/route.ts: redirige a /onboarding si el usuario no tiene grupo.
-
+- [Fixed] Sincronización de nombres de columna entre código y schema real de Supabase.
