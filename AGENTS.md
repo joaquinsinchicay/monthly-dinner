@@ -12,7 +12,7 @@ monthly-dinner es una app mobile-first para coordinar cenas mensuales grupales. 
 - **Tailwind CSS + primitives estilo shadcn/ui**: velocidad para construir UI consistente sin intervención de diseño dedicada.
 - **Vercel + GitHub**: deploy automático sin carga DevOps manual.
 
-## Schema base de datos (13 tablas)
+## Schema base de datos (14 tablas)
 
 1. `profiles`: `id uuid`, `email text unique`, `full_name text`, `avatar_url text`, `created_at timestamptz`, `updated_at timestamptz`.
 2. `groups`: `id uuid`, `name text`, `created_by uuid`, `created_at timestamptz`.
@@ -27,6 +27,7 @@ monthly-dinner es una app mobile-first para coordinar cenas mensuales grupales. 
 11. `restaurant_history`: `id uuid`, `group_id uuid`, `event_id uuid`, `restaurant_name text`, `visited_at date`, `attendees_count integer`, `created_by uuid`, `created_at timestamptz`.
 12. `checklist_templates`: `id uuid`, `group_id uuid nullable`, `label text`, `order_index integer`, `is_active boolean`.
 13. `checklist_items`: `id uuid`, `event_id uuid`, `template_id uuid nullable`, `label text`, `is_done boolean`, `order_index integer`, `completed_at timestamptz`.
+14. `notifications`: `id uuid`, `group_id uuid`, `event_id uuid`, `user_id uuid`, `type text`, `is_read boolean`, `created_at timestamptz`.
 
 ## RLS resumido por tabla
 
@@ -42,6 +43,7 @@ monthly-dinner es una app mobile-first para coordinar cenas mensuales grupales. 
 - `restaurant_history`: organizer del evento inserta; miembros consultan.
 - `checklist_templates`: admin del grupo gestiona o plantilla global; miembros consultan plantillas globales o de su grupo.
 - `checklist_items`: organizer del evento consulta y gestiona.
+- `notifications`: el organizer del evento asociado inserta; cada usuario consulta y actualiza solo sus propias notificaciones.
 
 ## Design system
 
@@ -62,9 +64,9 @@ monthly-dinner es una app mobile-first para coordinar cenas mensuales grupales. 
 - E01 US-02 Login con Google — **Done**.
 - E01 US-03 Cerrar sesión — **Done**.
 - E01 US-04 Join por invitación — **Done**.
-- E02 US-05 Crear grupo — Pending.
-- E02 US-06 Ver miembros — Pending.
-- E02 US-07 Gestionar roles — Pending.
+- E02 US-05 Crear evento del mes — **Completada**.
+- E02 US-06 Notificar al grupo — **Completada**.
+- E02 US-07 Ver estado del evento en tiempo real — **Completada**.
 - E03 US-08 Crear evento mensual — Pending.
 - E03 US-09 Publicar evento — Pending.
 - E03 US-10 Confirmar asistencia — Pending.

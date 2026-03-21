@@ -1,2 +1,5 @@
-import { EventPanel } from "@/components/event/EventPanel";
-export default function EventsPage() { return <EventPanel />; }
+import { redirect } from "next/navigation";
+
+export default function EventsPage() {
+  redirect("/dashboard");
+}

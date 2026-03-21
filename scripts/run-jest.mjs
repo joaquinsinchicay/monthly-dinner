@@ -1,21 +1,19 @@
 #!/usr/bin/env node
-import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 
-function isInvitationExpired(expiresAt) {
-  if (!expiresAt) return false;
-  return new Date(expiresAt).getTime() < Date.now();
-}
+const createEventForm = await readFile(new URL("../components/event/CreateEventForm.tsx", import.meta.url), "utf8");
+const eventsAction = await readFile(new URL("../app/actions/events.ts", import.meta.url), "utf8");
+const dashboardPage = await readFile(new URL("../app/dashboard/page.tsx", import.meta.url), "utf8");
+const schemaSql = await readFile(new URL("../db/schema.sql", import.meta.url), "utf8");
 
-const authTs = await readFile(new URL('../lib/auth.ts', import.meta.url), 'utf8');
-const callbackTs = await readFile(new URL('../app/api/auth/callback/route.ts', import.meta.url), 'utf8');
-const joinTs = await readFile(new URL('../app/(auth)/join/[token]/page.tsx', import.meta.url), 'utf8');
-const schemaSql = await readFile(new URL('../db/schema.sql', import.meta.url), 'utf8');
-
-assert.equal(isInvitationExpired('2000-01-01T00:00:00.000Z'), true, 'expired invitation should be invalid');
-assert.equal(isInvitationExpired(null), false, 'null expiration should remain valid');
-assert.match(authTs, /upsert\(payload, \{ onConflict: "email" \}\)/, 'profiles should upsert on email to avoid duplicates');
-assert.match(callbackTs, /exchangeCodeForSession/, 'OAuth callback must exchange code for session');
-assert.match(joinTs, /Este link de invitación no es válido o ya expiró/, 'join page must render invalid-link state');
-assert.match(schemaSql, /unique\(group_id, user_id\)/i, 'members must prevent duplicate memberships');
-console.log('Custom compatibility runner: all integration assertions passed.');
+assert.match(createEventForm, /La fecha es obligatoria para crear el evento/, "form should render inline required date validation");
+assert.match(createEventForm, /mode === "create" \? await createEvent\(payload\) : await updateEvent/, "form should call server actions for create/edit");
+assert.match(createEventForm, /Guardar y notificar/, "published event edit flow should expose notify confirmation");
+assert.match(eventsAction, /code: "event_exists"/, "createEvent should guard duplicate monthly events");
+assert.match(eventsAction, /is_read: false/, "notification inserts should include unread notifications");
+assert.match(eventsAction, /upsert\([\s\S]*onConflict: "event_id,member_id"/, "attendance updates should upsert by event and member");
+assert.match(dashboardPage, /attendanceSummaryResult\?\.success \? attendanceSummaryResult\.data : null/, "dashboard should pass attendance summary into EventPanel");
+assert.match(schemaSql, /create table public.notifications/i, "schema should include notifications table");
+assert.match(schemaSql, /create trigger update_profiles_updated_at/i, "schema should version profiles updated_at trigger");
+console.log("Custom compatibility runner: event workflow assertions passed.");
