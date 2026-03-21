@@ -38,12 +38,12 @@ supabase/
 
 - `app/(auth)/login/page.tsx`: Server Component; valida sesión SSR y redirige a `/dashboard` si ya existe usuario autenticado.
 - `app/(auth)/login/LoginCard.tsx`: Client Component; renderiza la landing, estados OAuth y dispara `signInWithGoogle()`.
-- `app/(auth)/invite/[token]/page.tsx`: Server Component; valida `invite_tokens`, decide entre `InviteExpired`, `AlreadyMember` o `InviteJoin`.
+- `app/(auth)/invite/[token]/page.tsx`: Server Component; valida `invitation_links`, decide entre `InviteExpired`, `AlreadyMember` o `InviteJoin`.
 - `app/(auth)/invite/[token]/InviteJoin.tsx`: Client Component; inicia OAuth con el token de invitación embebido en el callback.
 - `components/auth/LogoutButton.tsx`: Client Component reutilizable; muestra el bottom sheet de confirmación y ejecuta `signOut()`.
 - `lib/auth-copy.ts`: helper para importar el JSON tipado y resolver estados de UI.
 - `lib/auth.ts`: helpers de redirect seguro y construcción de callback OAuth.
-- `lib/invite.ts`: validación tipada de `invite_tokens` y membresía actual.
+- `lib/invite.ts`: validación tipada de `invitation_links` y membresía actual.
 - `lib/supabase/server.ts`: inicializa el cliente SSR con cookies de Next.js.
 - `public/locales/auth.json`: fuente única de todos los textos visibles del flujo auth.
 - `middleware.ts`: protege rutas, restaura contexto y evita mostrar `/login` a usuarios autenticados.

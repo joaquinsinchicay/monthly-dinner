@@ -14,11 +14,11 @@ El flujo de autenticación arranca en la landing `/login`, dispara Google OAuth 
               └─ /auth/callback
                   ├─ exchangeCodeForSession(code)
                   ├─ upsert profiles
-                  ├─ if invite token => validate invite_tokens + upsert group_members
+                  ├─ if invite token => validate invitation_links + upsert members
                   └─ redirect /dashboard or original ?redirect=
 
 /invite/[token]
-  ├─ validate invite_tokens on server
+  ├─ validate invitation_links on server
   ├─ expired => InviteExpired
   ├─ already member => AlreadyMember
   └─ valid => InviteJoin (client) => Google OAuth

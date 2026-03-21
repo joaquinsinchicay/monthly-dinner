@@ -25,7 +25,7 @@ async function ensureProfileAndMembership(
 
   const profilePayload = {
     id: user.id,
-    display_name: user.user_metadata.full_name ?? user.user_metadata.name ?? user.email ?? user.id,
+    full_name: user.user_metadata.full_name ?? user.user_metadata.name ?? user.email ?? user.id,
     email: user.email ?? '',
     avatar_url: user.user_metadata.avatar_url ?? null,
   };
@@ -42,7 +42,7 @@ async function ensureProfileAndMembership(
       return NextResponse.redirect(buildRedirectUrl(request, `/invite/${inviteToken}`));
     }
 
-    const memberInsert = await (supabase.from('group_members') as any).upsert(
+    const memberInsert = await (supabase.from('members') as any).upsert(
       {
         group_id: inviteResult.group.id,
         profile_id: user.id,

@@ -3,7 +3,7 @@
 ## Comportamientos inesperados
 
 1. El repo ya traía una implementación auth simplificada con `app/login/page.tsx` y `app/invite/[token]/page.tsx`, pero sin separar copy ni validar tokens reales.
-2. El schema existente usaba nombres incompatibles con el nuevo flujo (`profiles.full_name`, `group_members.user_id`, `invitations`), lo que obligó a normalizar el contrato a `display_name`, `profile_id` e `invite_tokens`.
+2. El primer refactor E01 quedó desalineado con el schema real de Supabase porque usó `group_members`, `invite_tokens` y `profiles.display_name`; el fix actual corrige las referencias a `members`, `invitation_links` y `profiles.full_name`.
 
 ## Diferencias entre prototipo React y Next.js App Router
 
@@ -23,4 +23,8 @@
 
 **Reproducción:** abrir el mismo invite link desde una sesión ya miembro o repetir el callback con el mismo usuario.
 
-**Solución:** `group_members` usa `UNIQUE (group_id, profile_id)` y el callback hace `upsert` con `onConflict`, evitando duplicados y derivando al estado `already_member` cuando aplica.
+**Solución:** `members` usa `UNIQUE (group_id, profile_id)` y el callback hace `upsert` con `onConflict`, evitando duplicados y derivando al estado `already_member` cuando aplica.
+
+## Bug resuelto: desajuste de schema E01
+
+El refactor anterior apuntaba a nombres de tablas/columnas que no existen en la base real (`group_members`, `invite_tokens`, `profiles.display_name`). Quedó corregido para usar `members`, `invitation_links`, `profiles.full_name` y validación adicional por `invitation_links.revoked = false`.

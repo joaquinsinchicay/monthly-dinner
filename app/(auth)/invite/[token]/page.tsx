@@ -52,7 +52,7 @@ export default async function InvitePage({ params }: { params: { token: string }
         <InviteJoin
           token={params.token}
           groupName={result.group.name}
-          members={result.members.map((member) => member.display_name).filter((member): member is string => Boolean(member))}
+          members={result.members.map((member) => member.full_name).filter((member): member is string => Boolean(member))}
         />
       ) : null}
     </main>

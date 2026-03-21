@@ -6,7 +6,6 @@ export type Database = {
       profiles: {
         Row: {
           id: string;
-          display_name?: string | null;
           full_name?: string | null;
           email: string;
           avatar_url: string | null;
@@ -21,7 +20,7 @@ export type Database = {
           created_at: string;
         };
       };
-      group_members: {
+      members: {
         Row: {
           id: string;
           group_id: string;
@@ -32,14 +31,14 @@ export type Database = {
           joined_at: string;
         };
       };
-      invite_tokens: {
+      invitation_links: {
         Row: {
           id: string;
           token: string;
           group_id: string;
           created_by: string;
           expires_at: string;
-          used_at: string | null;
+          revoked: boolean;
           created_at: string;
         };
       };
@@ -80,7 +79,7 @@ export type Database = {
 
 export type Profile = Database['public']['Tables']['profiles']['Row'];
 export type Group = Database['public']['Tables']['groups']['Row'];
-export type GroupMember = Database['public']['Tables']['group_members']['Row'];
+export type GroupMember = Database['public']['Tables']['members']['Row'];
 export type MonthlyEvent = Database['public']['Tables']['monthly_events']['Row'];
 export type Attendance = Database['public']['Tables']['attendances']['Row'];
 export type Poll = Database['public']['Tables']['polls']['Row'];

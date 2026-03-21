@@ -79,7 +79,9 @@ describe('US-04 invite token validation', () => {
       from: vi.fn(() => ({
         select: vi.fn(() => ({
           eq: vi.fn(() => ({
-            gt: vi.fn(() => ({ maybeSingle: vi.fn().mockResolvedValue({ error: null, data: null }) })),
+            eq: vi.fn(() => ({
+              gt: vi.fn(() => ({ maybeSingle: vi.fn().mockResolvedValue({ error: null, data: null }) })),
+            })),
           })),
         })),
       })),
@@ -88,7 +90,7 @@ describe('US-04 invite token validation', () => {
     await expect(validateInviteToken(supabase, 'expired-token', null)).resolves.toEqual({ status: 'expired' });
   });
 
-  it('devuelve valid cuando el token es vigente y el usuario no es miembro', async () => {
+  it('devuelve valid cuando el token es vigente, no revocado y el usuario no es miembro', async () => {
     const maybeSingle = vi.fn().mockResolvedValue({
       error: null,
       data: {
@@ -97,21 +99,29 @@ describe('US-04 invite token validation', () => {
         group_id: 'group-1',
         created_by: 'user-1',
         expires_at: '2099-01-01T00:00:00Z',
-        used_at: null,
+        revoked: false,
         created_at: '2026-03-21T00:00:00Z',
         groups: { id: 'group-1', name: 'Cenas del Jueves', created_at: '2026-03-21T00:00:00Z' },
       },
     });
     const membersLimit = vi.fn().mockResolvedValue({
-      data: [{ profiles: { id: 'user-2', display_name: 'Guido', avatar_url: null } }],
+      data: [{ profiles: { id: 'user-2', full_name: 'Guido', avatar_url: null } }],
     });
     const memberMaybeSingle = vi.fn().mockResolvedValue({ data: null });
 
     const from = vi.fn((table: string) => {
-      if (table === 'invite_tokens') {
-        return { select: vi.fn(() => ({ eq: vi.fn(() => ({ gt: vi.fn(() => ({ maybeSingle })) })) })) };
+      if (table === 'invitation_links') {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                gt: vi.fn(() => ({ maybeSingle })),
+              })),
+            })),
+          })),
+        };
       }
-      if (table === 'group_members') {
+      if (table === 'members') {
         return {
           select: vi.fn((selection: string) => {
             if (selection.includes('profiles')) {
