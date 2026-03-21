@@ -56,6 +56,14 @@ create table public.attendances (
   unique(event_id, member_id)
 );
 
+create or replace function public.update_updated_at_column()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
 create table public.rotation (
   id uuid primary key default gen_random_uuid(),
   group_id uuid not null references public.groups(id) on delete cascade,
@@ -63,6 +71,16 @@ create table public.rotation (
   month date not null,
   is_current boolean not null default false,
   unique(group_id, month)
+);
+
+create table public.notifications (
+  id uuid primary key default gen_random_uuid(),
+  group_id uuid not null references public.groups(id) on delete cascade,
+  event_id uuid not null references public.events(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  type text not null check (type in ('event_published', 'event_updated', 'poll_opened', 'turn_assigned')),
+  is_read boolean not null default false,
+  created_at timestamptz not null default now()
 );
 
 create table public.polls (
@@ -128,6 +146,8 @@ create index idx_attendances_event_id on public.attendances(event_id);
 create index idx_attendances_member_id on public.attendances(member_id);
 create index idx_rotation_group_id on public.rotation(group_id);
 create index idx_rotation_user_id on public.rotation(user_id);
+create index idx_notifications_user_id on public.notifications(user_id);
+create index idx_notifications_event_id on public.notifications(event_id);
 create index idx_polls_event_id on public.polls(event_id);
 create index idx_poll_options_poll_id on public.poll_options(poll_id);
 create index idx_poll_votes_poll_id on public.poll_votes(poll_id);
@@ -144,6 +164,7 @@ alter table public.invitation_links enable row level security;
 alter table public.events enable row level security;
 alter table public.attendances enable row level security;
 alter table public.rotation enable row level security;
+alter table public.notifications enable row level security;
 alter table public.polls enable row level security;
 alter table public.poll_options enable row level security;
 alter table public.poll_votes enable row level security;
@@ -199,6 +220,12 @@ create policy "attendances_delete_self" on public.attendances for delete using (
 create policy "rotation_select_group_member" on public.rotation for select using (
   exists (select 1 from public.members m where m.group_id = rotation.group_id and m.user_id = auth.uid())
 );
+create policy "notifications_insert_organizer" on public.notifications for insert with check (
+  auth.uid() in (select organizer_id from public.events where id = notifications.event_id)
+);
+create policy "notifications_select_own" on public.notifications for select using (auth.uid() = user_id);
+create policy "notifications_update_own" on public.notifications for update using (auth.uid() = user_id);
+
 create policy "rotation_manage_admin" on public.rotation for all using (
   exists (select 1 from public.members m where m.group_id = rotation.group_id and m.user_id = auth.uid() and m.role = 'admin')
 ) with check (
@@ -274,3 +301,10 @@ create policy "checklist_items_manage_organizer" on public.checklist_items for a
 ) with check (
   exists (select 1 from public.events e where e.id = checklist_items.event_id and e.organizer_id = auth.uid())
 );
+
+
+drop trigger if exists update_profiles_updated_at on public.profiles;
+create trigger update_profiles_updated_at before update on public.profiles for each row execute function public.update_updated_at_column();
+
+drop trigger if exists update_events_updated_at on public.events;
+create trigger update_events_updated_at before update on public.events for each row execute function public.update_updated_at_column();
