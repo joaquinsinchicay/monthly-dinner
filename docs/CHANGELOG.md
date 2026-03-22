@@ -13,21 +13,35 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 19 | 0 | 0 | 19 |
+| 19 | 1 | 0 | 18 |
 
 ---
 
 ## [Unreleased] — En desarrollo
 
+### Done recientemente
+
+Nuevas implementaciones entregadas en la versión `0.1.0`.
+
+---
+
+## [0.1.0] — 2026-03-22
+
+### Added
+- [Added] US-01 Registro con Google — `app/(auth)/login/`, `app/auth/callback/`, `middleware.ts`
+
+---
+
+
 ### Pendiente de implementación
 
-Todas las US están pendientes. Orden de implementación según dependencia técnica:
+US-01 ya fue entregada. El resto permanece pendiente según dependencia técnica:
 
 | # | ID | User Story | Épica | Esfuerzo | Estado |
 |---|---|---|---|---|---|
 | 1 | US-00 | Crear grupo | E00 Creación de grupo | M (3-4d) | ⬜ Pendiente |
 | 2 | US-00b | Generar link de invitación al crear el grupo | E00 Creación de grupo | S (1-2d) | ⬜ Pendiente |
-| 3 | US-01 | Registro con Google | E01 Acceso & Autenticación | S (1-2d) | ⬜ Pendiente |
+| 3 | US-01 | Registro con Google | E01 Acceso & Autenticación | S (1-2d) | ✅ Done |
 | 4 | US-02 | Login con Google | E01 Acceso & Autenticación | S (1-2d) | ⬜ Pendiente |
 | 5 | US-04 | Join por invitación | E01 Acceso & Autenticación | M (3-4d) | ⬜ Pendiente |
 | 6 | US-03 | Cerrar sesión | E01 Acceso & Autenticación | XS (<1d) | ⬜ Pendiente |
