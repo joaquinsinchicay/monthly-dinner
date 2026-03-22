@@ -12,7 +12,7 @@ monthly-dinner es una app mobile-first para coordinar cenas mensuales grupales. 
 - **Tailwind CSS + primitives estilo shadcn/ui**: velocidad para construir UI consistente sin intervención de diseño dedicada.
 - **Vercel + GitHub**: deploy automático sin carga DevOps manual.
 
-## Schema base de datos (14 tablas)
+## Schema base de datos (14 tablas + 1 RPC)
 
 1. `profiles`: `id uuid`, `email text unique`, `full_name text`, `avatar_url text`, `display_name text`, `created_at timestamptz`, `updated_at timestamptz`.
 2. `groups`: `id uuid`, `name text`, `created_by uuid`, `created_at timestamptz`.
@@ -28,6 +28,7 @@ monthly-dinner es una app mobile-first para coordinar cenas mensuales grupales. 
 12. `checklist_templates`: `id uuid`, `group_id uuid nullable`, `label text`, `order_index integer`, `is_active boolean`.
 13. `checklist_items`: `id uuid`, `event_id uuid`, `template_id uuid nullable`, `label text`, `order_index integer`, `is_done boolean`, `completed_at timestamptz`.
 14. `notifications`: `id uuid`, `group_id uuid`, `event_id uuid`, `user_id uuid`, `type text`, `is_read boolean`, `created_at timestamptz`.
+15. `create_group_with_admin(group_name text)`: RPC `SECURITY DEFINER` que crea `groups` + `members` usando `members.user_id` y retorna `group_id` + `name`.
 
 ## RLS resumido por tabla
 
