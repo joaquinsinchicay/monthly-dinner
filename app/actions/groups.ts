@@ -1,9 +1,11 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { createServerClient } from "@supabase/ssr";
 
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getSupabaseEnv } from "@/lib/supabase/config";
 import type { Database } from "@/types";
 
 type ActionResult = { error: string } | void;
@@ -22,6 +24,20 @@ type MembersTable = {
   insert(values: Database["public"]["Tables"]["members"]["Insert"]): Promise<{ data: { id: string } | null; error: SupabaseErrorLike }>;
 };
 
+
+function createActionSupabaseClient() {
+  const cookieStore = cookies();
+  const { url, anonKey } = getSupabaseEnv();
+
+  return createServerClient<Database, "public">(url, anonKey, {
+    cookies: {
+      get(name: string) {
+        return cookieStore.get(name)?.value;
+      }
+    }
+  });
+}
+
 type GroupsTable = {
   insert(values: Database["public"]["Tables"]["groups"]["Insert"]): {
     select(columns: string): {
@@ -31,7 +47,7 @@ type GroupsTable = {
 };
 
 export async function createGroup(formData: FormData): Promise<ActionResult> {
-  const supabase = createSupabaseServerClient();
+  const supabase = createActionSupabaseClient();
   const {
     data: { user },
     error: authError
