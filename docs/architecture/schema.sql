@@ -35,7 +35,6 @@ create table if not exists profiles (
 
 alter table profiles enable row level security;
 
--- El usuario solo puede ver y editar su propio perfil
 create policy "profiles: select own"
   on profiles for select
   using (auth.uid() = id);
@@ -83,7 +82,6 @@ create table if not exists groups (
 
 alter table groups enable row level security;
 
--- Solo miembros del grupo pueden verlo
 create policy "groups: select members"
   on groups for select
   using (
@@ -94,12 +92,10 @@ create policy "groups: select members"
     )
   );
 
--- Solo el creador puede insertar (se convierte en admin via trigger)
 create policy "groups: insert creator"
   on groups for insert
   with check (auth.uid() = created_by);
 
--- Solo admins del grupo pueden editar el nombre
 create policy "groups: update admin"
   on groups for update
   using (
@@ -115,6 +111,8 @@ create policy "groups: update admin"
 -- -----------------------------------------------------------------------------
 -- 03. members
 -- Membresía usuario-grupo. Roles: member | admin.
+-- IMPORTANTE: 'organizer' NO es un valor válido de este enum.
+-- El organizador del mes se determina via rotation.user_id, no via members.role.
 -- -----------------------------------------------------------------------------
 
 create type member_role as enum ('member', 'admin');
@@ -133,7 +131,6 @@ create index idx_members_user_id  on members(user_id);
 
 alter table members enable row level security;
 
--- Miembros del mismo grupo pueden verse entre sí
 create policy "members: select same group"
   on members for select
   using (
@@ -144,17 +141,14 @@ create policy "members: select same group"
     )
   );
 
--- Cualquier usuario autenticado puede insertarse a sí mismo (via link de invitación)
 create policy "members: insert self"
   on members for insert
   with check (auth.uid() = user_id);
 
--- Cada miembro puede actualizar solo su propio registro (ej: abandonar grupo)
 create policy "members: update own"
   on members for update
   using (auth.uid() = user_id);
 
--- Solo admins pueden eliminar miembros
 create policy "members: delete admin"
   on members for delete
   using (
@@ -202,7 +196,6 @@ create index idx_invitation_links_group_id on invitation_links(group_id);
 
 alter table invitation_links enable row level security;
 
--- Miembros del grupo pueden ver los links (para compartir)
 create policy "invitation_links: select members"
   on invitation_links for select
   using (
@@ -213,7 +206,10 @@ create policy "invitation_links: select members"
     )
   );
 
--- Solo admins pueden crear links
+-- NOTA: la política de INSERT usa exists(members) pero el trigger on_group_created_invitation
+-- corre ANTES de que el admin exista en members (el trigger on_group_created lo inserta
+-- en el mismo ciclo). El trigger es security definer y bypasea RLS — no modificar
+-- el orden de los triggers ni remover security definer sin entender esta dependencia.
 create policy "invitation_links: insert admin"
   on invitation_links for insert
   with check (
@@ -225,7 +221,6 @@ create policy "invitation_links: insert admin"
     )
   );
 
--- Solo admins pueden revocar (update revoked_at) o editar
 create policy "invitation_links: update admin"
   on invitation_links for update
   using (
@@ -237,7 +232,6 @@ create policy "invitation_links: update admin"
     )
   );
 
--- Solo admins pueden eliminar links
 create policy "invitation_links: delete admin"
   on invitation_links for delete
   using (
@@ -249,7 +243,10 @@ create policy "invitation_links: delete admin"
     )
   );
 
--- Trigger: crear link de invitación automáticamente al crear el grupo
+-- Trigger: crear link de invitación automáticamente al crear el grupo.
+-- Corre security definer para bypasear RLS — el admin aún no existe en members
+-- en este punto del ciclo (on_group_created lo inserta en el mismo after insert).
+-- No cambiar a security invoker.
 create or replace function handle_new_group_invitation()
 returns trigger language plpgsql security definer as $$
 begin
@@ -274,8 +271,8 @@ create table if not exists rotation (
   id            uuid primary key default uuid_generate_v4(),
   group_id      uuid not null references groups(id) on delete cascade,
   user_id       uuid not null references profiles(id) on delete restrict,
-  month         date not null,                          -- primer día del mes: 2026-04-01
-  notified_at   timestamptz,                            -- cuándo se notificó al organizador
+  month         date not null,        -- primer día del mes: 2026-04-01
+  notified_at   timestamptz,          -- cuándo se notificó al organizador
   created_at    timestamptz not null default now(),
   unique (group_id, month)
 );
@@ -285,7 +282,6 @@ create index idx_rotation_month    on rotation(month);
 
 alter table rotation enable row level security;
 
--- Todos los miembros del grupo pueden ver la rotación
 create policy "rotation: select members"
   on rotation for select
   using (
@@ -296,7 +292,6 @@ create policy "rotation: select members"
     )
   );
 
--- Solo admins gestionan la rotación
 create policy "rotation: insert admin"
   on rotation for insert
   with check (
@@ -344,12 +339,12 @@ create table if not exists events (
   id              uuid primary key default uuid_generate_v4(),
   group_id        uuid not null references groups(id) on delete cascade,
   organizer_id    uuid not null references profiles(id) on delete restrict,
-  month           date not null,                          -- primer día del mes: 2026-04-01
+  month           date not null,      -- primer día del mes: 2026-04-01
   status          event_status not null default 'pending',
   event_date      date,
   place           text,
   description     text,
-  notified_at     timestamptz,                            -- cuándo se notificó al grupo (US-06)
+  notified_at     timestamptz,        -- cuándo se notificó al grupo (US-06)
   closed_at       timestamptz,
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now(),
@@ -361,7 +356,6 @@ create index idx_events_month    on events(month);
 
 alter table events enable row level security;
 
--- Todos los miembros del grupo pueden ver los eventos
 create policy "events: select members"
   on events for select
   using (
@@ -372,12 +366,13 @@ create policy "events: select members"
     )
   );
 
--- Solo el organizador del mes puede crear el evento
 create policy "events: insert organizer"
   on events for insert
   with check (auth.uid() = organizer_id);
 
--- Solo el organizador puede editar mientras no esté cerrado
+-- NOTA: RLS no impide que un UPDATE malicioso modifique organizer_id.
+-- La inmutabilidad de organizer_id debe validarse en el server action
+-- antes de ejecutar el UPDATE — no asumir que RLS lo cubre.
 create policy "events: update organizer"
   on events for update
   using (
@@ -408,19 +403,17 @@ create index idx_attendances_member_id on attendances(member_id);
 
 alter table attendances enable row level security;
 
--- Miembros del grupo pueden ver las confirmaciones de su evento
 create policy "attendances: select members"
   on attendances for select
   using (
     exists (
       select 1 from events
       join members on members.group_id = events.group_id
-      where events.id         = attendances.event_id
-        and members.user_id   = auth.uid()
+      where events.id       = attendances.event_id
+        and members.user_id = auth.uid()
     )
   );
 
--- Cada miembro gestiona solo su propia confirmación
 create policy "attendances: insert own"
   on attendances for insert
   with check (auth.uid() = member_id);
@@ -452,7 +445,7 @@ create table if not exists polls (
   closes_at   timestamptz not null,
   closed_at   timestamptz,
   created_at  timestamptz not null default now(),
-  unique (event_id)                                       -- un solo poll por evento
+  unique (event_id)
 );
 
 create index idx_polls_event_id on polls(event_id);
@@ -460,7 +453,6 @@ create index idx_polls_group_id on polls(group_id);
 
 alter table polls enable row level security;
 
--- Miembros del grupo pueden ver las votaciones
 create policy "polls: select members"
   on polls for select
   using (
@@ -471,7 +463,6 @@ create policy "polls: select members"
     )
   );
 
--- Solo el organizador (created_by) puede crear y editar
 create policy "polls: insert organizer"
   on polls for insert
   with check (auth.uid() = created_by);
@@ -497,7 +488,6 @@ create index idx_poll_options_poll_id on poll_options(poll_id);
 
 alter table poll_options enable row level security;
 
--- Miembros del grupo pueden ver las opciones (via poll → event → group)
 create policy "poll_options: select members"
   on poll_options for select
   using (
@@ -509,7 +499,6 @@ create policy "poll_options: select members"
     )
   );
 
--- Solo el organizador puede agregar opciones
 create policy "poll_options: insert organizer"
   on poll_options for insert
   with check (
@@ -543,7 +532,7 @@ create table if not exists poll_votes (
   user_id    uuid not null references profiles(id) on delete cascade,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  unique (poll_id, user_id)                               -- un voto por miembro
+  unique (poll_id, user_id)
 );
 
 create index idx_poll_votes_poll_id on poll_votes(poll_id);
@@ -551,7 +540,6 @@ create index idx_poll_votes_user_id on poll_votes(user_id);
 
 alter table poll_votes enable row level security;
 
--- Miembros del grupo pueden ver todos los votos (para ver porcentajes)
 create policy "poll_votes: select members"
   on poll_votes for select
   using (
@@ -563,7 +551,6 @@ create policy "poll_votes: select members"
     )
   );
 
--- Cada miembro gestiona solo su propio voto
 create policy "poll_votes: insert own"
   on poll_votes for insert
   with check (auth.uid() = user_id);
@@ -587,9 +574,9 @@ create table if not exists restaurant_history (
   id           uuid primary key default uuid_generate_v4(),
   event_id     uuid not null references events(id) on delete cascade,
   group_id     uuid not null references groups(id) on delete cascade,
-  name         text,                                      -- puede ser null (US-14 scenario: cierre sin restaurante)
+  name         text,                  -- nullable: cierre sin restaurante registrado (US-14)
   visited_at   date not null,
-  attendee_ids uuid[] not null default '{}',              -- snapshot de asistentes confirmados
+  attendee_ids uuid[] not null default '{}',   -- snapshot de confirmados al cierre
   created_by   uuid not null references profiles(id) on delete restrict,
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now(),
@@ -601,7 +588,6 @@ create index idx_restaurant_history_visited_at on restaurant_history(visited_at)
 
 alter table restaurant_history enable row level security;
 
--- Todos los miembros del grupo pueden consultar el historial
 create policy "restaurant_history: select members"
   on restaurant_history for select
   using (
@@ -612,18 +598,16 @@ create policy "restaurant_history: select members"
     )
   );
 
--- Solo el organizador del evento puede cargar el restaurante
 create policy "restaurant_history: insert organizer"
   on restaurant_history for insert
   with check (
     exists (
       select 1 from events
-      where events.id          = restaurant_history.event_id
+      where events.id           = restaurant_history.event_id
         and events.organizer_id = auth.uid()
     )
   );
 
--- El organizador puede actualizar el nombre si lo dejó vacío al cerrar
 create policy "restaurant_history: update organizer"
   on restaurant_history for update
   using (auth.uid() = created_by);
@@ -637,7 +621,7 @@ create policy "restaurant_history: update organizer"
 
 create table if not exists checklist_templates (
   id          uuid primary key default uuid_generate_v4(),
-  group_id    uuid references groups(id) on delete cascade, -- null = template global
+  group_id    uuid references groups(id) on delete cascade,  -- null = template global
   label       text not null,
   description text,
   order_index int  not null default 0,
@@ -649,7 +633,6 @@ create index idx_checklist_templates_group_id on checklist_templates(group_id);
 
 alter table checklist_templates enable row level security;
 
--- Miembros ven templates de su grupo + templates globales
 create policy "checklist_templates: select members or global"
   on checklist_templates for select
   using (
@@ -661,7 +644,6 @@ create policy "checklist_templates: select members or global"
     )
   );
 
--- Solo admins pueden crear, editar y eliminar templates de grupo
 create policy "checklist_templates: insert admin"
   on checklist_templates for insert
   with check (
@@ -689,6 +671,9 @@ create policy "checklist_templates: update admin"
 -- 13. checklist_items
 -- Tareas del checklist del organizador (US-20).
 -- Instanciadas a partir de templates al asignar el turno.
+-- Políticas separadas por operación (no usar FOR ALL — ver nota).
+-- NOTA: FOR ALL aplica USING como WITH CHECK en INSERT, lo cual es ambiguo
+-- en algunas versiones. Se usan políticas individuales para mayor claridad.
 -- -----------------------------------------------------------------------------
 
 create type checklist_status as enum ('pending', 'done');
@@ -709,13 +694,42 @@ create index idx_checklist_items_event_id on checklist_items(event_id);
 
 alter table checklist_items enable row level security;
 
--- Solo el organizador del evento puede ver y gestionar su checklist
-create policy "checklist_items: all organizer"
-  on checklist_items for all
+create policy "checklist_items: select organizer"
+  on checklist_items for select
   using (
     exists (
       select 1 from events
-      where events.id          = checklist_items.event_id
+      where events.id           = checklist_items.event_id
+        and events.organizer_id = auth.uid()
+    )
+  );
+
+create policy "checklist_items: insert organizer"
+  on checklist_items for insert
+  with check (
+    exists (
+      select 1 from events
+      where events.id           = checklist_items.event_id
+        and events.organizer_id = auth.uid()
+    )
+  );
+
+create policy "checklist_items: update organizer"
+  on checklist_items for update
+  using (
+    exists (
+      select 1 from events
+      where events.id           = checklist_items.event_id
+        and events.organizer_id = auth.uid()
+    )
+  );
+
+create policy "checklist_items: delete organizer"
+  on checklist_items for delete
+  using (
+    exists (
+      select 1 from events
+      where events.id           = checklist_items.event_id
         and events.organizer_id = auth.uid()
     )
   );
@@ -723,11 +737,12 @@ create policy "checklist_items: all organizer"
 
 -- =============================================================================
 -- REALTIME
--- Habilitar realtime para las tablas que requieren actualizaciones en vivo
--- (US-07: confirmaciones en tiempo real, US-18: porcentajes de votación)
+-- Habilitar realtime para las tablas que requieren actualizaciones en vivo.
+-- US-07: confirmaciones en tiempo real.
+-- US-18: porcentajes de votación en tiempo real.
+-- Ejecutar en Supabase → Database → Replication, o descomentar las líneas:
 -- =============================================================================
 
--- Ejecutar en el panel de Supabase → Database → Replication, o via SQL:
 -- alter publication supabase_realtime add table attendances;
 -- alter publication supabase_realtime add table poll_votes;
 -- alter publication supabase_realtime add table events;
@@ -738,12 +753,12 @@ create policy "checklist_items: all organizer"
 -- =============================================================================
 
 insert into checklist_templates (label, order_index, global) values
-  ('Crear el evento del mes',          1, true),
-  ('Abrir votación de restaurantes',   2, true),
-  ('Notificar al grupo',               3, true),
-  ('Revisar confirmaciones',           4, true),
-  ('Confirmar reserva en el restaurante', 5, true),
-  ('Cerrar el evento y cargar restaurante', 6, true);
+  ('Crear el evento del mes',               1, true),
+  ('Abrir votación de restaurantes',         2, true),
+  ('Notificar al grupo',                     3, true),
+  ('Revisar confirmaciones',                 4, true),
+  ('Confirmar reserva en el restaurante',    5, true),
+  ('Cerrar el evento y cargar restaurante',  6, true);
 
 
 -- =============================================================================

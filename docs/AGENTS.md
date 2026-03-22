@@ -90,7 +90,7 @@ monthly-dinner es una app web mobile-first para grupos de amigos que se reúnen 
 |---|---|---|
 | profiles | INSERT / SELECT / UPDATE | `auth.uid() = id` — solo el propio usuario |
 | groups | INSERT / SELECT | INSERT: `auth.uid()` queda como admin / SELECT: solo miembros del grupo |
-| members | INSERT / SELECT / UPDATE | INSERT: `id = auth.uid()` / SELECT: mismo grupo / UPDATE: propio perfil |
+| members | INSERT / SELECT / UPDATE | INSERT: `user_id = auth.uid()` / SELECT: mismo grupo / UPDATE: propio perfil |
 | invitation_links | INSERT / SELECT / UPDATE / DELETE | INSERT, UPDATE, DELETE: solo admin del grupo / SELECT: miembros del grupo |
 | events | INSERT / SELECT / UPDATE | INSERT y UPDATE: `organizer_id = auth.uid()` / SELECT: miembros del grupo |
 | attendances | ALL / SELECT | ALL: `member_id = auth.uid()` / SELECT: miembros del grupo via events |
@@ -233,7 +233,7 @@ monthly-dinner/
 
 ```ts
 // ✅ Siempre usar .select() con campos explícitos — nunca select(*) en producción
-const { data } = await supabase.from('events').select('id, date, place, organizer_id')
+const { data } = await supabase.from('events').select('id, event_date, place, organizer_id')
 
 // ✅ Tiempo real: usar supabase.channel() con filter por event_id o group_id
 supabase.channel('confirmations').on('postgres_changes', { filter: `event_id=eq.${id}` }, handler)

@@ -66,14 +66,16 @@ Al completar una US, moverla al bloque de la versión correspondiente con el for
 | ⬜ | Pendiente | No iniciada |
 | 🔄 | In Progress | En desarrollo en rama activa |
 | ✅ | Done | Mergeada a `main`, todos los CA Gherkin cubiertos |
-| 🚫 | Blocked | Bloqueada por dependencia no resuelta |
+| 🚫 | Blocked | Se intentó implementar fuera de orden — su dependencia directa no está `✅ Done` |
 
 ### Reglas para agentes de IA
 
+- Implementar siempre siguiendo el orden numérico de la tabla — no saltar US.
+- La próxima US a implementar es siempre la primera `⬜ Pendiente` de la tabla, en orden.
 - Una US es `✅ Done` **solo si todos sus escenarios Gherkin están cubiertos** — no solo el happy path.
 - Al iniciar una US, cambiar su estado a `🔄 In Progress` en este archivo.
 - Al completar una US, moverla al bloque de versión con fecha y archivos modificados.
-- Si una US depende de otra que está `⬜ Pendiente`, marcarla como `🚫 Blocked` y no implementarla.
+- Marcar una US como `🚫 Blocked` solo si se detecta que su dependencia directa no está `✅ Done` y no es posible continuar — no como estado preventivo.
 
 ---
 

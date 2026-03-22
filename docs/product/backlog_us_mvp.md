@@ -13,7 +13,7 @@ User Stories con Acceptance Criteria en formato Gherkin — ordenadas por priori
 
 ### US-00 — Crear grupo
 
-> *Como usuario registrado, quiero crear un grupo con nombre y lista de miembros inicial, para coordinar las cenas del jueves en un espacio propio.*
+> *Como usuario registrado, quiero crear un grupo con un nombre, para coordinar las cenas del jueves en un espacio propio.*
 
 | Prioridad | Esfuerzo | Descripción |
 |---|---|---|
