@@ -18,9 +18,10 @@ pero no sobre `schema.sql` ni los CA Gherkin del backlog.
 ## Auth
 
 - Supabase Google OAuth — sin email/password
+- El flujo OAuth usa PKCE provisto por Supabase SSR y el callback intercambia el `code` por una sesión persistida en cookies
 - Sesión validada en servidor con `getUser()` — nunca con `getSession()` del cliente
 - Token validado en cada Server Action antes de cualquier operación de escritura
-- Perfil creado automáticamente via trigger en `auth.users`
+- Perfil creado automáticamente via trigger `on_auth_user_created` en `auth.users`, nunca desde código de aplicación
 
 ---
 
