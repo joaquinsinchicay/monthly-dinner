@@ -19,7 +19,7 @@ type MembersTable = {
       };
     };
   };
-  insert(values: Database["public"]["Tables"]["members"]["Insert"]): Promise<{ error: SupabaseErrorLike }>;
+  insert(values: Database["public"]["Tables"]["members"]["Insert"]): Promise<{ data: { id: string } | null; error: SupabaseErrorLike }>;
 };
 
 type GroupsTable = {
@@ -36,6 +36,8 @@ export async function createGroup(formData: FormData): Promise<ActionResult> {
     data: { user },
     error: authError
   } = await supabase.auth.getUser();
+
+  console.error('CREATE_GROUP_DEBUG user:', user?.id, 'error:', authError?.message);
 
   if (authError || !user) {
     return { error: "No autenticado" };
@@ -75,16 +77,20 @@ export async function createGroup(formData: FormData): Promise<ActionResult> {
     .select("id")
     .single();
 
+  console.error("CREATE_GROUP_DEBUG group insert:", createdGroup, groupError?.message);
+
   if (groupError || !createdGroup) {
     console.error("groups.insert_group_error", groupError?.message ?? "missing group");
     return { error: "No se pudo crear el grupo. Intentalo de nuevo." };
   }
 
-  const { error: memberError } = await members.insert({
+  const { data: memberData, error: memberError } = await members.insert({
     group_id: createdGroup.id,
     user_id: user.id,
     role: "admin"
   });
+
+  console.error("CREATE_GROUP_DEBUG member insert:", memberData, memberError?.message);
 
   if (memberError) {
     console.error("groups.insert_member_error", memberError.message);
