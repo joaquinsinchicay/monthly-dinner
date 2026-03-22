@@ -13,3 +13,16 @@
 ## Hallazgo adicional durante E02
 
 - El proyecto no incluía todavía una referencia local `e02-panel-evento.jsx`, así que la implementación visual se adaptó al design system documentado en `AGENTS.md` y a los primitives existentes de la app.
+
+## Gap de onboarding detectado entre E01 y E02
+
+- **Descripción:** el backlog MVP original no incluía la creación de grupo, por lo que usuarios nuevos autenticados quedaban sin camino para habilitar el dashboard y las historias de eventos.
+- **Causa raíz:** se asumió que el grupo ya existía antes del primer login o que el usuario siempre entraría por invitación.
+- **Solución aplicada:** se agregó US-21 entre E01 y E02 con onboarding explícito, pantalla de decisión y RPC atómica para crear `groups` y `members` sin estados inconsistentes.
+
+## Divergencia entre schema real y schema versionado local
+
+- **Descripción:** después de nuevas migraciones en Supabase quedaron columnas renombradas o agregadas (`display_name`, `revoked`, `event_year`, `event_month`, `restaurant_name`, `status` en `polls`, etc.) que no estaban reflejadas en `types/database.ts` ni en el schema versionado local.
+- **Causa raíz:** el código avanzó sobre una versión previa del schema y no se resincronizó tras ejecutar migraciones manuales en Supabase.
+- **Solución aplicada:** se actualizaron tipos, queries y documentación para reflejar el schema real sin cambiar la lógica de negocio.
+
