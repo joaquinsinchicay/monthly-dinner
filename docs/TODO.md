@@ -6,3 +6,7 @@
 - Notificaciones push reales (FCM) - Fase 2 - impacto alto, esfuerzo alto.
 - Marcar notificaciones como leídas - Fase 2 - impacto medio, esfuerzo bajo.
 - Badge de notificaciones no leídas en el nav - Fase 2 - impacto medio, esfuerzo bajo.
+- Edición del nombre del grupo - Fase 2 - impacto bajo, esfuerzo bajo.
+- Soporte para múltiples grupos por usuario - Fase 3 - impacto alto, esfuerzo alto.
+- Eliminar grupo con confirmación - Fase 3 - impacto medio, esfuerzo medio.
+
