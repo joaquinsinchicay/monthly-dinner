@@ -5,6 +5,7 @@ create table public.profiles (
   email text not null unique,
   full_name text,
   avatar_url text,
+  display_name text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -20,6 +21,8 @@ create table public.members (
   id uuid primary key default gen_random_uuid(),
   group_id uuid not null references public.groups(id) on delete cascade,
   user_id uuid not null references public.profiles(id) on delete cascade,
+  full_name text,
+  avatar_url text,
   role text not null default 'member' check (role in ('member', 'admin')),
   joined_at timestamptz not null default now(),
   unique(group_id, user_id)
@@ -31,6 +34,7 @@ create table public.invitation_links (
   token text not null unique,
   created_by uuid not null references public.profiles(id) on delete cascade,
   expires_at timestamptz,
+  revoked boolean not null default false,
   created_at timestamptz not null default now()
 );
 
@@ -40,9 +44,12 @@ create table public.events (
   organizer_id uuid not null references public.profiles(id) on delete cascade,
   title text,
   event_date date not null,
+  event_year integer,
+  event_month integer,
   location text,
   description text,
   status text not null default 'draft' check (status in ('draft', 'published', 'closed')),
+  restaurant_name text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -64,11 +71,41 @@ begin
 end;
 $$ language plpgsql;
 
+create or replace function public.create_group_with_admin(group_name text)
+returns json
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  new_group_id uuid;
+  result json;
+begin
+  insert into public.groups (name, created_by)
+  values (group_name, auth.uid())
+  returning id into new_group_id;
+
+  insert into public.members (group_id, user_id, role)
+  values (new_group_id, auth.uid(), 'admin');
+
+  select json_build_object(
+    'group_id', new_group_id,
+    'name', group_name
+  ) into result;
+
+  return result;
+exception when others then
+  raise exception 'Error al crear el grupo: %', sqlerrm;
+end;
+$$;
+
 create table public.rotation (
   id uuid primary key default gen_random_uuid(),
   group_id uuid not null references public.groups(id) on delete cascade,
   user_id uuid not null references public.profiles(id) on delete cascade,
-  month date not null,
+  order_index integer not null,
+  cycle integer not null,
+  month date,
   is_current boolean not null default false,
   unique(group_id, month)
 );
@@ -88,7 +125,7 @@ create table public.polls (
   event_id uuid not null references public.events(id) on delete cascade,
   created_by uuid not null references public.profiles(id) on delete cascade,
   closes_at timestamptz not null,
-  is_closed boolean not null default false,
+  status text not null default 'open',
   created_at timestamptz not null default now()
 );
 
@@ -96,7 +133,7 @@ create table public.poll_options (
   id uuid primary key default gen_random_uuid(),
   poll_id uuid not null references public.polls(id) on delete cascade,
   label text not null,
-  order_index integer not null default 0
+  created_at timestamptz not null default now()
 );
 
 create table public.poll_votes (
@@ -115,7 +152,7 @@ create table public.restaurant_history (
   restaurant_name text not null,
   visited_at date not null,
   attendees_count integer,
-  created_by uuid not null references public.profiles(id) on delete cascade,
+  created_by uuid references public.profiles(id) on delete cascade,
   created_at timestamptz not null default now()
 );
 
@@ -176,10 +213,10 @@ create policy "profiles_insert_own" on public.profiles for insert with check (au
 create policy "profiles_select_own" on public.profiles for select using (auth.uid() = id);
 create policy "profiles_update_own" on public.profiles for update using (auth.uid() = id) with check (auth.uid() = id);
 
-create policy "groups_select_member_groups" on public.groups for select using (
+create policy "groups_insert_authenticated" on public.groups for insert with check (auth.uid() = created_by);
+create policy "groups_select_members" on public.groups for select using (
   exists (select 1 from public.members m where m.group_id = groups.id and m.user_id = auth.uid())
 );
-create policy "groups_insert_creator" on public.groups for insert with check (auth.uid() = created_by);
 create policy "groups_update_creator" on public.groups for update using (auth.uid() = created_by) with check (auth.uid() = created_by);
 
 create policy "members_insert_self" on public.members for insert with check (auth.uid() = user_id);
@@ -301,7 +338,6 @@ create policy "checklist_items_manage_organizer" on public.checklist_items for a
 ) with check (
   exists (select 1 from public.events e where e.id = checklist_items.event_id and e.organizer_id = auth.uid())
 );
-
 
 drop trigger if exists update_profiles_updated_at on public.profiles;
 create trigger update_profiles_updated_at before update on public.profiles for each row execute function public.update_updated_at_column();
