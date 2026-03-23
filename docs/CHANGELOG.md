@@ -13,7 +13,7 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 19 | 1 | 0 | 18 |
+| 19 | 2 | 0 | 17 |
 
 ---
 
@@ -23,10 +23,18 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 - **US-00** Crear grupo — `app/(auth)/crear-grupo/page.tsx`, `components/group/CreateGroupForm.tsx`, `lib/actions/groups.ts`
 
   Todos los escenarios Gherkin cubiertos:
-  - ✅ Creación exitosa → INSERT a `groups`, trigger asigna admin en `members`, redirect a `/dashboard`
+  - ✅ Creación exitosa → INSERT a `groups`, trigger asigna admin en `members`, redirect a `/grupo/[id]`
   - ✅ Nombre obligatorio → validación server-side, error inline, formulario no se limpia
   - ✅ Nombre duplicado mismo usuario → query `ilike` + mensaje con sugerencia
   - ✅ Visibilidad → RLS `groups: select members` garantiza aislamiento por grupo
+
+- **US-00b** Generar link de invitación — `app/(auth)/grupo/[id]/page.tsx`, `components/group/InvitationLinkPanel.tsx`, `lib/actions/invitation-links.ts`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Link generado automáticamente → trigger DB `on_group_created_invitation` + redirect a `/grupo/[id]` post-creación
+  - ✅ Link copiado al portapapeles → `navigator.clipboard` + confirmación visual "¡Copiado!" por 2s
+  - ✅ Link reutilizable con expiración → `getInvitationLinkStatus()` detecta expirado, admin puede generar nuevo
+  - ✅ Revocar link activo → `UPDATE revoked_at`, UI refleja estado sin link
 
 ---
 
@@ -37,8 +45,8 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 | # | ID | User Story | Épica | Esfuerzo | Estado |
 |---|---|---|---|---|---|
 | 1 | US-00 | Crear grupo | E00 Creación de grupo | M (3-4d) | ✅ Done |
-| 2 | US-00b | Generar link de invitación al crear el grupo | E00 Creación de grupo | S (1-2d) | ⬜ Pendiente |
-| 2 | US-00b | Generar link de invitación al crear el grupo | E00 Creación de grupo | S (1-2d) | ⬜ Pendiente |
+| 2 | US-00b | Generar link de invitación al crear el grupo | E00 Creación de grupo | S (1-2d) | ✅ Done |
+| 2 | US-00b | Generar link de invitación al crear el grupo | E00 Creación de grupo | S (1-2d) | ✅ Done |
 | 3 | US-01 | Registro con Google | E01 Acceso & Autenticación | S (1-2d) | ⬜ Pendiente |
 | 4 | US-02 | Login con Google | E01 Acceso & Autenticación | S (1-2d) | ⬜ Pendiente |
 | 5 | US-04 | Join por invitación | E01 Acceso & Autenticación | M (3-4d) | ⬜ Pendiente |
