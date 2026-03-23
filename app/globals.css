@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600&display=swap');
+
+:root {
+  --surface: #fcf9f8;
+  --surface-low: #f6f3f2;
+  --surface-lowest: #ffffff;
+  --surface-high: #ede9e8;
+  --primary: #004ac6;
+  --primary-container: #2563eb;
+  --on-surface: #1c1b1b;
+  --secondary: #585f6c;
+  --tertiary: #006242;
+  --tertiary-fixed: #6ffbbe;
+  --secondary-fixed: #dce2f3;
+  --error: #ba1a1a;
+  --error-container: #ffdad6;
+  --outline-variant: #c3c6d7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--surface);
+  color: var(--on-surface);
+  font-family: 'DM Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
