@@ -8,14 +8,21 @@ export async function GET(request: NextRequest) {
 
   // Scenario: Cancelación del flujo OAuth — Google devuelve error=access_denied
   if (error || !code) {
-    return NextResponse.redirect(`${origin}/auth/login`)
+    return NextResponse.redirect(`${origin}/`)
   }
 
   const supabase = createClient()
   const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
 
   if (exchangeError) {
-    return NextResponse.redirect(`${origin}/auth/login`)
+    return NextResponse.redirect(`${origin}/`)
+  }
+
+  // Soportar `next` para flujos con token de invitación (US-04)
+  // Ejemplo: /auth/callback?code=xxx&next=/join/TOKEN
+  const next = searchParams.get('next')
+  if (next && next.startsWith('/')) {
+    return NextResponse.redirect(`${origin}${next}`)
   }
 
   // Scenario: Registro exitoso / Login exitoso → redirigir al dashboard

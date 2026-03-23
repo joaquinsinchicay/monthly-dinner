@@ -13,7 +13,7 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 19 | 3 | 0 | 16 |
+| 19 | 4 | 0 | 15 |
 
 ---
 
@@ -27,6 +27,16 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
   - ✅ Nombre obligatorio → validación server-side, error inline, formulario no se limpia
   - ✅ Nombre duplicado mismo usuario → query `ilike` + mensaje con sugerencia
   - ✅ Visibilidad → RLS `groups: select members` garantiza aislamiento por grupo
+
+- **US-04** Join por invitación — `app/join/[token]/page.tsx`, `components/join/JoinGroupView.tsx`, `lib/actions/join.ts`, `supabase/migrations/20260323_get_invitation_link_by_token.sql`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Join con cuenta nueva → OAuth con `next=/join/TOKEN` → callback preserva token → `joinGroup()` → INSERT members
+  - ✅ Join con cuenta existente → `JoinGroupView` con botón "Unirme" → `joinGroup()` → INSERT members
+  - ✅ Link expirado/inválido → UI de error con mensaje claro e instrucción para pedir nuevo link
+  - ✅ Ya miembro → Server Component detecta membership y redirige a `/grupo/[id]` sin duplicar
+
+  **Nota:** Requiere ejecutar `supabase/migrations/20260323_get_invitation_link_by_token.sql` en Supabase antes de deployar.
 
 - **US-01** Registro con Google — `app/auth/login/page.tsx`, `components/auth/GoogleSignInButton.tsx`, `lib/actions/auth.ts`, `app/auth/callback/route.ts`
 
