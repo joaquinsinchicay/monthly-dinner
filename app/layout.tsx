@@ -1,9 +1,19 @@
 import type { Metadata } from 'next'
+import { DM_Sans, DM_Serif_Display } from 'next/font/google'
 import './globals.css'
-import { Geist } from "next/font/google";
-import { cn } from "@/lib/utils";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-sans',
+})
+
+const dmSerifDisplay = DM_Serif_Display({
+  subsets: ['latin'],
+  weight: '400',
+  style: ['normal', 'italic'],
+  variable: '--font-serif',
+})
 
 export const metadata: Metadata = {
   title: 'monthly-dinner',
@@ -16,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es" className={cn("font-sans", geist.variable)}>
+    <html lang="es" className={`${dmSans.variable} ${dmSerifDisplay.variable}`}>
       <body>{children}</body>
     </html>
   )
