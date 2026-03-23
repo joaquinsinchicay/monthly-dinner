@@ -13,7 +13,7 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 19 | 2 | 0 | 17 |
+| 19 | 3 | 0 | 16 |
 
 ---
 
@@ -27,6 +27,13 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
   - ✅ Nombre obligatorio → validación server-side, error inline, formulario no se limpia
   - ✅ Nombre duplicado mismo usuario → query `ilike` + mensaje con sugerencia
   - ✅ Visibilidad → RLS `groups: select members` garantiza aislamiento por grupo
+
+- **US-01** Registro con Google — `app/auth/login/page.tsx`, `components/auth/GoogleSignInButton.tsx`, `lib/actions/auth.ts`, `app/auth/callback/route.ts`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Registro exitoso → `signInWithOAuth` → trigger `handle_new_user()` crea perfil → `/auth/callback` → `/dashboard`
+  - ✅ Email ya registrado → Supabase maneja nativamente: misma cuenta inicia sesión sin duplicar
+  - ✅ Cancelación OAuth → `/auth/callback` detecta `error`/ausencia de `code` → redirect a `/auth/login` sin error crítico
 
 - **US-00b** Generar link de invitación — `app/(auth)/grupo/[id]/page.tsx`, `components/group/InvitationLinkPanel.tsx`, `lib/actions/invitation-links.ts`
 
@@ -46,8 +53,7 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 |---|---|---|---|---|---|
 | 1 | US-00 | Crear grupo | E00 Creación de grupo | M (3-4d) | ✅ Done |
 | 2 | US-00b | Generar link de invitación al crear el grupo | E00 Creación de grupo | S (1-2d) | ✅ Done |
-| 2 | US-00b | Generar link de invitación al crear el grupo | E00 Creación de grupo | S (1-2d) | ✅ Done |
-| 3 | US-01 | Registro con Google | E01 Acceso & Autenticación | S (1-2d) | ⬜ Pendiente |
+| 3 | US-01 | Registro con Google | E01 Acceso & Autenticación | S (1-2d) | ✅ Done |
 | 4 | US-02 | Login con Google | E01 Acceso & Autenticación | S (1-2d) | ⬜ Pendiente |
 | 5 | US-04 | Join por invitación | E01 Acceso & Autenticación | M (3-4d) | ⬜ Pendiente |
 | 6 | US-03 | Cerrar sesión | E01 Acceso & Autenticación | XS (<1d) | ⬜ Pendiente |
