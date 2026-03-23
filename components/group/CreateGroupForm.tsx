@@ -25,7 +25,8 @@ export default function CreateGroupForm() {
         return
       }
 
-      router.push('/dashboard')
+      // Redirigir al panel del grupo para mostrar el link de invitación (US-00b)
+      router.push(`/grupo/${result.data.id}`)
     })
   }
 
