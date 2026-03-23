@@ -13,7 +13,7 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 19 | 4 | 0 | 15 |
+| 19 | 5 | 0 | 14 |
 
 ---
 
@@ -53,6 +53,13 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
   - ✅ Link reutilizable con expiración → `getInvitationLinkStatus()` detecta expirado, admin puede generar nuevo
   - ✅ Revocar link activo → `UPDATE revoked_at`, UI refleja estado sin link
 
+- **US-03** Cerrar sesión — `components/auth/SignOutButton.tsx`, `lib/actions/auth.ts`, `app/(auth)/grupo/[id]/page.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Cierre de sesión exitoso → `signOut()` invalida sesión en Supabase → redirect a `/`
+  - ✅ Confirmación antes de cerrar → bottom sheet glassmorphism con "Sí, cerrar sesión" / "Cancelar"
+  - ✅ Datos locales limpios → `supabase.auth.signOut()` limpia cookies/tokens; próximo usuario no ve datos anteriores
+
 ---
 
 ## [Unreleased] — En desarrollo
@@ -66,7 +73,7 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 | 3 | US-01 | Registro con Google | E01 Acceso & Autenticación | S (1-2d) | ✅ Done |
 | 4 | US-02 | Login con Google | E01 Acceso & Autenticación | S (1-2d) | ⬜ Pendiente |
 | 5 | US-04 | Join por invitación | E01 Acceso & Autenticación | M (3-4d) | ⬜ Pendiente |
-| 6 | US-03 | Cerrar sesión | E01 Acceso & Autenticación | XS (<1d) | ⬜ Pendiente |
+| 6 | US-03 | Cerrar sesión | E01 Acceso & Autenticación | XS (<1d) | ✅ Done |
 | 7 | US-11 | Ver organizador del mes | E03 Turno rotativo | S (1-2d) | ⬜ Pendiente |
 | 8 | US-05 | Crear evento del mes | E02 Panel de evento | S (1-2d) | ⬜ Pendiente |
 | 9 | US-06 | Notificar al grupo | E02 Panel de evento | M (3-4d) | ⬜ Pendiente |
