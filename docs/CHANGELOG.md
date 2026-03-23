@@ -13,7 +13,20 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 19 | 0 | 0 | 19 |
+| 19 | 1 | 0 | 18 |
+
+---
+
+## [0.1.0] — 2026-03-23
+
+### Added
+- **US-00** Crear grupo — `app/(auth)/crear-grupo/page.tsx`, `components/group/CreateGroupForm.tsx`, `lib/actions/groups.ts`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Creación exitosa → INSERT a `groups`, trigger asigna admin en `members`, redirect a `/dashboard`
+  - ✅ Nombre obligatorio → validación server-side, error inline, formulario no se limpia
+  - ✅ Nombre duplicado mismo usuario → query `ilike` + mensaje con sugerencia
+  - ✅ Visibilidad → RLS `groups: select members` garantiza aislamiento por grupo
 
 ---
 
@@ -21,11 +34,10 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 ### Pendiente de implementación
 
-Todas las US están pendientes. Orden de implementación según dependencia técnica:
-
 | # | ID | User Story | Épica | Esfuerzo | Estado |
 |---|---|---|---|---|---|
-| 1 | US-00 | Crear grupo | E00 Creación de grupo | M (3-4d) | ⬜ Pendiente |
+| 1 | US-00 | Crear grupo | E00 Creación de grupo | M (3-4d) | ✅ Done |
+| 2 | US-00b | Generar link de invitación al crear el grupo | E00 Creación de grupo | S (1-2d) | ⬜ Pendiente |
 | 2 | US-00b | Generar link de invitación al crear el grupo | E00 Creación de grupo | S (1-2d) | ⬜ Pendiente |
 | 3 | US-01 | Registro con Google | E01 Acceso & Autenticación | S (1-2d) | ⬜ Pendiente |
 | 4 | US-02 | Login con Google | E01 Acceso & Autenticación | S (1-2d) | ⬜ Pendiente |
