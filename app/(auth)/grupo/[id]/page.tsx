@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import { headers } from 'next/headers'
 import InvitationLinkPanel from '@/components/group/InvitationLinkPanel'
+import SignOutButton from '@/components/auth/SignOutButton'
 import { getInvitationLinkStatus } from '@/types'
 import type { MemberRole } from '@/types'
 
@@ -79,6 +80,11 @@ export default async function GrupoPage({ params }: Props) {
           />
         </div>
 
+      </div>
+
+      {/* Scenario: Cerrar sesión desde cualquier pantalla (US-03) */}
+      <div className="mx-auto mt-8 w-full max-w-sm text-center">
+        <SignOutButton />
       </div>
     </main>
   )
