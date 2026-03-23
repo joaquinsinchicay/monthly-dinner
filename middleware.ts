@@ -29,18 +29,21 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const isAuthRoute = request.nextUrl.pathname.startsWith('/auth')
-  const isPublicRoute =
-    request.nextUrl.pathname === '/' ||
-    request.nextUrl.pathname.startsWith('/join')
+  const { pathname } = request.nextUrl
 
-  if (!user && !isAuthRoute && !isPublicRoute) {
+  const isPublicRoute =
+    pathname === '/' ||
+    pathname.startsWith('/auth') ||
+    pathname.startsWith('/join')
+
+  if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone()
-    url.pathname = '/auth/login'
+    url.pathname = '/'
     return NextResponse.redirect(url)
   }
 
-  if (user && isAuthRoute) {
+  // Usuario autenticado en la raíz o en /auth/login → dashboard
+  if (user && (pathname === '/' || pathname === '/auth/login')) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
