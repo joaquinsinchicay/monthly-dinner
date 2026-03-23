@@ -1,7 +1,6 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { getInvitationLinkStatus } from '@/types'
 import type { ActionResult } from '@/types'
 
 interface InvitationLinkRow {
@@ -10,6 +9,14 @@ interface InvitationLinkRow {
   group_name: string
   expires_at: string
   revoked_at: string | null
+}
+
+type LinkStatus = 'active' | 'expired' | 'revoked'
+
+function getLinkStatus(link: InvitationLinkRow): LinkStatus {
+  if (link.revoked_at) return 'revoked'
+  if (new Date(link.expires_at) <= new Date()) return 'expired'
+  return 'active'
 }
 
 interface JoinResult {
@@ -40,7 +47,7 @@ export async function joinGroup(token: string): Promise<ActionResult<JoinResult>
   }
 
   const link = rows[0] as InvitationLinkRow
-  const status = getInvitationLinkStatus(link)
+  const status = getLinkStatus(link)
 
   // Scenario: Link expirado o inválido — token expirado o revocado
   if (status !== 'active') {
@@ -100,7 +107,7 @@ export async function getGroupByToken(
   }
 
   const link = rows[0] as InvitationLinkRow
-  const status = getInvitationLinkStatus(link)
+  const status = getLinkStatus(link)
 
   if (status !== 'active') {
     return { success: true, data: null }
