@@ -8,7 +8,8 @@ import type { ActionResult } from '@/types'
 // Inicia el flujo OAuth con Google.
 // US-01 (registro) y US-02 (login) usan el mismo endpoint de Supabase —
 // si el email ya existe, Supabase inicia sesión en la cuenta existente sin duplicar.
-export async function signInWithGoogle(): Promise<ActionResult<void>> {
+// `next` se usa en US-04 para preservar el token de invitación a través del flujo OAuth.
+export async function signInWithGoogle(next?: string): Promise<ActionResult<void>> {
   const supabase = createClient()
 
   const headersList = headers()
@@ -16,10 +17,14 @@ export async function signInWithGoogle(): Promise<ActionResult<void>> {
   const protocol = host.includes('localhost') ? 'http' : 'https'
   const baseUrl = `${protocol}://${host}`
 
+  const callbackUrl = next
+    ? `${baseUrl}/auth/callback?next=${encodeURIComponent(next)}`
+    : `${baseUrl}/auth/callback`
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${baseUrl}/auth/callback`,
+      redirectTo: callbackUrl,
       queryParams: {
         access_type: 'offline',
         prompt: 'consent',
