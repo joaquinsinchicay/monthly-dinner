@@ -59,6 +59,81 @@ export async function upsertAttendance(
   return { success: true, data: undefined }
 }
 
+export interface AttendanceMember {
+  id: string
+  name: string
+}
+
+export interface AttendanceDetails {
+  va: AttendanceMember[]
+  no_va: AttendanceMember[]
+  tal_vez: AttendanceMember[]
+  sin_responder: AttendanceMember[]
+  total_members: number
+}
+
+// Scenario: Resumen completo visible — names por estado + sin_responder.
+// Scenario: Todos confirmaron — sin_responder.length === 0.
+// Requiere política RLS "profiles: select group members" activa en Supabase.
+export async function getAttendanceDetails(
+  eventId: string,
+  groupId: string
+): Promise<ActionResult<AttendanceDetails>> {
+  const supabase = createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return { success: false, error: 'No autenticado' }
+
+  // Confirmaciones del evento con nombre del miembro
+  const { data: attendances, error: aError } = await supabase
+    .from('attendances')
+    .select('member_id, status, profiles(full_name)')
+    .eq('event_id', eventId)
+
+  if (aError) return { success: false, error: 'No se pudo obtener las confirmaciones.' }
+
+  // Todos los miembros del grupo (para calcular sin_responder)
+  const { data: members, error: mError } = await supabase
+    .from('members')
+    .select('user_id, profiles(full_name)')
+    .eq('group_id', groupId)
+
+  if (mError) return { success: false, error: 'No se pudo obtener los miembros del grupo.' }
+
+  function toMember(
+    userId: string,
+    profile: unknown
+  ): AttendanceMember {
+    const p = profile as { full_name: string | null } | null
+    return { id: userId, name: p?.full_name ?? 'Miembro' }
+  }
+
+  const rows = attendances ?? []
+  const confirmedIds = new Set(rows.map((r) => r.member_id))
+
+  return {
+    success: true,
+    data: {
+      va: rows
+        .filter((r) => r.status === 'va')
+        .map((r) => toMember(r.member_id, r.profiles)),
+      no_va: rows
+        .filter((r) => r.status === 'no_va')
+        .map((r) => toMember(r.member_id, r.profiles)),
+      tal_vez: rows
+        .filter((r) => r.status === 'tal_vez')
+        .map((r) => toMember(r.member_id, r.profiles)),
+      sin_responder: (members ?? [])
+        .filter((m) => !confirmedIds.has(m.user_id))
+        .map((m) => toMember(m.user_id, m.profiles)),
+      total_members: (members ?? []).length,
+    },
+  }
+}
+
 // Retorna la confirmación del usuario autenticado para un evento, o null si no confirmó.
 // Scenario: Notificación recibida con acción directa — detectar si el miembro ya confirmó.
 // Scenario: Recordatorio por falta de respuesta — la ausencia de fila determina el reminder.
