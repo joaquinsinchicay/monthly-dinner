@@ -13,7 +13,7 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 19 | 5 | 0 | 14 |
+| 19 | 6 | 0 | 13 |
 
 ---
 
@@ -53,6 +53,13 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
   - ✅ Link reutilizable con expiración → `getInvitationLinkStatus()` detecta expirado, admin puede generar nuevo
   - ✅ Revocar link activo → `UPDATE revoked_at`, UI refleja estado sin link
 
+- **US-11** Ver organizador del mes — `lib/actions/rotation.ts`, `components/group/OrganizerPanel.tsx`, `app/(auth)/grupo/[id]/page.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Organizador visible en el panel → nombre del organizador del mes actual destacado en la card
+  - ✅ El organizador soy yo → indicación "Te toca organizar" con badge + próximo paso hacia el evento
+  - ✅ Sin organizador asignado → mensaje "El turno de este mes aún no fue asignado"
+
 - **US-03** Cerrar sesión — `components/auth/SignOutButton.tsx`, `lib/actions/auth.ts`, `app/(auth)/grupo/[id]/page.tsx`
 
   Todos los escenarios Gherkin cubiertos:
@@ -86,7 +93,7 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 | 4 | US-02 | Login con Google | E01 Acceso & Autenticación | S (1-2d) | ⬜ Pendiente |
 | 5 | US-04 | Join por invitación | E01 Acceso & Autenticación | M (3-4d) | ⬜ Pendiente |
 | 6 | US-03 | Cerrar sesión | E01 Acceso & Autenticación | XS (<1d) | ✅ Done |
-| 7 | US-11 | Ver organizador del mes | E03 Turno rotativo | S (1-2d) | ⬜ Pendiente |
+| 7 | US-11 | Ver organizador del mes | E03 Turno rotativo | S (1-2d) | ✅ Done |
 | 8 | US-05 | Crear evento del mes | E02 Panel de evento | S (1-2d) | ⬜ Pendiente |
 | 9 | US-06 | Notificar al grupo | E02 Panel de evento | M (3-4d) | ⬜ Pendiente |
 | 10 | US-07 | Ver estado del evento en tiempo real | E02 Panel de evento | S (1-2d) | ⬜ Pendiente |

@@ -2,7 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import { headers } from 'next/headers'
 import InvitationLinkPanel from '@/components/group/InvitationLinkPanel'
+import OrganizerPanel from '@/components/group/OrganizerPanel'
 import SignOutButton from '@/components/auth/SignOutButton'
+import { getCurrentOrganizer } from '@/lib/actions/rotation'
 import { getInvitationLinkStatus } from '@/types'
 import type { MemberRole } from '@/types'
 
@@ -47,6 +49,9 @@ export default async function GrupoPage({ params }: Props) {
   const activeLink =
     (links ?? []).find((l) => getInvitationLinkStatus(l) === 'active') ?? null
 
+  // Organizador del mes actual (US-11)
+  const { data: organizer } = await getCurrentOrganizer(params.id)
+
   // Base URL para construir el link completo
   const headersList = headers()
   const host = headersList.get('host') ?? 'localhost:3000'
@@ -60,7 +65,7 @@ export default async function GrupoPage({ params }: Props) {
         {/* Header editorial */}
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-            Grupo creado
+            Tu grupo
           </p>
           <h1
             className="mt-1 font-serif text-[28px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
@@ -69,6 +74,9 @@ export default async function GrupoPage({ params }: Props) {
             {group.name}
           </h1>
         </div>
+
+        {/* US-11: Organizador del mes */}
+        <OrganizerPanel organizer={organizer ?? null} currentUserId={user.id} />
 
         {/* Scenario: Link generado automáticamente al crear el grupo */}
         <div className="rounded-2xl bg-white p-6 shadow-[0px_10px_30px_-5px_rgba(28,27,27,0.07)]">
