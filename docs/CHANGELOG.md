@@ -13,7 +13,7 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 19 | 7 | 0 | 12 |
+| 19 | 8 | 0 | 11 |
 
 ---
 
@@ -52,6 +52,13 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
   - ✅ Link copiado al portapapeles → `navigator.clipboard` + confirmación visual "¡Copiado!" por 2s
   - ✅ Link reutilizable con expiración → `getInvitationLinkStatus()` detecta expirado, admin puede generar nuevo
   - ✅ Revocar link activo → `UPDATE revoked_at`, UI refleja estado sin link
+
+- **US-06** Notificar al grupo — `lib/actions/events.ts`, `components/group/NotifyButton.tsx`, `components/group/EventForm.tsx`, `components/group/EventPanel.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Notificación enviada al publicar → `publishEvent` sets `status=published` + `notified_at=now()`, botón en EventPanel cuando `status=pending`
+  - ✅ Miembro sin notificaciones activas → el evento aparece en el panel al abrir la app (RLS members, in-app only per technical-decisions.md)
+  - ✅ Re-notificación por cambio de datos → checkbox "Notificar al grupo sobre los cambios" en EventForm para eventos publicados, `updateEvent` setea `notified_at` si `notify=true`
 
 - **US-05** Crear evento del mes — `lib/actions/events.ts`, `components/group/EventForm.tsx`, `components/group/EventPanel.tsx`, `app/(auth)/grupo/[id]/page.tsx`
 
@@ -103,7 +110,7 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 | 6 | US-03 | Cerrar sesión | E01 Acceso & Autenticación | XS (<1d) | ✅ Done |
 | 7 | US-11 | Ver organizador del mes | E03 Turno rotativo | S (1-2d) | ✅ Done |
 | 8 | US-05 | Crear evento del mes | E02 Panel de evento | S (1-2d) | ✅ Done |
-| 9 | US-06 | Notificar al grupo | E02 Panel de evento | M (3-4d) | ⬜ Pendiente |
+| 9 | US-06 | Notificar al grupo | E02 Panel de evento | M (3-4d) | ✅ Done |
 | 10 | US-07 | Ver estado del evento en tiempo real | E02 Panel de evento | S (1-2d) | ⬜ Pendiente |
 | 11 | US-08 | Recibir notificación de convocatoria | E04 Confirmación | M (3-4d) | ⬜ Pendiente |
 | 12 | US-09 | Confirmar asistencia | E04 Confirmación | S (1-2d) | ⬜ Pendiente |
