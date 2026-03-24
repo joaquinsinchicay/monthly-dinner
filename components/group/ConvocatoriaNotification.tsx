@@ -10,6 +10,7 @@
 // al abrir la app. El routing de /dashboard redirige a /grupo/[id] automáticamente.
 
 import type { Event } from '@/types'
+import ConfirmAttendanceButtons from '@/components/group/ConfirmAttendanceButtons'
 
 interface Props {
   event: Event
@@ -89,18 +90,13 @@ export default function ConvocatoriaNotification({ event }: Props) {
         )}
       </div>
 
-      {/* Scenario: CTA — confirmar asistencia directamente desde la notificación.
-          La acción se implementa en US-09 (ConfirmAttendanceButtons). */}
-      <div
-        id="confirmacion"
-        className="mt-5 rounded-xl bg-[#f6f3f2] px-4 py-3 text-center"
-      >
-        <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-          ¿Vas a la cena?
-        </p>
-        <p className="mt-1 text-xs text-[#585f6c]">
-          La confirmación de asistencia estará disponible en breve.
-        </p>
+      {/* Scenario: CTA — confirmar asistencia directamente desde la notificación (US-09) */}
+      <div id="confirmacion">
+        <ConfirmAttendanceButtons
+          eventId={event.id}
+          currentStatus={null}
+          eventClosed={false}
+        />
       </div>
 
     </div>

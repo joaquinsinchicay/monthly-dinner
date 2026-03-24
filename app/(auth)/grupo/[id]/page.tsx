@@ -112,13 +112,14 @@ export default async function GrupoPage({ params }: Props) {
           <ConvocatoriaNotification event={currentEvent} groupId={params.id} />
         )}
 
-        {/* US-05 / US-07: Evento del mes + confirmaciones en tiempo real */}
+        {/* US-05 / US-07 / US-09: Evento del mes + confirmaciones en tiempo real + Tu respuesta */}
         <EventPanel
           groupId={params.id}
           event={currentEvent ?? null}
           currentUserId={user.id}
           isOrganizer={isOrganizer}
           attendanceCounts={attendanceCounts}
+          userAttendance={userAttendance}
         />
 
         {/* Scenario: Link generado automáticamente al crear el grupo */}
