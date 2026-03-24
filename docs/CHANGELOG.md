@@ -13,7 +13,20 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 19 | 10 | 0 | 9 |
+| 19 | 11 | 0 | 8 |
+
+---
+
+## [0.1.2] — 2026-03-24
+
+### Added
+- **US-09** Confirmar asistencia — `lib/actions/attendances.ts`, `components/group/ConfirmAttendanceButtons.tsx`, `components/group/ConvocatoriaNotification.tsx`, `components/group/EventPanel.tsx`, `app/(auth)/grupo/[id]/page.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Confirmación exitosa → `ConfirmAttendanceButtons` en `ConvocatoriaNotification` (primera vez sin fila previa) → `upsertAttendance` INSERT, `router.refresh()` actualiza la página
+  - ✅ Cambio de estado → sección "Tu respuesta" en `EventPanel` con `ConfirmAttendanceButtons` cuando `userAttendance` existe → UPSERT actualiza la fila existente; `AttendanceSummary` refleja el cambio vía realtime
+  - ✅ Estado "Tal vez" → mismo flujo con `status='tal_vez'`, badge azul para el estado seleccionado
+  - ✅ Confirmación después del evento → `upsertAttendance` rechaza si `status=closed`; UI muestra `ReadOnlyBadge` sin botones
 
 ---
 
@@ -140,7 +153,7 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 | 9 | US-06 | Notificar al grupo | E02 Panel de evento | M (3-4d) | ✅ Done |
 | 10 | US-07 | Ver estado del evento en tiempo real | E02 Panel de evento | S (1-2d) | ✅ Done |
 | 11 | US-08 | Recibir notificación de convocatoria | E04 Confirmación | M (3-4d) | ✅ Done |
-| 12 | US-09 | Confirmar asistencia | E04 Confirmación | S (1-2d) | ⬜ Pendiente |
+| 12 | US-09 | Confirmar asistencia | E04 Confirmación | S (1-2d) | ✅ Done |
 | 13 | US-10 | Ver resumen de confirmaciones | E04 Confirmación | S (1-2d) | ⬜ Pendiente |
 | 14 | US-17 | Abrir votación de restaurantes | E06 Votación | M (3-4d) | ⬜ Pendiente |
 | 15 | US-18 | Votar por un restaurante | E06 Votación | S (1-2d) | ⬜ Pendiente |
