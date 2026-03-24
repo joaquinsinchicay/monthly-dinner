@@ -1,4 +1,5 @@
 import EventForm from '@/components/group/EventForm'
+import NotifyButton from '@/components/group/NotifyButton'
 import type { Event } from '@/types'
 
 interface Props {
@@ -67,8 +68,10 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer 
     )
   }
 
-  // Evento existe — mostrar datos + edición para el organizador
+  // Evento existe — mostrar datos + acciones para el organizador
   const canEdit = isOrganizer && event!.organizer_id === currentUserId && event!.status !== 'closed'
+  // Scenario: Notificación enviada al publicar — botón visible cuando status = pending
+  const canNotify = isOrganizer && event!.organizer_id === currentUserId && event!.status === 'pending'
 
   return (
     <div className="rounded-2xl bg-white p-6 shadow-[0px_10px_30px_-5px_rgba(28,27,27,0.07)]">
@@ -101,6 +104,9 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer 
       {event!.description && (
         <p className="mt-1 text-sm text-[#585f6c]">{event!.description}</p>
       )}
+
+      {/* Scenario: Notificación enviada al publicar */}
+      {canNotify && <NotifyButton eventId={event!.id} />}
 
       {/* Scenario: Edición posterior — solo para el organizador, evento no cerrado */}
       {canEdit && (

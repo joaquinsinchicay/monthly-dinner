@@ -90,6 +90,21 @@ export default function EventForm({ groupId, existing }: Props) {
         />
       </div>
 
+      {/* Scenario: Re-notificación por cambio de datos — solo si el evento ya está publicado */}
+      {isEdit && existing?.status === 'published' && (
+        <label className="flex items-start gap-3 rounded-xl bg-[#f0ede9] px-4 py-3 cursor-pointer">
+          <input
+            type="checkbox"
+            name="notify"
+            value="true"
+            className="mt-0.5 h-4 w-4 shrink-0 accent-[#004ac6]"
+          />
+          <span className="text-sm text-[#1c1b1b]">
+            Notificar al grupo sobre los cambios
+          </span>
+        </label>
+      )}
+
       {/* Error inline — no se limpia el form ante error */}
       {error && (
         <p className="text-sm text-[#ba1a1a]">{error}</p>
