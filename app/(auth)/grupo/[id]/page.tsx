@@ -3,8 +3,10 @@ import { redirect, notFound } from 'next/navigation'
 import { headers } from 'next/headers'
 import InvitationLinkPanel from '@/components/group/InvitationLinkPanel'
 import OrganizerPanel from '@/components/group/OrganizerPanel'
+import EventPanel from '@/components/group/EventPanel'
 import SignOutButton from '@/components/auth/SignOutButton'
 import { getCurrentOrganizer } from '@/lib/actions/rotation'
+import { getCurrentEvent } from '@/lib/actions/events'
 import { getInvitationLinkStatus } from '@/types'
 import type { MemberRole } from '@/types'
 
@@ -52,6 +54,11 @@ export default async function GrupoPage({ params }: Props) {
   // Organizador del mes actual (US-11)
   const organizerResult = await getCurrentOrganizer(params.id)
   const organizer = organizerResult.success ? organizerResult.data : null
+  const isOrganizer = organizer?.userId === user.id
+
+  // Evento del mes actual (US-05)
+  const eventResult = await getCurrentEvent(params.id)
+  const currentEvent = eventResult.success ? eventResult.data : null
 
   // Base URL para construir el link completo
   const headersList = headers()
@@ -78,6 +85,14 @@ export default async function GrupoPage({ params }: Props) {
 
         {/* US-11: Organizador del mes */}
         <OrganizerPanel organizer={organizer ?? null} currentUserId={user.id} />
+
+        {/* US-05: Evento del mes */}
+        <EventPanel
+          groupId={params.id}
+          event={currentEvent ?? null}
+          currentUserId={user.id}
+          isOrganizer={isOrganizer}
+        />
 
         {/* Scenario: Link generado automáticamente al crear el grupo */}
         <div className="rounded-2xl bg-white p-6 shadow-[0px_10px_30px_-5px_rgba(28,27,27,0.07)]">
