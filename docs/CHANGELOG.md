@@ -13,7 +13,7 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 19 | 6 | 0 | 13 |
+| 19 | 7 | 0 | 12 |
 
 ---
 
@@ -52,6 +52,14 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
   - ✅ Link copiado al portapapeles → `navigator.clipboard` + confirmación visual "¡Copiado!" por 2s
   - ✅ Link reutilizable con expiración → `getInvitationLinkStatus()` detecta expirado, admin puede generar nuevo
   - ✅ Revocar link activo → `UPDATE revoked_at`, UI refleja estado sin link
+
+- **US-05** Crear evento del mes — `lib/actions/events.ts`, `components/group/EventForm.tsx`, `components/group/EventPanel.tsx`, `app/(auth)/grupo/[id]/page.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Creación exitosa → validación de organizador via rotation, INSERT separado, estado `pending`, visible para miembros
+  - ✅ Campos obligatorios vacíos → `event_date` requerida, error inline, form no se limpia
+  - ✅ Evento ya existente en el mes → check previo al INSERT, mensaje con opción de editar
+  - ✅ Edición posterior → `updateEvent` valida organizer_id inmutable + status ≠ closed, `<details>` inline en el panel
 
 - **US-11** Ver organizador del mes — `lib/actions/rotation.ts`, `components/group/OrganizerPanel.tsx`, `app/(auth)/grupo/[id]/page.tsx`
 
@@ -94,7 +102,7 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 | 5 | US-04 | Join por invitación | E01 Acceso & Autenticación | M (3-4d) | ⬜ Pendiente |
 | 6 | US-03 | Cerrar sesión | E01 Acceso & Autenticación | XS (<1d) | ✅ Done |
 | 7 | US-11 | Ver organizador del mes | E03 Turno rotativo | S (1-2d) | ✅ Done |
-| 8 | US-05 | Crear evento del mes | E02 Panel de evento | S (1-2d) | ⬜ Pendiente |
+| 8 | US-05 | Crear evento del mes | E02 Panel de evento | S (1-2d) | ✅ Done |
 | 9 | US-06 | Notificar al grupo | E02 Panel de evento | M (3-4d) | ⬜ Pendiente |
 | 10 | US-07 | Ver estado del evento en tiempo real | E02 Panel de evento | S (1-2d) | ⬜ Pendiente |
 | 11 | US-08 | Recibir notificación de convocatoria | E04 Confirmación | M (3-4d) | ⬜ Pendiente |
