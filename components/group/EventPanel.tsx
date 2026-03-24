@@ -1,8 +1,10 @@
 import EventForm from '@/components/group/EventForm'
 import NotifyButton from '@/components/group/NotifyButton'
 import AttendanceSummary from '@/components/group/AttendanceSummary'
+import ConfirmAttendanceButtons from '@/components/group/ConfirmAttendanceButtons'
 import type { Event } from '@/types'
 import type { AttendanceCounts } from '@/lib/actions/events'
+import type { UserAttendance, AttendanceStatus } from '@/lib/actions/attendances'
 
 interface Props {
   groupId: string
@@ -10,6 +12,7 @@ interface Props {
   currentUserId: string
   isOrganizer: boolean
   attendanceCounts?: AttendanceCounts
+  userAttendance?: UserAttendance | null
 }
 
 function formatDate(dateStr: string): string {
@@ -27,7 +30,7 @@ const STATUS_LABEL: Record<string, string> = {
   closed: 'Cerrado',
 }
 
-export default function EventPanel({ groupId, event, currentUserId, isOrganizer, attendanceCounts }: Props) {
+export default function EventPanel({ groupId, event, currentUserId, isOrganizer, attendanceCounts, userAttendance }: Props) {
 
   // Scenario: no hay evento + usuario NO es organizador → empty state
   if (!event && !isOrganizer) {
@@ -76,6 +79,14 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
   // Scenario: Notificación enviada al publicar — botón visible cuando status = pending
   const canNotify = isOrganizer && event!.organizer_id === currentUserId && event!.status === 'pending'
 
+  // Scenario: Cambio de estado — visible cuando el usuario ya confirmó (tiene userAttendance)
+  // y el evento no está pending (pending = aún no convocado).
+  // Scenario: Confirmación después del evento — ConfirmAttendanceButtons muestra read-only cuando closed.
+  const showAttendanceButtons =
+    (event!.status === 'published' || event!.status === 'closed') &&
+    userAttendance !== undefined &&
+    userAttendance !== null
+
   return (
     <div className="rounded-2xl bg-white p-6 shadow-[0px_10px_30px_-5px_rgba(28,27,27,0.07)]">
 
@@ -116,6 +127,15 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
         <AttendanceSummary
           eventId={event!.id}
           initialCounts={attendanceCounts}
+        />
+      )}
+
+      {/* Scenario: Cambio de estado / Confirmación después del evento — "Tu respuesta" */}
+      {showAttendanceButtons && (
+        <ConfirmAttendanceButtons
+          eventId={event!.id}
+          currentStatus={userAttendance!.status as AttendanceStatus}
+          eventClosed={event!.status === 'closed'}
         />
       )}
 
