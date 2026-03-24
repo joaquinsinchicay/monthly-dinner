@@ -13,7 +13,21 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 19 | 9 | 0 | 10 |
+| 19 | 10 | 0 | 9 |
+
+---
+
+## [0.1.1] — 2026-03-24
+
+### Added
+- **US-08** Recibir notificación de convocatoria — `lib/actions/attendances.ts`, `components/group/ConvocatoriaNotification.tsx`, `app/(auth)/grupo/[id]/page.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Notificación recibida con acción directa → `ConvocatoriaNotification` muestra fecha, lugar, descripción y CTA "Confirmar asistencia" cuando `status=published` y el miembro no ha confirmado aún
+  - ✅ Recordatorio por falta de respuesta → `isReminder()` detecta ≥48h desde `events.notified_at`; el componente cambia a variante "Recordatorio" (badge rojo, mensaje urgente)
+  - ✅ Acceso desde notificación → routing `/dashboard → /grupo/[id]` preexistente garantiza que el usuario llega al panel del evento; `ConvocatoriaNotification` es visible en esa ruta
+
+  **Nota:** Notificaciones in-app only en MVP — no hay push ni email. El "recordatorio único" se implementa como variante visual de la misma card. La acción de confirmación (botón CTA) se completa en US-09.
 
 ---
 
@@ -125,7 +139,7 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 | 8 | US-05 | Crear evento del mes | E02 Panel de evento | S (1-2d) | ✅ Done |
 | 9 | US-06 | Notificar al grupo | E02 Panel de evento | M (3-4d) | ✅ Done |
 | 10 | US-07 | Ver estado del evento en tiempo real | E02 Panel de evento | S (1-2d) | ✅ Done |
-| 11 | US-08 | Recibir notificación de convocatoria | E04 Confirmación | M (3-4d) | ⬜ Pendiente |
+| 11 | US-08 | Recibir notificación de convocatoria | E04 Confirmación | M (3-4d) | ✅ Done |
 | 12 | US-09 | Confirmar asistencia | E04 Confirmación | S (1-2d) | ⬜ Pendiente |
 | 13 | US-10 | Ver resumen de confirmaciones | E04 Confirmación | S (1-2d) | ⬜ Pendiente |
 | 14 | US-17 | Abrir votación de restaurantes | E06 Votación | M (3-4d) | ⬜ Pendiente |
