@@ -24,12 +24,16 @@ export async function createGroup(
   }
 
   // Verificar nombre duplicado del mismo usuario (Scenario: Nombre duplicado del mismo usuario)
-  const { data: existing } = await supabase
+  const { data: existing, error: dupError } = await supabase
     .from('groups')
     .select('id, name')
     .eq('created_by', user.id)
     .ilike('name', name)
     .maybeSingle()
+
+  if (dupError) {
+    console.error('[createGroup] Supabase duplicate check error:', JSON.stringify(dupError, null, 2))
+  }
 
   if (existing) {
     return {
@@ -47,6 +51,7 @@ export async function createGroup(
     .single()
 
   if (error || !group) {
+    console.error('[createGroup] Supabase insert error:', JSON.stringify(error, null, 2))
     return { success: false, error: 'No se pudo crear el grupo. Intentá de nuevo.' }
   }
 
