@@ -131,15 +131,29 @@ create index idx_members_user_id  on members(user_id);
 
 alter table members enable row level security;
 
+-- IMPORTANTE: la política "select same group" NO puede usar un subquery directo
+-- sobre members — genera recursión infinita (error 42P17 en Supabase).
+-- Solución: función security definer que bypasea RLS para el check interno.
+-- Ver docs/architecture/technical-decisions.md → "RLS: recursión infinita en members"
+create or replace function is_group_member(p_group_id uuid, p_user_id uuid)
+returns boolean
+language sql
+security definer
+stable
+as $$
+  select exists (
+    select 1 from members
+    where group_id = p_group_id
+      and user_id  = p_user_id
+  );
+$$;
+
+revoke all on function is_group_member(uuid, uuid) from public;
+grant execute on function is_group_member(uuid, uuid) to authenticated;
+
 create policy "members: select same group"
   on members for select
-  using (
-    exists (
-      select 1 from members m2
-      where m2.group_id = members.group_id
-        and m2.user_id  = auth.uid()
-    )
-  );
+  using (is_group_member(group_id, auth.uid()));
 
 create policy "members: insert self"
   on members for insert

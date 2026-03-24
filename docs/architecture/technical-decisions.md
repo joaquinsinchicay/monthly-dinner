@@ -96,6 +96,67 @@ el cambio en la UI del usuario que ejecutó la acción.
 
 ---
 
+## RLS: problemas conocidos y soluciones aplicadas
+
+### 1. Recursión infinita en `members` (error `42P17`)
+
+**Problema:** la política `"members: select same group"` usaba un subquery `exists (select 1 from members ...)` dentro de una policy de la misma tabla `members`. Postgres evalúa las políticas RLS antes de ejecutar la query, lo que genera recursión infinita.
+
+**Error en Supabase:** `code: "42P17" — infinite recursion detected in policy for relation "members"`
+
+**Solución:** función `is_group_member(p_group_id uuid, p_user_id uuid)` con `security definer`. Al correr con permisos del owner (postgres), el SELECT interno bypasea RLS completamente — no hay recursión.
+
+```sql
+create or replace function is_group_member(p_group_id uuid, p_user_id uuid)
+returns boolean language sql security definer stable as $$
+  select exists (select 1 from members where group_id = p_group_id and user_id = p_user_id);
+$$;
+
+-- Reemplazar la política recursiva:
+drop policy if exists "members: select same group" on members;
+create policy "members: select same group"
+  on members for select using (is_group_member(group_id, auth.uid()));
+```
+
+**Aplica también a:** cualquier política en `groups`, `invitation_links`, `rotation`, etc. que haga `exists (select 1 from members ...)`. Si alguna falla con `42P17`, reemplazar el subquery inline por `is_group_member(group_id, auth.uid())`.
+
+---
+
+### 2. Orden de creación de tablas — FK circular entre `groups` y `members`
+
+**Problema:** `members.group_id` referencia `groups(id)`, pero las políticas RLS de `groups` hacen `exists (select 1 from members ...)`. Esto obliga a un orden específico de creación que no puede resolverse de forma lineal.
+
+**Solución — orden correcto:**
+1. Crear `profiles`
+2. Crear `groups` **sin políticas RLS**
+3. Crear `members` con políticas RLS completas + función `is_group_member`
+4. Agregar políticas RLS a `groups` (ahora que `members` existe)
+5. Crear triggers `on_group_created` y `on_group_created_invitation`
+
+---
+
+### 3. Usuario sin fila en `profiles` — trigger retroactivo (error `42501`)
+
+**Problema:** el trigger `handle_new_user()` sobre `auth.users` no existía cuando el usuario se registró inicialmente. Como `groups.created_by` referencia `profiles(id)`, el INSERT a `groups` falla con violación de FK, lo cual se manifiesta como `42501` (RLS policy violation) porque Supabase no distingue FK errors de RLS errors en el cliente.
+
+**Error en Supabase:** `code: "42501" — new row violates row-level security policy for table "groups"`
+
+**Solución — sincronización manual, ejecutar una vez en SQL Editor:**
+```sql
+insert into profiles (id, email, full_name, avatar_url)
+select
+  id,
+  email,
+  raw_user_meta_data->>'full_name',
+  raw_user_meta_data->>'avatar_url'
+from auth.users
+on conflict (id) do nothing;
+```
+
+**Prevención:** el trigger `handle_new_user()` con `on conflict (id) do nothing` garantiza idempotencia para todos los registros futuros.
+
+---
+
 ## Manejo de errores
 
 - Estados de error inline dentro del componente

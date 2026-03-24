@@ -60,6 +60,18 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
   - ✅ Confirmación antes de cerrar → bottom sheet glassmorphism con "Sí, cerrar sesión" / "Cancelar"
   - ✅ Datos locales limpios → `supabase.auth.signOut()` limpia cookies/tokens; próximo usuario no ve datos anteriores
 
+### Fixed (Supabase RLS)
+
+- **RLS recursión infinita en `members`** — `"members: select same group"` usaba subquery sobre la misma tabla → error `42P17`. Reemplazada por función `is_group_member(uuid, uuid)` con `security definer`. Ver `docs/architecture/technical-decisions.md`.
+
+- **Orden de creación de tablas** — FK circular entre `groups` y `members` requiere crear `groups` sin políticas, luego `members` con políticas, luego agregar políticas a `groups`. Documentado en `technical-decisions.md`.
+
+- **Usuario sin fila en `profiles`** — trigger `handle_new_user()` no existía al momento del primer registro. El INSERT a `groups` fallaba con `42501` por FK violation en `created_by`. Solución: SQL de sincronización retroactiva + trigger con `on conflict do nothing`.
+
+- **Post-login routing** — agregado `app/(dashboard)/dashboard/page.tsx` como smart redirect: si tiene grupo → `/grupo/[id]`, si no → `/onboarding`. Eliminado duplicado en `app/(auth)/dashboard/page.tsx` (conflicto de rutas, error build).
+
+- **Pantalla onboarding** — `app/(auth)/onboarding/page.tsx` + `components/onboarding/OnboardingView.tsx`: dos opciones post-login para usuarios sin grupo — crear grupo o pegar link de invitación.
+
 ---
 
 ## [Unreleased] — En desarrollo
