@@ -39,6 +39,20 @@ create policy "profiles: select own"
   on profiles for select
   using (auth.uid() = id);
 
+-- Permite ver el perfil de cualquier miembro del mismo grupo.
+-- Necesario para US-10 (nombres en resumen) y US-11 (nombre del organizador para otros miembros).
+create policy "profiles: select group members"
+  on profiles for select
+  using (
+    exists (
+      select 1
+      from members m1
+      join members m2 on m1.group_id = m2.group_id
+      where m1.user_id = profiles.id
+        and m2.user_id = auth.uid()
+    )
+  );
+
 create policy "profiles: insert own"
   on profiles for insert
   with check (auth.uid() = id);
