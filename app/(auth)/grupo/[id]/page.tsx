@@ -50,7 +50,8 @@ export default async function GrupoPage({ params }: Props) {
     (links ?? []).find((l) => getInvitationLinkStatus(l) === 'active') ?? null
 
   // Organizador del mes actual (US-11)
-  const { data: organizer } = await getCurrentOrganizer(params.id)
+  const organizerResult = await getCurrentOrganizer(params.id)
+  const organizer = organizerResult.success ? organizerResult.data : null
 
   // Base URL para construir el link completo
   const headersList = headers()
