@@ -198,7 +198,7 @@ create or replace trigger on_group_created
 create table if not exists invitation_links (
   id          uuid primary key default uuid_generate_v4(),
   group_id    uuid not null references groups(id) on delete cascade,
-  token       text not null unique default encode(gen_random_bytes(24), 'base64url'),
+  token       text not null unique default replace(replace(encode(gen_random_bytes(24), 'base64'), '+', '-'), '/', '_'),
   created_by  uuid not null references profiles(id) on delete restrict,
   expires_at  timestamptz not null default (now() + interval '30 days'),
   revoked_at  timestamptz,

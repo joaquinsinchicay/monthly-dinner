@@ -157,6 +157,24 @@ on conflict (id) do nothing;
 
 ---
 
+### 4. `encode()` no soporta `'base64url'` en PostgreSQL (error `22023`)
+
+**Problema:** el default del campo `invitation_links.token` usaba `encode(gen_random_bytes(24), 'base64url')`. PostgreSQL solo soporta `'base64'`, `'hex'` y `'escape'` como encodings en `encode()`. El error `22023: unrecognized encoding: "base64url"` hace explotar el trigger `handle_new_group_invitation()` en cada INSERT a `groups`.
+
+**Error en Supabase:** `ERROR: 22023: unrecognized encoding: "base64url"`
+
+**Solución:** base64url se construye manualmente reemplazando los caracteres no URL-safe del base64 estándar:
+
+```sql
+alter table invitation_links
+alter column token set default
+  replace(replace(encode(gen_random_bytes(24), 'base64'), '+', '-'), '/', '_');
+```
+
+`+` → `-`, `/` → `_`. El `=` de padding puede quedar — no rompe URLs en ningún navegador moderno.
+
+---
+
 ## Manejo de errores
 
 - Estados de error inline dentro del componente
