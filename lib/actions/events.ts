@@ -118,6 +118,42 @@ export async function createEvent(
   return { success: true, data: event }
 }
 
+// Scenario: Notificación enviada al publicar — cambia status a 'published' y registra notified_at.
+// In-app only en MVP: el evento queda visible para todos los miembros al abrir la app.
+export async function publishEvent(eventId: string): Promise<ActionResult<void>> {
+  const supabase = createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return { success: false, error: 'No autenticado' }
+
+  const { data: existing } = await supabase
+    .from('events')
+    .select('organizer_id, status')
+    .eq('id', eventId)
+    .maybeSingle()
+
+  if (!existing) return { success: false, error: 'Evento no encontrado.' }
+  if (existing.organizer_id !== user.id) {
+    return { success: false, error: 'Solo el organizador puede publicar el evento.' }
+  }
+  if (existing.status === 'closed') {
+    return { success: false, error: 'No se puede publicar un evento cerrado.' }
+  }
+
+  const { error } = await supabase
+    .from('events')
+    .update({ status: 'published', notified_at: new Date().toISOString() })
+    .eq('id', eventId)
+    .eq('organizer_id', user.id)
+
+  if (error) return { success: false, error: 'No se pudo publicar el evento. Intentá de nuevo.' }
+
+  return { success: true, data: undefined }
+}
+
 // Scenario: Edición posterior — solo el organizador puede editar, y el evento no debe estar cerrado.
 // organizer_id es inmutable — validación en server action, RLS no lo garantiza en UPDATE.
 export async function updateEvent(
@@ -155,6 +191,10 @@ export async function updateEvent(
   const place = (formData.get('place') as string)?.trim() || null
   const description = (formData.get('description') as string)?.trim() || null
 
+  // Scenario: Re-notificación por cambio de datos — si notify=true, actualizar notified_at
+  const notify = formData.get('notify') === 'true'
+  const notifiedAt = notify ? new Date().toISOString() : undefined
+
   const { error: updateError } = await supabase
     .from('events')
     .update({
@@ -162,6 +202,7 @@ export async function updateEvent(
       place,
       description,
       updated_at: new Date().toISOString(),
+      ...(notifiedAt ? { notified_at: notifiedAt } : {}),
     })
     .eq('id', eventId)
     // organizer_id no se actualiza — inmutabilidad garantizada en server action
