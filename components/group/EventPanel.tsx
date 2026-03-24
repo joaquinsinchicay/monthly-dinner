@@ -1,6 +1,7 @@
 import EventForm from '@/components/group/EventForm'
 import NotifyButton from '@/components/group/NotifyButton'
 import AttendanceSummary from '@/components/group/AttendanceSummary'
+import AttendanceSummaryDetailed from '@/components/group/AttendanceSummaryDetailed'
 import ConfirmAttendanceButtons from '@/components/group/ConfirmAttendanceButtons'
 import type { Event } from '@/types'
 import type { AttendanceCounts } from '@/lib/actions/events'
@@ -13,6 +14,7 @@ interface Props {
   isOrganizer: boolean
   attendanceCounts?: AttendanceCounts
   userAttendance?: UserAttendance | null
+  // US-10: groupId ya está en Props — AttendanceSummaryDetailed lo usa para sin_responder
 }
 
 function formatDate(dateStr: string): string {
@@ -122,8 +124,15 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
       {/* Scenario: Notificación enviada al publicar */}
       {canNotify && <NotifyButton eventId={event!.id} />}
 
-      {/* Scenario: Panel con evento activo — estado de confirmaciones en tiempo real */}
-      {event!.status !== 'pending' && attendanceCounts && (
+      {/* US-10: Organizador ve resumen detallado con nombres + compartir (en tiempo real).
+          US-07: Miembros ven solo conteos (AttendanceSummary — ya implementado). */}
+      {event!.status !== 'pending' && isOrganizer && (
+        <AttendanceSummaryDetailed
+          eventId={event!.id}
+          groupId={groupId}
+        />
+      )}
+      {event!.status !== 'pending' && !isOrganizer && attendanceCounts && (
         <AttendanceSummary
           eventId={event!.id}
           initialCounts={attendanceCounts}
