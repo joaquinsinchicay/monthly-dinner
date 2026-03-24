@@ -5,10 +5,12 @@ import InvitationLinkPanel from '@/components/group/InvitationLinkPanel'
 import OrganizerPanel from '@/components/group/OrganizerPanel'
 import EventPanel from '@/components/group/EventPanel'
 import ConvocatoriaNotification from '@/components/group/ConvocatoriaNotification'
+import PollPanel from '@/components/group/PollPanel'
 import SignOutButton from '@/components/auth/SignOutButton'
 import { getCurrentOrganizer } from '@/lib/actions/rotation'
 import { getCurrentEvent, getAttendanceCounts } from '@/lib/actions/events'
 import { getUserAttendance } from '@/lib/actions/attendances'
+import { getPollWithOptions } from '@/lib/actions/polls'
 import { getInvitationLinkStatus } from '@/types'
 import type { MemberRole } from '@/types'
 
@@ -80,6 +82,13 @@ export default async function GrupoPage({ params }: Props) {
   // que el usuario llega al panel del evento, no a la pantalla de inicio.
   const showNotification = currentEvent?.status === 'published' && !userAttendance && !isOrganizer
 
+  // Votación del mes actual (US-17) — solo si hay evento publicado
+  const pollResult =
+    currentEvent && currentEvent.status !== 'pending'
+      ? await getPollWithOptions(currentEvent.id)
+      : null
+  const currentPoll = pollResult?.success ? pollResult.data : null
+
   // Base URL para construir el link completo
   const headersList = headers()
   const host = headersList.get('host') ?? 'localhost:3000'
@@ -121,6 +130,16 @@ export default async function GrupoPage({ params }: Props) {
           attendanceCounts={attendanceCounts}
           userAttendance={userAttendance}
         />
+
+        {/* US-17: Votación de restaurantes — visible para organizador (crear) y todos (ver) */}
+        {currentEvent && currentEvent.status !== 'pending' && (
+          <PollPanel
+            eventId={currentEvent.id}
+            groupId={params.id}
+            poll={currentPoll ?? null}
+            isOrganizer={isOrganizer}
+          />
+        )}
 
         {/* Scenario: Link generado automáticamente al crear el grupo */}
         <div className="rounded-2xl bg-white p-6 shadow-[0px_10px_30px_-5px_rgba(28,27,27,0.07)]">

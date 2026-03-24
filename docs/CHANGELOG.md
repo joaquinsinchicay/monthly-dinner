@@ -13,7 +13,20 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 19 | 12 | 0 | 7 |
+| 19 | 13 | 0 | 6 |
+
+---
+
+## [0.2.0] — 2026-03-24
+
+### Added
+- **US-17** Abrir votación de restaurantes — `lib/actions/polls.ts`, `components/group/PollForm.tsx`, `components/group/PollPanel.tsx`, `app/(auth)/grupo/[id]/page.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Votación creada exitosamente → `createPoll` INSERT poll + opciones, `status='open'`; `PollPanel` visible para todos los miembros (notificación in-app); `router.refresh()` actualiza la vista
+  - ✅ Menos de 2 opciones → validación client-side en `PollForm` + server-side en `createPoll`; error inline; form no se limpia
+  - ✅ Fecha de cierre en el pasado → input con `min=tomorrow` en UI + validación `closesAtDate <= new Date()` en server action; error inline
+  - ✅ Solo una votación activa por evento → check previo al INSERT; error "Ya existe... Podés editarla"; `PollPanel` muestra aviso al organizador cuando ya hay poll activo
 
 ---
 
@@ -169,7 +182,7 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 | 11 | US-08 | Recibir notificación de convocatoria | E04 Confirmación | M (3-4d) | ✅ Done |
 | 12 | US-09 | Confirmar asistencia | E04 Confirmación | S (1-2d) | ✅ Done |
 | 13 | US-10 | Ver resumen de confirmaciones | E04 Confirmación | S (1-2d) | ✅ Done |
-| 14 | US-17 | Abrir votación de restaurantes | E06 Votación | M (3-4d) | ⬜ Pendiente |
+| 14 | US-17 | Abrir votación de restaurantes | E06 Votación | M (3-4d) | ✅ Done |
 | 15 | US-18 | Votar por un restaurante | E06 Votación | S (1-2d) | ⬜ Pendiente |
 | 16 | US-14 | Cargar restaurante al cerrar evento | E05 Historial | S (1-2d) | ⬜ Pendiente |
 | 17 | US-16 | Consultar historial de restaurantes | E05 Historial | S (1-2d) | ⬜ Pendiente |
