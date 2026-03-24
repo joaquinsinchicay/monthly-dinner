@@ -1,12 +1,15 @@
 import EventForm from '@/components/group/EventForm'
 import NotifyButton from '@/components/group/NotifyButton'
+import AttendanceSummary from '@/components/group/AttendanceSummary'
 import type { Event } from '@/types'
+import type { AttendanceCounts } from '@/lib/actions/events'
 
 interface Props {
   groupId: string
   event: Event | null
   currentUserId: string
   isOrganizer: boolean
+  attendanceCounts?: AttendanceCounts
 }
 
 function formatDate(dateStr: string): string {
@@ -24,7 +27,7 @@ const STATUS_LABEL: Record<string, string> = {
   closed: 'Cerrado',
 }
 
-export default function EventPanel({ groupId, event, currentUserId, isOrganizer }: Props) {
+export default function EventPanel({ groupId, event, currentUserId, isOrganizer, attendanceCounts }: Props) {
 
   // Scenario: no hay evento + usuario NO es organizador → empty state
   if (!event && !isOrganizer) {
@@ -107,6 +110,14 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer 
 
       {/* Scenario: Notificación enviada al publicar */}
       {canNotify && <NotifyButton eventId={event!.id} />}
+
+      {/* Scenario: Panel con evento activo — estado de confirmaciones en tiempo real */}
+      {event!.status !== 'pending' && attendanceCounts && (
+        <AttendanceSummary
+          eventId={event!.id}
+          initialCounts={attendanceCounts}
+        />
+      )}
 
       {/* Scenario: Edición posterior — solo para el organizador, evento no cerrado */}
       {canEdit && (

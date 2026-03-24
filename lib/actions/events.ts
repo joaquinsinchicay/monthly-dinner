@@ -118,6 +118,43 @@ export async function createEvent(
   return { success: true, data: event }
 }
 
+export interface AttendanceCounts {
+  va: number
+  no_va: number
+  tal_vez: number
+}
+
+// Retorna los conteos de asistencia para un evento. Usado como datos iniciales
+// para el componente realtime — los updates llegan via supabase.channel().
+export async function getAttendanceCounts(
+  eventId: string
+): Promise<ActionResult<AttendanceCounts>> {
+  const supabase = createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return { success: false, error: 'No autenticado' }
+
+  const { data, error } = await supabase
+    .from('attendances')
+    .select('status')
+    .eq('event_id', eventId)
+
+  if (error) return { success: false, error: 'No se pudieron obtener las confirmaciones.' }
+
+  const rows = data ?? []
+  return {
+    success: true,
+    data: {
+      va: rows.filter((r) => r.status === 'va').length,
+      no_va: rows.filter((r) => r.status === 'no_va').length,
+      tal_vez: rows.filter((r) => r.status === 'tal_vez').length,
+    },
+  }
+}
+
 // Scenario: Notificación enviada al publicar — cambia status a 'published' y registra notified_at.
 // In-app only en MVP: el evento queda visible para todos los miembros al abrir la app.
 export async function publishEvent(eventId: string): Promise<ActionResult<void>> {
