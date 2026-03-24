@@ -6,7 +6,7 @@ import OrganizerPanel from '@/components/group/OrganizerPanel'
 import EventPanel from '@/components/group/EventPanel'
 import SignOutButton from '@/components/auth/SignOutButton'
 import { getCurrentOrganizer } from '@/lib/actions/rotation'
-import { getCurrentEvent } from '@/lib/actions/events'
+import { getCurrentEvent, getAttendanceCounts } from '@/lib/actions/events'
 import { getInvitationLinkStatus } from '@/types'
 import type { MemberRole } from '@/types'
 
@@ -60,6 +60,10 @@ export default async function GrupoPage({ params }: Props) {
   const eventResult = await getCurrentEvent(params.id)
   const currentEvent = eventResult.success ? eventResult.data : null
 
+  // Conteos de asistencia para realtime (US-07) — solo si hay evento
+  const countsResult = currentEvent ? await getAttendanceCounts(currentEvent.id) : null
+  const attendanceCounts = countsResult?.success ? countsResult.data : undefined
+
   // Base URL para construir el link completo
   const headersList = headers()
   const host = headersList.get('host') ?? 'localhost:3000'
@@ -86,12 +90,13 @@ export default async function GrupoPage({ params }: Props) {
         {/* US-11: Organizador del mes */}
         <OrganizerPanel organizer={organizer ?? null} currentUserId={user.id} />
 
-        {/* US-05: Evento del mes */}
+        {/* US-05 / US-07: Evento del mes + confirmaciones en tiempo real */}
         <EventPanel
           groupId={params.id}
           event={currentEvent ?? null}
           currentUserId={user.id}
           isOrganizer={isOrganizer}
+          attendanceCounts={attendanceCounts}
         />
 
         {/* Scenario: Link generado automáticamente al crear el grupo */}
