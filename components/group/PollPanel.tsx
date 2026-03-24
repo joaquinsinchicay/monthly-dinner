@@ -1,4 +1,5 @@
 import PollForm from '@/components/group/PollForm'
+import PollVoting from '@/components/group/PollVoting'
 import type { PollWithOptions } from '@/lib/actions/polls'
 
 interface Props {
@@ -91,17 +92,8 @@ export default function PollPanel({ eventId, groupId, poll, isOrganizer }: Props
           : `Cerró el ${formatDateTime(poll.closes_at)}`}
       </p>
 
-      {/* Opciones — US-18 agrega el mecanismo de voto sobre esta lista */}
-      <div className="mt-4 space-y-2">
-        {poll.options.map((opt) => (
-          <div
-            key={opt.id}
-            className="rounded-xl bg-[#f6f3f2] px-4 py-3 text-sm text-[#1c1b1b]"
-          >
-            {opt.label}
-          </div>
-        ))}
-      </div>
+      {/* US-18: Opciones con mecanismo de voto, porcentajes en tiempo real y estado final */}
+      <PollVoting poll={poll} />
 
       {/* Scenario: Solo una votación activa por evento — organizador ve aviso en lugar del form */}
       {isOrganizer && open && (
