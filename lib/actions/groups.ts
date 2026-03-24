@@ -42,6 +42,10 @@ export async function createGroup(
     }
   }
 
+  // Debug: comparar user.id con auth.uid() en la DB
+  const { data: dbUid } = await supabase.rpc('debug_auth_uid')
+  console.error('[createGroup] user.id:', user.id, '| DB auth.uid():', dbUid)
+
   // Crear el grupo — el trigger on_group_created inserta al creador como admin
   // y on_group_created_invitation genera el link de invitación automáticamente
   const { data: group, error } = await supabase
