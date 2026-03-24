@@ -13,7 +13,21 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 19 | 11 | 0 | 8 |
+| 19 | 12 | 0 | 7 |
+
+---
+
+## [0.1.3] — 2026-03-24
+
+### Added
+- **US-10** Ver resumen de confirmaciones — `lib/actions/attendances.ts`, `components/group/AttendanceSummaryDetailed.tsx`, `components/group/EventPanel.tsx`, `docs/architecture/schema.sql`, `supabase/migrations/20260324_profiles_select_group_members.sql`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Resumen completo visible → `AttendanceSummaryDetailed` muestra nombres por categoría (Van / Tal vez / No van) como pills coloreados + sección "Sin responder" cuando aplica. Solo visible para el organizador
+  - ✅ Todos confirmaron → `sin_responder.length === 0` oculta la sección y muestra badge verde "Todos respondieron"
+  - ✅ Compartir resumen → botón genera texto formateado con emoji + categorías + nombres, `navigator.clipboard.writeText()`, feedback visual "¡Copiado!" por 2s
+
+  **Nota:** Requiere ejecutar `supabase/migrations/20260324_profiles_select_group_members.sql` en Supabase antes de deployar. Agrega la política `"profiles: select group members"` necesaria para leer nombres de otros miembros.
 
 ---
 
@@ -154,7 +168,7 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 | 10 | US-07 | Ver estado del evento en tiempo real | E02 Panel de evento | S (1-2d) | ✅ Done |
 | 11 | US-08 | Recibir notificación de convocatoria | E04 Confirmación | M (3-4d) | ✅ Done |
 | 12 | US-09 | Confirmar asistencia | E04 Confirmación | S (1-2d) | ✅ Done |
-| 13 | US-10 | Ver resumen de confirmaciones | E04 Confirmación | S (1-2d) | ⬜ Pendiente |
+| 13 | US-10 | Ver resumen de confirmaciones | E04 Confirmación | S (1-2d) | ✅ Done |
 | 14 | US-17 | Abrir votación de restaurantes | E06 Votación | M (3-4d) | ⬜ Pendiente |
 | 15 | US-18 | Votar por un restaurante | E06 Votación | S (1-2d) | ⬜ Pendiente |
 | 16 | US-14 | Cargar restaurante al cerrar evento | E05 Historial | S (1-2d) | ⬜ Pendiente |
