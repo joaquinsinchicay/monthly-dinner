@@ -45,7 +45,7 @@ export async function getCurrentOrganizer(
     return { success: true, data: null }
   }
 
-  const profile = data.profiles as { full_name: string | null; avatar_url: string | null } | null
+  const profile = (data.profiles as unknown) as { full_name: string | null; avatar_url: string | null } | null
 
   return {
     success: true,
