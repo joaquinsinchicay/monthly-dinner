@@ -13,7 +13,7 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 19 | 8 | 0 | 11 |
+| 19 | 9 | 0 | 10 |
 
 ---
 
@@ -52,6 +52,19 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
   - ✅ Link copiado al portapapeles → `navigator.clipboard` + confirmación visual "¡Copiado!" por 2s
   - ✅ Link reutilizable con expiración → `getInvitationLinkStatus()` detecta expirado, admin puede generar nuevo
   - ✅ Revocar link activo → `UPDATE revoked_at`, UI refleja estado sin link
+
+- **US-07** Ver estado del evento en tiempo real — `lib/actions/events.ts`, `components/group/AttendanceSummary.tsx`, `components/group/EventPanel.tsx`, `app/(auth)/grupo/[id]/page.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Panel con evento activo → fecha, lugar, organizador (OrganizerPanel) y conteos va/no_va/tal_vez
+  - ✅ Panel sin evento activo → "La cena de este mes aún no fue convocada" (EventPanel empty state)
+  - ✅ Actualización en tiempo real → `supabase.channel()` en `AttendanceSummary`, re-fetch en cada INSERT/UPDATE/DELETE de `attendances`
+
+  **Nota:** Habilitar realtime en Supabase → Database → Replication:
+  ```sql
+  alter publication supabase_realtime add table attendances;
+  alter publication supabase_realtime add table events;
+  ```
 
 - **US-06** Notificar al grupo — `lib/actions/events.ts`, `components/group/NotifyButton.tsx`, `components/group/EventForm.tsx`, `components/group/EventPanel.tsx`
 
@@ -111,7 +124,7 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 | 7 | US-11 | Ver organizador del mes | E03 Turno rotativo | S (1-2d) | ✅ Done |
 | 8 | US-05 | Crear evento del mes | E02 Panel de evento | S (1-2d) | ✅ Done |
 | 9 | US-06 | Notificar al grupo | E02 Panel de evento | M (3-4d) | ✅ Done |
-| 10 | US-07 | Ver estado del evento en tiempo real | E02 Panel de evento | S (1-2d) | ⬜ Pendiente |
+| 10 | US-07 | Ver estado del evento en tiempo real | E02 Panel de evento | S (1-2d) | ✅ Done |
 | 11 | US-08 | Recibir notificación de convocatoria | E04 Confirmación | M (3-4d) | ⬜ Pendiente |
 | 12 | US-09 | Confirmar asistencia | E04 Confirmación | S (1-2d) | ⬜ Pendiente |
 | 13 | US-10 | Ver resumen de confirmaciones | E04 Confirmación | S (1-2d) | ⬜ Pendiente |
