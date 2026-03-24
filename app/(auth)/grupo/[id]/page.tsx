@@ -4,9 +4,11 @@ import { headers } from 'next/headers'
 import InvitationLinkPanel from '@/components/group/InvitationLinkPanel'
 import OrganizerPanel from '@/components/group/OrganizerPanel'
 import EventPanel from '@/components/group/EventPanel'
+import ConvocatoriaNotification from '@/components/group/ConvocatoriaNotification'
 import SignOutButton from '@/components/auth/SignOutButton'
 import { getCurrentOrganizer } from '@/lib/actions/rotation'
 import { getCurrentEvent, getAttendanceCounts } from '@/lib/actions/events'
+import { getUserAttendance } from '@/lib/actions/attendances'
 import { getInvitationLinkStatus } from '@/types'
 import type { MemberRole } from '@/types'
 
@@ -64,6 +66,20 @@ export default async function GrupoPage({ params }: Props) {
   const countsResult = currentEvent ? await getAttendanceCounts(currentEvent.id) : null
   const attendanceCounts = countsResult?.success ? countsResult.data : undefined
 
+  // Confirmación del usuario actual (US-08) — solo si hay evento publicado
+  const attendanceResult =
+    currentEvent?.status === 'published'
+      ? await getUserAttendance(currentEvent.id)
+      : null
+  const userAttendance = attendanceResult?.success ? attendanceResult.data : null
+
+  // Scenario: Notificación recibida con acción directa — mostrar solo si el evento
+  // está publicado y el miembro NO ha confirmado todavía.
+  // Scenario: Recordatorio por falta de respuesta — isReminder se evalúa dentro del componente.
+  // Scenario: Acceso desde notificación — el routing /dashboard → /grupo/[id] ya garantiza
+  // que el usuario llega al panel del evento, no a la pantalla de inicio.
+  const showNotification = currentEvent?.status === 'published' && !userAttendance && !isOrganizer
+
   // Base URL para construir el link completo
   const headersList = headers()
   const host = headersList.get('host') ?? 'localhost:3000'
@@ -89,6 +105,12 @@ export default async function GrupoPage({ params }: Props) {
 
         {/* US-11: Organizador del mes */}
         <OrganizerPanel organizer={organizer ?? null} currentUserId={user.id} />
+
+        {/* US-08: Notificación de convocatoria — visible cuando hay evento publicado y el
+            miembro no confirmó. Muestra variante "recordatorio" si pasaron ≥48h. */}
+        {showNotification && currentEvent && (
+          <ConvocatoriaNotification event={currentEvent} groupId={params.id} />
+        )}
 
         {/* US-05 / US-07: Evento del mes + confirmaciones en tiempo real */}
         <EventPanel
