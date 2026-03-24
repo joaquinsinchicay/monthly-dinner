@@ -25,6 +25,100 @@ export interface PollWithOptions extends Poll {
   options: PollOption[]
 }
 
+export interface PollVotesResult {
+  counts: Record<string, number>   // optionId → vote count
+  total: number
+  userVoteOptionId: string | null  // null = no votó
+}
+
+// Retorna conteos de votos por opción y el voto del usuario actual.
+// Scenario: Voto registrado — porcentajes iniciales.
+// Scenario: Cambio de voto — re-fetch tras realtime event.
+// Scenario: Resultado final — conteos cuando la votación cerró.
+export async function getPollVotes(
+  pollId: string
+): Promise<ActionResult<PollVotesResult>> {
+  const supabase = createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return { success: false, error: 'No autenticado' }
+
+  const { data: votes, error } = await supabase
+    .from('poll_votes')
+    .select('option_id, user_id')
+    .eq('poll_id', pollId)
+
+  if (error) return { success: false, error: 'No se pudo obtener los votos.' }
+
+  const rows = votes ?? []
+  const counts: Record<string, number> = {}
+  for (const row of rows) {
+    counts[row.option_id] = (counts[row.option_id] ?? 0) + 1
+  }
+
+  const userVote = rows.find((r) => r.user_id === user.id)
+
+  return {
+    success: true,
+    data: {
+      counts,
+      total: rows.length,
+      userVoteOptionId: userVote?.option_id ?? null,
+    },
+  }
+}
+
+// Scenario: Voto registrado — INSERT cuando no hay voto previo.
+// Scenario: Cambio de voto dentro del plazo — UPSERT actualiza el voto existente.
+// Scenario: Intento de votar fuera del plazo — rechaza si closed o closes_at en el pasado.
+export async function castVote(
+  pollId: string,
+  optionId: string
+): Promise<ActionResult<void>> {
+  const supabase = createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return { success: false, error: 'No autenticado' }
+
+  // Validar que la votación existe y está abierta
+  const { data: poll } = await supabase
+    .from('polls')
+    .select('status, closes_at')
+    .eq('id', pollId)
+    .maybeSingle()
+
+  if (!poll) return { success: false, error: 'Votación no encontrada.' }
+
+  // Scenario: Intento de votar fuera del plazo
+  const isClosed = poll.status === 'closed' || new Date(poll.closes_at) <= new Date()
+  if (isClosed) {
+    return { success: false, error: 'La votación ya cerró. No se puede emitir o cambiar el voto.' }
+  }
+
+  // UPSERT — INSERT o UPDATE según constraint unique (poll_id, user_id)
+  const { error } = await supabase
+    .from('poll_votes')
+    .upsert(
+      {
+        poll_id: pollId,
+        option_id: optionId,
+        user_id: user.id,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'poll_id,user_id' }
+    )
+
+  if (error) return { success: false, error: 'No se pudo registrar el voto. Intentá de nuevo.' }
+
+  return { success: true, data: undefined }
+}
+
 // Retorna la votación del evento con sus opciones, o null si no existe.
 export async function getPollWithOptions(
   eventId: string
