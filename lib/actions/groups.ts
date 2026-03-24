@@ -24,16 +24,12 @@ export async function createGroup(
   }
 
   // Verificar nombre duplicado del mismo usuario (Scenario: Nombre duplicado del mismo usuario)
-  const { data: existing, error: dupError } = await supabase
+  const { data: existing } = await supabase
     .from('groups')
     .select('id, name')
     .eq('created_by', user.id)
     .ilike('name', name)
     .maybeSingle()
-
-  if (dupError) {
-    console.error('[createGroup] Supabase duplicate check error:', JSON.stringify(dupError, null, 2))
-  }
 
   if (existing) {
     return {
@@ -42,20 +38,29 @@ export async function createGroup(
     }
   }
 
-  // Debug: comparar user.id con auth.uid() en la DB
-  const { data: dbUid } = await supabase.rpc('debug_auth_uid')
-  console.error('[createGroup] user.id:', user.id, '| DB auth.uid():', dbUid)
-
   // Crear el grupo — el trigger on_group_created inserta al creador como admin
-  // y on_group_created_invitation genera el link de invitación automáticamente
-  const { data: group, error } = await supabase
+  // y on_group_created_invitation genera el link de invitación automáticamente.
+  // INSERT separado del SELECT para evitar que INSERT...RETURNING evalúe
+  // groups: select members antes de que el trigger inserte la membresía.
+  const { error: insertError } = await supabase
     .from('groups')
     .insert({ name, created_by: user.id })
+
+  if (insertError) {
+    console.error('[createGroup] Supabase insert error:', JSON.stringify(insertError, null, 2))
+    return { success: false, error: 'No se pudo crear el grupo. Intentá de nuevo.' }
+  }
+
+  const { data: group, error: selectError } = await supabase
+    .from('groups')
     .select('id, name, created_by, created_at, updated_at')
+    .eq('created_by', user.id)
+    .order('created_at', { ascending: false })
+    .limit(1)
     .single()
 
-  if (error || !group) {
-    console.error('[createGroup] Supabase insert error:', JSON.stringify(error, null, 2))
+  if (selectError || !group) {
+    console.error('[createGroup] Supabase select after insert error:', JSON.stringify(selectError, null, 2))
     return { success: false, error: 'No se pudo crear el grupo. Intentá de nuevo.' }
   }
 
