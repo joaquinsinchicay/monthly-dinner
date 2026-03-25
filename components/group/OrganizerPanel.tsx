@@ -3,6 +3,7 @@ import type { OrganizerInfo } from '@/lib/actions/rotation'
 interface Props {
   organizer: OrganizerInfo | null
   currentUserId: string
+  nextOrganizer?: OrganizerInfo | null
 }
 
 // Formatea 'YYYY-MM-DD' como "Marzo 2026"
@@ -14,7 +15,45 @@ function formatMonth(dateStr: string): string {
   })
 }
 
-export default function OrganizerPanel({ organizer, currentUserId }: Props) {
+// Scenario: Siguiente organizador visible tras el cierre
+// Scenario: Notificación al próximo organizador (in-app)
+function NextOrganizerBadge({
+  next,
+  currentUserId,
+}: {
+  next: OrganizerInfo
+  currentUserId: string
+}) {
+  const isMe = next.userId === currentUserId
+  const name = next.fullName ?? 'Próximo organizador'
+  const monthLabel = formatMonth(next.month)
+
+  if (isMe) {
+    return (
+      <div className="mt-4 rounded-xl border border-[#004ac6]/20 bg-[#eef3fd] px-4 py-3">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-[#004ac6]">
+          {monthLabel} · Próximo turno
+        </p>
+        <p className="mt-0.5 text-sm font-medium text-[#1c1b1b]">
+          Te toca organizar el próximo mes
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mt-4 rounded-xl bg-[#f6f3f2] px-4 py-3">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
+        {monthLabel} · Próximo turno
+      </p>
+      <p className="mt-0.5 text-sm text-[#1c1b1b]">
+        Organiza <span className="font-medium">{name}</span>
+      </p>
+    </div>
+  )
+}
+
+export default function OrganizerPanel({ organizer, currentUserId, nextOrganizer }: Props) {
   // Scenario: Sin organizador asignado
   if (!organizer) {
     return (
@@ -31,6 +70,9 @@ export default function OrganizerPanel({ organizer, currentUserId }: Props) {
         <p className="mt-2 text-sm text-[#585f6c]">
           El turno de este mes aún no fue asignado. El admin del grupo puede configurarlo.
         </p>
+        {nextOrganizer && (
+          <NextOrganizerBadge next={nextOrganizer} currentUserId={currentUserId} />
+        )}
       </div>
     )
   }
@@ -82,6 +124,9 @@ export default function OrganizerPanel({ organizer, currentUserId }: Props) {
             Creá el evento del mes para convocar al grupo.
           </p>
         </div>
+        {nextOrganizer && (
+          <NextOrganizerBadge next={nextOrganizer} currentUserId={currentUserId} />
+        )}
       </div>
     )
   }
@@ -99,6 +144,9 @@ export default function OrganizerPanel({ organizer, currentUserId }: Props) {
         {displayName}
       </p>
       <p className="mt-1 text-sm text-[#585f6c]">Organiza este mes.</p>
+      {nextOrganizer && (
+        <NextOrganizerBadge next={nextOrganizer} currentUserId={currentUserId} />
+      )}
     </div>
   )
 }
