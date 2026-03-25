@@ -13,9 +13,23 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 21 | 21 | 0 | 0 |
+| 22 | 22 | 0 | 0 |
 
 > **MVP completo** — todas las US implementadas.
+
+---
+
+## [0.2.9] — 2026-03-25
+
+### Added
+- **US-07b** Estado vacío del dashboard sin eventos — `app/(auth)/grupo/[id]/page.tsx`, `components/group/EmptyDashboard.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Admin u organizador ve el estado vacío con CTA → `EmptyDashboard` con `isAdminOrOrganizer=true` muestra card con título editorial "Tu clan está listo, *pero falta la mesa.*", body descriptivo y botón gradiente "Crear primer evento →"
+  - ✅ Botón redirige a creación de evento → `href="/grupo/[groupId]/eventos/nuevo"` mediante `<Link>`
+  - ✅ Miembro ve mensaje de espera sin CTA → `isAdminOrOrganizer=false` renderiza texto plano "Aún no hay eventos. El organizador del mes está preparando la primera cita." sin botón
+  - ✅ Estado vacío desaparece al crear el primer evento → `COUNT(*)` sobre `events` por `group_id`; `!hasEvents` controla el render; al crear el primer evento `hasEvents=true` y el componente desaparece
+  - ✅ Estado vacío no se muestra si hay historial previo → el COUNT incluye eventos de cualquier estado (pending/published/closed), no solo el mes actual
 
 ---
 
