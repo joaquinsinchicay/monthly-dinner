@@ -13,9 +13,41 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 19 | 19 | 0 | 0 |
+| 21 | 20 | 0 | 1 |
 
-> **MVP completo** — todas las US implementadas y en producción.
+> 20/21 US completadas — US-00d pendiente de implementación.
+
+---
+
+## [0.2.7] — 2026-03-25
+
+### Added
+- **US-00c** Configurar frecuencia y día al crear el grupo — `types/index.ts`, `lib/actions/groups.ts`, `components/group/CreateGroupForm.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Frecuencia mensual muestra días del mes → selector numérico 1–31 renderizado cuando `frequency === 'mensual'`
+  - ✅ Frecuencia semanal muestra días de la semana → `DAYS_OF_WEEK` renderizado cuando `frequency === 'semanal'`
+  - ✅ Frecuencia quincenal muestra días de la semana → mismo bloque `else` cubre `quincenal` y `semanal`
+  - ✅ Campos obligatorios — frecuencia y día → `handleSubmit` valida `!dayValue` con error inline; server action valida antes del INSERT
+  - ✅ Mensaje informativo visible al cargar → `<p>` siempre visible al pie del formulario (no condicional)
+  - ✅ Datos guardados con el grupo → INSERT incluye `frequency` + `meeting_day_of_month` o `meeting_day_of_week`; SELECT devuelve los tres campos
+
+  **Nota:** Requiere ejecutar el ALTER TABLE en Supabase antes de deployar:
+  ```sql
+  ALTER TABLE groups
+    ADD COLUMN frequency text NOT NULL DEFAULT 'mensual'
+      CHECK (frequency IN ('mensual', 'quincenal', 'semanal')),
+    ADD COLUMN meeting_day_of_week text
+      CHECK (meeting_day_of_week IN ('lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo')),
+    ADD COLUMN meeting_day_of_month integer
+      CHECK (meeting_day_of_month BETWEEN 1 AND 31);
+
+  ALTER TABLE groups
+    ADD CONSTRAINT meeting_day_consistency CHECK (
+      (frequency = 'mensual' AND meeting_day_of_month IS NOT NULL AND meeting_day_of_week IS NULL) OR
+      (frequency IN ('semanal', 'quincenal') AND meeting_day_of_week IS NOT NULL AND meeting_day_of_month IS NULL)
+    );
+  ```
 
 ---
 
@@ -246,29 +278,31 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 ## [Unreleased] — En desarrollo
 
-### Pendiente de implementación
+### Estado de implementación
 
 | # | ID | User Story | Épica | Esfuerzo | Estado |
 |---|---|---|---|---|---|
 | 1 | US-00 | Crear grupo | E00 Creación de grupo | M (3-4d) | ✅ Done |
 | 2 | US-00b | Generar link de invitación al crear el grupo | E00 Creación de grupo | S (1-2d) | ✅ Done |
-| 3 | US-01 | Registro con Google | E01 Acceso & Autenticación | S (1-2d) | ✅ Done |
-| 4 | US-02 | Login con Google | E01 Acceso & Autenticación | S (1-2d) | ⬜ Pendiente |
-| 5 | US-04 | Join por invitación | E01 Acceso & Autenticación | M (3-4d) | ⬜ Pendiente |
-| 6 | US-03 | Cerrar sesión | E01 Acceso & Autenticación | XS (<1d) | ✅ Done |
-| 7 | US-11 | Ver organizador del mes | E03 Turno rotativo | S (1-2d) | ✅ Done |
-| 8 | US-05 | Crear evento del mes | E02 Panel de evento | S (1-2d) | ✅ Done |
-| 9 | US-06 | Notificar al grupo | E02 Panel de evento | M (3-4d) | ✅ Done |
-| 10 | US-07 | Ver estado del evento en tiempo real | E02 Panel de evento | S (1-2d) | ✅ Done |
-| 11 | US-08 | Recibir notificación de convocatoria | E04 Confirmación | M (3-4d) | ✅ Done |
-| 12 | US-09 | Confirmar asistencia | E04 Confirmación | S (1-2d) | ✅ Done |
-| 13 | US-10 | Ver resumen de confirmaciones | E04 Confirmación | S (1-2d) | ✅ Done |
-| 14 | US-17 | Abrir votación de restaurantes | E06 Votación | M (3-4d) | ✅ Done |
-| 15 | US-18 | Votar por un restaurante | E06 Votación | S (1-2d) | ✅ Done |
-| 16 | US-14 | Cargar restaurante al cerrar evento | E05 Historial | S (1-2d) | ✅ Done |
-| 17 | US-16 | Consultar historial de restaurantes | E05 Historial | S (1-2d) | ✅ Done |
-| 18 | US-13 | Próximo organizador tras el cierre | E03 Turno rotativo | M (3-4d) | ⬜ Pendiente |
-| 19 | US-20 | Acceder al checklist del mes | E07 Checklist | M (3-4d) | ⬜ Pendiente |
+| 3 | US-00c | Configurar frecuencia y día al crear el grupo | E00 Creación de grupo | S (1-2d) | ✅ Done |
+| 4 | US-00d | Pantalla de confirmación post-creación de grupo | E00 Creación de grupo | S (1-2d) | ⬜ Pendiente |
+| 5 | US-01 | Registro con Google | E01 Acceso & Autenticación | S (1-2d) | ✅ Done |
+| 6 | US-02 | Login con Google | E01 Acceso & Autenticación | S (1-2d) | ✅ Done |
+| 7 | US-04 | Join por invitación | E01 Acceso & Autenticación | M (3-4d) | ✅ Done |
+| 8 | US-03 | Cerrar sesión | E01 Acceso & Autenticación | XS (<1d) | ✅ Done |
+| 9 | US-11 | Ver organizador del mes | E03 Turno rotativo | S (1-2d) | ✅ Done |
+| 10 | US-05 | Crear evento del mes | E02 Panel de evento | S (1-2d) | ✅ Done |
+| 11 | US-06 | Notificar al grupo | E02 Panel de evento | M (3-4d) | ✅ Done |
+| 12 | US-07 | Ver estado del evento en tiempo real | E02 Panel de evento | S (1-2d) | ✅ Done |
+| 13 | US-08 | Recibir notificación de convocatoria | E04 Confirmación | M (3-4d) | ✅ Done |
+| 14 | US-09 | Confirmar asistencia | E04 Confirmación | S (1-2d) | ✅ Done |
+| 15 | US-10 | Ver resumen de confirmaciones | E04 Confirmación | S (1-2d) | ✅ Done |
+| 16 | US-17 | Abrir votación de restaurantes | E06 Votación | M (3-4d) | ✅ Done |
+| 17 | US-18 | Votar por un restaurante | E06 Votación | S (1-2d) | ✅ Done |
+| 18 | US-14 | Cargar restaurante al cerrar evento | E05 Historial | S (1-2d) | ✅ Done |
+| 19 | US-16 | Consultar historial de restaurantes | E05 Historial | S (1-2d) | ✅ Done |
+| 20 | US-13 | Próximo organizador tras el cierre | E03 Turno rotativo | M (3-4d) | ✅ Done |
+| 21 | US-20 | Acceder al checklist del mes | E07 Checklist | M (3-4d) | ✅ Done |
 
 ---
 
@@ -310,7 +344,7 @@ El proyecto sigue [Semantic Versioning](https://semver.org/):
 
 - `0.x.0` — iteraciones del MVP (cada épica completa sube el minor)
 - `0.0.x` — fixes y ajustes dentro de una épica
-- `1.0.0` — MVP completo con las 19 US en producción
+- `1.0.0` — MVP completo con las 21 US en producción
 
 ---
 
