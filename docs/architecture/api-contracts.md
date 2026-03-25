@@ -15,13 +15,21 @@ Los tipos referenciados están definidos en `types/index.ts`.
 ```ts
 // app/(dashboard)/group/actions.ts
 async function createGroup(
-  input: { name: string }
+  input: {
+    name: string
+    frequency: 'mensual' | 'quincenal' | 'semanal'
+    meeting_day_of_week?: 'lunes' | 'martes' | 'miércoles' | 'jueves' | 'viernes' | 'sábado' | 'domingo'  // para frecuencia semanal y quincenal
+    meeting_day_of_month?: number  // 1-31, para frecuencia mensual
+  }
 ): Promise<ActionResult<Group>>
 ```
 - Inserta en `groups` con `created_by = auth.uid()`
 - El trigger `on_group_created` inserta al creador en `members` como `admin`
 - El trigger `on_group_created_invitation` genera el primer `invitation_link`
 - Retorna el grupo creado
+- **Validación:** exactamente uno de `meeting_day_of_week` o `meeting_day_of_month` debe estar presente según la frecuencia:
+  - `frequency = 'mensual'` → `meeting_day_of_month` requerido, `meeting_day_of_week` debe ser `undefined`
+  - `frequency = 'semanal' | 'quincenal'` → `meeting_day_of_week` requerido, `meeting_day_of_month` debe ser `undefined`
 
 ### `revokeInvitationLink`
 ```ts

@@ -83,6 +83,52 @@ Feature: US-00b — Link de invitación inicial
 
 ---
 
+### US-00c — Configurar frecuencia y día al crear el grupo
+
+> *Como usuario registrado, quiero definir la frecuencia y el día de reunión al crear el grupo, para que el sistema pueda generar los eventos automáticamente y todos los miembros sepan cuándo se reúne el grupo.*
+
+| Prioridad | Esfuerzo | Descripción |
+|---|---|---|
+| Alta — P0c | S (1-2 días) | Complemento directo de US-00. Sin frecuencia y día no hay base para generar eventos ni rotación. Depende de US-00. |
+
+**Acceptance Criteria — Gherkin**
+
+```gherkin
+Feature: US-00c — Configurar frecuencia y día al crear el grupo
+
+  Scenario: Selección de frecuencia mensual muestra días del mes
+    Given estoy completando el formulario de creación de grupo
+    When selecciono la frecuencia "Mensual"
+    Then el campo "Día" muestra un selector numérico con los días del mes (1 al 31)
+
+  Scenario: Selección de frecuencia semanal muestra días de la semana
+    Given estoy completando el formulario de creación de grupo
+    When selecciono la frecuencia "Semanal"
+    Then el campo "Día" muestra los 7 días de la semana como opciones seleccionables
+
+  Scenario: Selección de frecuencia quincenal muestra días de la semana
+    Given estoy completando el formulario de creación de grupo
+    When selecciono la frecuencia "Quincenal"
+    Then el campo "Día" muestra los 7 días de la semana como opciones seleccionables
+
+  Scenario: Campos obligatorios — frecuencia y día
+    Given estoy en el formulario de creación de grupo
+    When intento confirmar sin seleccionar frecuencia o día
+    Then el sistema indica que ambos campos son obligatorios y no crea el grupo
+
+  Scenario: Mensaje informativo visible al cargar el formulario
+    Given accedo al formulario de creación de grupo
+    When la pantalla carga
+    Then veo el mensaje: "Como creador, tendrás el rol de administrador para gestionar las invitaciones, proponer fechas y coordinar los lugares de encuentro"
+
+  Scenario: Datos de frecuencia y día guardados con el grupo
+    Given completé nombre, frecuencia y día correctamente
+    When confirmo la creación del grupo
+    Then el grupo queda creado con los tres atributos guardados y accesibles desde la configuración del grupo
+```
+
+---
+
 ## E01 🔐 Acceso & Autenticación
 
 ### US-01 — Registro con Google
