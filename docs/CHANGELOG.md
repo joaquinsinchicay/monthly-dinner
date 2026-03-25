@@ -13,7 +13,19 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 19 | 15 | 0 | 4 |
+| 19 | 16 | 0 | 3 |
+
+---
+
+## [0.2.3] — 2026-03-24
+
+### Added
+- **US-16** Consultar historial de restaurantes — `lib/actions/restaurant.ts`, `components/group/RestaurantHistory.tsx`, `app/(auth)/grupo/[id]/page.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Historial con registros → `getRestaurantHistory` devuelve entradas ordenadas por `visited_at` desc con nombres de asistentes resueltos desde `profiles`; cada card muestra nombre, fecha y pills de asistentes
+  - ✅ Historial vacío → `entries.length === 0` → card con &ldquo;Todavía no hay cenas registradas&rdquo;
+  - ✅ Búsqueda → input con `useState` filtra `entries` por `name` case-insensitive; muestra &ldquo;No hay resultados&rdquo; cuando no hay matches
 
 ---
 
@@ -215,7 +227,7 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 | 14 | US-17 | Abrir votación de restaurantes | E06 Votación | M (3-4d) | ✅ Done |
 | 15 | US-18 | Votar por un restaurante | E06 Votación | S (1-2d) | ✅ Done |
 | 16 | US-14 | Cargar restaurante al cerrar evento | E05 Historial | S (1-2d) | ✅ Done |
-| 17 | US-16 | Consultar historial de restaurantes | E05 Historial | S (1-2d) | ⬜ Pendiente |
+| 17 | US-16 | Consultar historial de restaurantes | E05 Historial | S (1-2d) | ✅ Done |
 | 18 | US-13 | Próximo organizador tras el cierre | E03 Turno rotativo | M (3-4d) | ⬜ Pendiente |
 | 19 | US-20 | Acceder al checklist del mes | E07 Checklist | M (3-4d) | ⬜ Pendiente |
 
