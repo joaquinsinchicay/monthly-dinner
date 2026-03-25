@@ -13,7 +13,21 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 19 | 18 | 0 | 1 |
+| 19 | 19 | 0 | 0 |
+
+> **MVP completo** — todas las US implementadas y en producción.
+
+---
+
+## [0.2.6] — 2026-03-24
+
+### Verificado (no requirió código nuevo)
+- **US-02** Login con Google — ya implementada como parte de US-01 (infraestructura OAuth)
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Login exitoso → `GoogleSignInButton` llama `signInWithGoogle` → redirect OAuth de Google → `app/auth/callback/route.ts` intercambia el código por sesión → `redirect('/dashboard')`
+  - ✅ Sesión persistente → `app/auth/login/page.tsx` llama `supabase.auth.getUser()` al renderizar; si hay sesión activa hace `redirect('/dashboard')` sin mostrar el login. El middleware replica la misma lógica para rutas protegidas
+  - ✅ Token expirado → `middleware.ts` llama `supabase.auth.getUser()` en cada request; si no hay usuario en ruta no pública, redirige a `/` (landing/login)
 
 ---
 
