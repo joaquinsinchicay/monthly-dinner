@@ -13,6 +13,8 @@ import { getCurrentEvent, getAttendanceCounts } from '@/lib/actions/events'
 import { getUserAttendance } from '@/lib/actions/attendances'
 import { getPollWithOptions } from '@/lib/actions/polls'
 import { getRestaurantHistory } from '@/lib/actions/restaurant'
+import { getOrCreateChecklist } from '@/lib/actions/checklist'
+import ChecklistPanel from '@/components/group/ChecklistPanel'
 import { getInvitationLinkStatus } from '@/types'
 import type { MemberRole } from '@/types'
 
@@ -92,6 +94,13 @@ export default async function GrupoPage({ params }: Props) {
   const historyResult = await getRestaurantHistory(params.id)
   const restaurantHistory = historyResult.success ? historyResult.data : []
 
+  // Checklist del mes (US-20) — solo si el usuario es el organizador y hay evento
+  const checklistResult =
+    isOrganizer && currentEvent
+      ? await getOrCreateChecklist(currentEvent.id)
+      : null
+  const checklistItems = checklistResult?.success ? checklistResult.data : []
+
   // Votación del mes actual (US-17) — solo si hay evento publicado
   const pollResult =
     currentEvent && currentEvent.status !== 'pending'
@@ -124,6 +133,16 @@ export default async function GrupoPage({ params }: Props) {
 
         {/* US-11: Organizador del mes / US-13: Próximo organizador */}
         <OrganizerPanel organizer={organizer ?? null} currentUserId={user.id} nextOrganizer={nextOrganizer} />
+
+        {/* US-20: Checklist del mes — visible para el organizador cuando hay evento activo;
+            para no organizadores muestra mensaje explicativo */}
+        {currentEvent && (
+          <ChecklistPanel
+            eventId={currentEvent.id}
+            isOrganizer={isOrganizer}
+            initialItems={checklistItems ?? []}
+          />
+        )}
 
         {/* US-08: Notificación de convocatoria — visible cuando hay evento publicado y el
             miembro no confirmó. Muestra variante "recordatorio" si pasaron ≥48h. */}
