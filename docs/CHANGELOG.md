@@ -13,7 +13,19 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 19 | 16 | 0 | 3 |
+| 19 | 17 | 0 | 2 |
+
+---
+
+## [0.2.4] — 2026-03-24
+
+### Added
+- **US-13** Próximo organizador tras el cierre — `supabase/migrations/20260324_assign_next_rotation.sql`, `lib/actions/rotation.ts`, `lib/actions/restaurant.ts`, `components/group/OrganizerPanel.tsx`, `app/(auth)/grupo/[id]/page.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Siguiente organizador visible tras el cierre → `assign_next_rotation` (security definer) se llama al cerrar el evento; `getNextOrganizer` consulta `rotation` para el próximo mes; `OrganizerPanel` muestra `NextOrganizerBadge` con nombre y mes
+  - ✅ Notificación al próximo organizador → badge in-app en `OrganizerPanel`: "Te toca organizar el próximo mes" (si soy yo) o "Organiza [nombre]" (si es otro); visible inmediatamente tras el cierre del evento
+  - ✅ Rotación completa reinicia el ciclo → lógica modular en SQL: `v_next_index := (v_last_index % array_length(v_members, 1)) + 1`; cuando el último organiza, el índice vuelve al primero
 
 ---
 
