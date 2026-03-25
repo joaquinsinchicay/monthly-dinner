@@ -5,8 +5,8 @@ interface Props {
   isAdminOrOrganizer: boolean
 }
 
-// Scenario: Admin u organizador ve el estado vacío con CTA — card con título, body y botón primario.
-// Scenario: Botón redirige a creación de evento — href a /grupo/[id]/eventos/nuevo.
+// Scenario: Admin u organizador ve el estado vacío con CTA — layout sin card, centrado sobre surface.
+// Scenario: Botón redirige a configuración del grupo — href a /dashboard/[groupId]/settings.
 // Scenario: Miembro ve mensaje de espera sin CTA — texto plano sin botón.
 // Scenario: Estado vacío desaparece al crear el primer evento — se oculta cuando hasEvents=true.
 // Scenario: Estado vacío no se muestra si hay historial previo — idem, hasEvents cubre eventos cerrados.
@@ -22,35 +22,35 @@ export default function EmptyDashboard({ groupId, isAdminOrOrganizer }: Props) {
 
   // Scenario: Admin u organizador ve el estado vacío con CTA
   return (
-    <div className="rounded-2xl bg-white p-6 shadow-[0px_10px_30px_-5px_rgba(28,27,27,0.07)]">
+    <div className="flex flex-col items-center px-8">
 
-      {/* Ícono decorativo */}
-      <div className="mb-5 flex justify-center">
-        <span className="text-4xl" aria-hidden="true">🍽️</span>
-      </div>
-
-      {/* Título editorial */}
+      {/* Título editorial Display Large */}
       <h2
-        className="text-center font-serif text-[26px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
+        className="text-center font-serif text-[36px] leading-tight tracking-[-0.02em]"
         style={{ fontFamily: 'DM Serif Display, serif' }}
       >
-        Tu clan está listo,{' '}
-        <span className="italic">pero falta la mesa.</span>
+        <span className="text-[#1c1b1b]">Configurá</span>
+        <br />
+        <span className="italic text-[#004ac6]">el grupo</span>
       </h2>
 
       {/* Cuerpo */}
-      <p className="mt-4 text-center text-sm leading-relaxed text-[#585f6c]">
-        Has creado el espacio perfecto para los amantes del buen comer. Ahora solo falta
-        coordinar la primera cita para que la magia suceda.
+      <p className="mt-6 text-center text-base leading-relaxed text-[#585f6c]">
+        Tu clan está listo, finalizá la configuración para dar comienzo a la experiencia culinaria.
       </p>
 
-      {/* Scenario: Botón redirige a creación de evento */}
+      {/* Scenario: Botón redirige a configuración del grupo */}
       <Link
-        href={`/grupo/${groupId}/eventos/nuevo`}
-        className="mt-6 flex w-full items-center justify-center rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-6 py-3 text-[13px] font-semibold uppercase tracking-[0.08em] text-white transition-opacity hover:opacity-90"
+        href={`/dashboard/${groupId}/settings`}
+        className="mt-8 flex w-full max-w-xs items-center justify-center rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-6 py-5 text-base font-semibold text-white transition-opacity hover:opacity-90"
       >
-        Crear primer evento →
+        Completar configuración →
       </Link>
+
+      {/* Footer */}
+      <p className="mt-auto pt-10 text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
+        Powered by The Digital Maître D&apos;
+      </p>
     </div>
   )
 }

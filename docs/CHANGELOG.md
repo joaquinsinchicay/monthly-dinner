@@ -19,6 +19,21 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 ---
 
+## [0.3.0] — 2026-03-25
+
+### Updated
+- **US-07b** Redesign variante admin/organizador — `components/group/EmptyDashboard.tsx`
+
+  Cambios aprobados:
+  - Layout sin card/sombra — contenido centrado directamente sobre `surface (#fcf9f8)`
+  - Título Display Large: "Configurá" (`on_surface #1c1b1b`) + "el grupo" (`italic, primary #004ac6`)
+  - Copy: "Tu clan está listo, finalizá la configuración para dar comienzo a la experiencia culinaria."
+  - CTA: "Completar configuración →" → `href=/dashboard/[groupId]/settings`
+  - Footer: "POWERED BY THE DIGITAL MAÎTRE D'"
+  - Variante miembro sin cambios
+
+---
+
 ## [0.2.9] — 2026-03-25
 
 ### Added
