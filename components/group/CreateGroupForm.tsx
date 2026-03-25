@@ -67,7 +67,8 @@ export default function CreateGroupForm() {
         return
       }
 
-      router.push(`/grupo/${result.data.id}`)
+      // router.replace evita que el botón atrás vuelva al formulario (US-00d)
+      router.replace(`/grupo-creado/${result.data.id}`)
     })
   }
 
