@@ -13,7 +13,25 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 19 | 13 | 0 | 6 |
+| 19 | 14 | 0 | 5 |
+
+---
+
+## [0.2.1] — 2026-03-24
+
+### Added
+- **US-18** Votar por un restaurante — `lib/actions/polls.ts`, `components/group/PollVoting.tsx`, `components/group/PollPanel.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Voto registrado → `castVote` UPSERT INSERT; actualización optimista inmediata; porcentajes visibles tras votar; realtime actualiza cuando otro miembro vota
+  - ✅ Cambio de voto dentro del plazo → misma UI, `castVote` UPSERT UPDATE; barra de porcentaje se recalcula
+  - ✅ Intento de votar fuera del plazo → `castVote` rechaza si `status=closed` o `closes_at` en el pasado; UI con botones deshabilitados y resultado final siempre visible
+  - ✅ Miembro que no votó antes del cierre → `!open && !userVoted` → badge "No participaste en esta votación"; resultado final visible
+
+  **Nota:** Requiere habilitar realtime para `poll_votes` en Supabase:
+  ```sql
+  alter publication supabase_realtime add table poll_votes;
+  ```
 
 ---
 
@@ -183,7 +201,7 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 | 12 | US-09 | Confirmar asistencia | E04 Confirmación | S (1-2d) | ✅ Done |
 | 13 | US-10 | Ver resumen de confirmaciones | E04 Confirmación | S (1-2d) | ✅ Done |
 | 14 | US-17 | Abrir votación de restaurantes | E06 Votación | M (3-4d) | ✅ Done |
-| 15 | US-18 | Votar por un restaurante | E06 Votación | S (1-2d) | ⬜ Pendiente |
+| 15 | US-18 | Votar por un restaurante | E06 Votación | S (1-2d) | ✅ Done |
 | 16 | US-14 | Cargar restaurante al cerrar evento | E05 Historial | S (1-2d) | ⬜ Pendiente |
 | 17 | US-16 | Consultar historial de restaurantes | E05 Historial | S (1-2d) | ⬜ Pendiente |
 | 18 | US-13 | Próximo organizador tras el cierre | E03 Turno rotativo | M (3-4d) | ⬜ Pendiente |

@@ -771,9 +771,12 @@ create policy "checklist_items: delete organizer"
 -- Ejecutar en Supabase → Database → Replication, o descomentar las líneas:
 -- =============================================================================
 
--- alter publication supabase_realtime add table attendances;
--- alter publication supabase_realtime add table poll_votes;
--- alter publication supabase_realtime add table events;
+-- US-07 / US-10: confirmaciones en tiempo real
+alter publication supabase_realtime add table attendances;
+-- US-18: porcentajes de votación en tiempo real
+alter publication supabase_realtime add table poll_votes;
+-- US-07: cambios de estado del evento
+alter publication supabase_realtime add table events;
 
 
 -- =============================================================================
