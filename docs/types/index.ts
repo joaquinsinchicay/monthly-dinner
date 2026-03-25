@@ -39,6 +39,9 @@ export interface Profile {
 export interface Group {
   id: string
   name: string
+  frequency: 'mensual' | 'quincenal' | 'semanal'
+  meeting_day_of_week: 'lunes' | 'martes' | 'miércoles' | 'jueves' | 'viernes' | 'sábado' | 'domingo' | null
+  meeting_day_of_month: number | null
   created_by: string       // uuid — profiles.id
   created_at: string
   updated_at: string
