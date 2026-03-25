@@ -19,6 +19,28 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 ---
 
+## [0.3.1] — 2026-03-25
+
+### Updated
+- **US-01 / US-02** Redesign pantalla de login — `app/auth/login/page.tsx`, `components/auth/GoogleSignInButton.tsx`, `public/images/`
+
+  Cambios aprobados:
+  - Layout: dos bloques apilados (imagen arriba, texto + CTA abajo) sobre `surface (#fcf9f8)`, `max-w-[480px]`, centrado vertical en pantalla
+  - Hero image: `/public/images/login-hero.jpg`, `rounded-3xl`, `aspect-ratio 4/3`, `object-cover` — **requiere colocar el archivo de imagen en `public/images/login-hero.jpg`**
+  - Título: "Registra las cenas con amigos" — DM Serif Display 36px, `on_surface #1c1b1b`, `text-center`
+  - Botón: "Continuar con Google" — `bg-[#2563eb]` sólido, `rounded-full`, `py-4`, `text-base font-medium`, ícono Google oficial
+  - Texto legal: "Si no tenés cuenta se creará automáticamente." — 12px, `secondary #585f6c`
+  - Backend sin cambios: `signInWithGoogle` apunta a Google OAuth con `redirectTo` correcto
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ US-01: Registro exitoso / Email ya registrado → `signInWithOAuth` + Supabase maneja ambos casos con el mismo endpoint
+  - ✅ US-01: Cancelación OAuth → `auth/callback/route.ts` detecta `error=access_denied` y redirige a `/`
+  - ✅ US-02: Login exitoso → mismo flujo OAuth, Supabase reconoce cuenta existente
+  - ✅ US-02: Sesión persistente → `LoginPage` llama `getUser()` al cargar; `redirect('/dashboard')` si hay sesión
+  - ✅ US-02: Token expirado → `middleware.ts` redirige rutas protegidas a `/` si no hay usuario
+
+---
+
 ## [0.3.0] — 2026-03-25
 
 ### Updated
