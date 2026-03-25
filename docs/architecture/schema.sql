@@ -39,6 +39,20 @@ create policy "profiles: select own"
   on profiles for select
   using (auth.uid() = id);
 
+-- Permite ver el perfil de cualquier miembro del mismo grupo.
+-- Necesario para US-10 (nombres en resumen) y US-11 (nombre del organizador para otros miembros).
+create policy "profiles: select group members"
+  on profiles for select
+  using (
+    exists (
+      select 1
+      from members m1
+      join members m2 on m1.group_id = m2.group_id
+      where m1.user_id = profiles.id
+        and m2.user_id = auth.uid()
+    )
+  );
+
 create policy "profiles: insert own"
   on profiles for insert
   with check (auth.uid() = id);
@@ -757,9 +771,12 @@ create policy "checklist_items: delete organizer"
 -- Ejecutar en Supabase → Database → Replication, o descomentar las líneas:
 -- =============================================================================
 
--- alter publication supabase_realtime add table attendances;
--- alter publication supabase_realtime add table poll_votes;
--- alter publication supabase_realtime add table events;
+-- US-07 / US-10: confirmaciones en tiempo real
+alter publication supabase_realtime add table attendances;
+-- US-18: porcentajes de votación en tiempo real
+alter publication supabase_realtime add table poll_votes;
+-- US-07: cambios de estado del evento
+alter publication supabase_realtime add table events;
 
 
 -- =============================================================================

@@ -2,7 +2,19 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import { headers } from 'next/headers'
 import InvitationLinkPanel from '@/components/group/InvitationLinkPanel'
+import OrganizerPanel from '@/components/group/OrganizerPanel'
+import EventPanel from '@/components/group/EventPanel'
+import ConvocatoriaNotification from '@/components/group/ConvocatoriaNotification'
+import PollPanel from '@/components/group/PollPanel'
+import RestaurantHistory from '@/components/group/RestaurantHistory'
 import SignOutButton from '@/components/auth/SignOutButton'
+import { getCurrentOrganizer, getNextOrganizer } from '@/lib/actions/rotation'
+import { getCurrentEvent, getAttendanceCounts } from '@/lib/actions/events'
+import { getUserAttendance } from '@/lib/actions/attendances'
+import { getPollWithOptions } from '@/lib/actions/polls'
+import { getRestaurantHistory } from '@/lib/actions/restaurant'
+import { getOrCreateChecklist } from '@/lib/actions/checklist'
+import ChecklistPanel from '@/components/group/ChecklistPanel'
 import { getInvitationLinkStatus } from '@/types'
 import type { MemberRole } from '@/types'
 
@@ -47,6 +59,55 @@ export default async function GrupoPage({ params }: Props) {
   const activeLink =
     (links ?? []).find((l) => getInvitationLinkStatus(l) === 'active') ?? null
 
+  // Organizador del mes actual (US-11)
+  const organizerResult = await getCurrentOrganizer(params.id)
+  const organizer = organizerResult.success ? organizerResult.data : null
+  const isOrganizer = organizer?.userId === user.id
+
+  // Próximo organizador (US-13) — asignado al cerrar el evento
+  const nextOrganizerResult = await getNextOrganizer(params.id)
+  const nextOrganizer = nextOrganizerResult.success ? nextOrganizerResult.data : null
+
+  // Evento del mes actual (US-05)
+  const eventResult = await getCurrentEvent(params.id)
+  const currentEvent = eventResult.success ? eventResult.data : null
+
+  // Conteos de asistencia para realtime (US-07) — solo si hay evento
+  const countsResult = currentEvent ? await getAttendanceCounts(currentEvent.id) : null
+  const attendanceCounts = countsResult?.success ? countsResult.data : undefined
+
+  // Confirmación del usuario actual (US-08) — solo si hay evento publicado
+  const attendanceResult =
+    currentEvent?.status === 'published'
+      ? await getUserAttendance(currentEvent.id)
+      : null
+  const userAttendance = attendanceResult?.success ? attendanceResult.data : null
+
+  // Scenario: Notificación recibida con acción directa — mostrar solo si el evento
+  // está publicado y el miembro NO ha confirmado todavía.
+  // Scenario: Recordatorio por falta de respuesta — isReminder se evalúa dentro del componente.
+  // Scenario: Acceso desde notificación — el routing /dashboard → /grupo/[id] ya garantiza
+  // que el usuario llega al panel del evento, no a la pantalla de inicio.
+  const showNotification = currentEvent?.status === 'published' && !userAttendance && !isOrganizer
+
+  // Historial de restaurantes del grupo (US-16)
+  const historyResult = await getRestaurantHistory(params.id)
+  const restaurantHistory = historyResult.success ? historyResult.data : []
+
+  // Checklist del mes (US-20) — solo si el usuario es el organizador y hay evento
+  const checklistResult =
+    isOrganizer && currentEvent
+      ? await getOrCreateChecklist(currentEvent.id)
+      : null
+  const checklistItems = checklistResult?.success ? checklistResult.data : []
+
+  // Votación del mes actual (US-17) — solo si hay evento publicado
+  const pollResult =
+    currentEvent && currentEvent.status !== 'pending'
+      ? await getPollWithOptions(currentEvent.id)
+      : null
+  const currentPoll = pollResult?.success ? pollResult.data : null
+
   // Base URL para construir el link completo
   const headersList = headers()
   const host = headersList.get('host') ?? 'localhost:3000'
@@ -60,7 +121,7 @@ export default async function GrupoPage({ params }: Props) {
         {/* Header editorial */}
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-            Grupo creado
+            Tu grupo
           </p>
           <h1
             className="mt-1 font-serif text-[28px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
@@ -69,6 +130,48 @@ export default async function GrupoPage({ params }: Props) {
             {group.name}
           </h1>
         </div>
+
+        {/* US-11: Organizador del mes / US-13: Próximo organizador */}
+        <OrganizerPanel organizer={organizer ?? null} currentUserId={user.id} nextOrganizer={nextOrganizer} />
+
+        {/* US-20: Checklist del mes — visible para el organizador cuando hay evento activo;
+            para no organizadores muestra mensaje explicativo */}
+        {currentEvent && (
+          <ChecklistPanel
+            eventId={currentEvent.id}
+            isOrganizer={isOrganizer}
+            initialItems={checklistItems ?? []}
+          />
+        )}
+
+        {/* US-08: Notificación de convocatoria — visible cuando hay evento publicado y el
+            miembro no confirmó. Muestra variante "recordatorio" si pasaron ≥48h. */}
+        {showNotification && currentEvent && (
+          <ConvocatoriaNotification event={currentEvent} groupId={params.id} />
+        )}
+
+        {/* US-05 / US-07 / US-09: Evento del mes + confirmaciones en tiempo real + Tu respuesta */}
+        <EventPanel
+          groupId={params.id}
+          event={currentEvent ?? null}
+          currentUserId={user.id}
+          isOrganizer={isOrganizer}
+          attendanceCounts={attendanceCounts}
+          userAttendance={userAttendance}
+        />
+
+        {/* US-17: Votación de restaurantes — visible para organizador (crear) y todos (ver) */}
+        {currentEvent && currentEvent.status !== 'pending' && (
+          <PollPanel
+            eventId={currentEvent.id}
+            groupId={params.id}
+            poll={currentPoll ?? null}
+            isOrganizer={isOrganizer}
+          />
+        )}
+
+        {/* US-16: Historial de restaurantes */}
+        <RestaurantHistory entries={restaurantHistory} />
 
         {/* Scenario: Link generado automáticamente al crear el grupo */}
         <div className="rounded-2xl bg-white p-6 shadow-[0px_10px_30px_-5px_rgba(28,27,27,0.07)]">

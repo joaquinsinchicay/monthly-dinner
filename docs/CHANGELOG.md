@@ -13,7 +13,128 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 19 | 5 | 0 | 14 |
+| 19 | 18 | 0 | 1 |
+
+---
+
+## [0.2.5] — 2026-03-24
+
+### Added
+- **US-20** Acceder al checklist del mes — `supabase/migrations/20260324_checklist_global_templates.sql`, `lib/actions/checklist.ts`, `components/group/ChecklistPanel.tsx`, `app/(auth)/grupo/[id]/page.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Checklist disponible al ser asignado → `getOrCreateChecklist` crea 5 items desde templates globales al primer acceso; `ChecklistPanel` muestra tareas ordenadas por `order_index` + barra de progreso `X/N` con gradiente azul
+  - ✅ Tarea completada → `toggleChecklistItem` actualiza `status='done'` + `completed_at`; optimistic update inmediato; label tachado; progreso se recalcula; siguiente tarea se habilita (lógica secuencial: `items[idx-1].status === 'done'`)
+  - ✅ Checklist no disponible para no organizadores → `ChecklistPanel` con `isOrganizer=false` muestra "El checklist está disponible únicamente para el organizador del mes"
+  - ✅ Retomar checklist incompleto → `getOrCreateChecklist` detecta items existentes (`existing.length > 0`) y los devuelve sin recrear; `initialItems` prop hidrata el estado inicial sin flicker
+
+---
+
+## [0.2.4] — 2026-03-24
+
+### Added
+- **US-13** Próximo organizador tras el cierre — `supabase/migrations/20260324_assign_next_rotation.sql`, `lib/actions/rotation.ts`, `lib/actions/restaurant.ts`, `components/group/OrganizerPanel.tsx`, `app/(auth)/grupo/[id]/page.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Siguiente organizador visible tras el cierre → `assign_next_rotation` (security definer) se llama al cerrar el evento; `getNextOrganizer` consulta `rotation` para el próximo mes; `OrganizerPanel` muestra `NextOrganizerBadge` con nombre y mes
+  - ✅ Notificación al próximo organizador → badge in-app en `OrganizerPanel`: "Te toca organizar el próximo mes" (si soy yo) o "Organiza [nombre]" (si es otro); visible inmediatamente tras el cierre del evento
+  - ✅ Rotación completa reinicia el ciclo → lógica modular en SQL: `v_next_index := (v_last_index % array_length(v_members, 1)) + 1`; cuando el último organiza, el índice vuelve al primero
+
+---
+
+## [0.2.3] — 2026-03-24
+
+### Added
+- **US-16** Consultar historial de restaurantes — `lib/actions/restaurant.ts`, `components/group/RestaurantHistory.tsx`, `app/(auth)/grupo/[id]/page.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Historial con registros → `getRestaurantHistory` devuelve entradas ordenadas por `visited_at` desc con nombres de asistentes resueltos desde `profiles`; cada card muestra nombre, fecha y pills de asistentes
+  - ✅ Historial vacío → `entries.length === 0` → card con &ldquo;Todavía no hay cenas registradas&rdquo;
+  - ✅ Búsqueda → input con `useState` filtra `entries` por `name` case-insensitive; muestra &ldquo;No hay resultados&rdquo; cuando no hay matches
+
+---
+
+## [0.2.2] — 2026-03-24
+
+### Added
+- **US-14** Cargar restaurante al cerrar evento — `lib/actions/restaurant.ts`, `components/group/CloseEventForm.tsx`, `components/group/EventPanel.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Restaurante cargado al cerrar → `closeEvent` INSERT `restaurant_history` con snapshot `attendee_ids` (va) + UPDATE `events.status='closed'`; `router.refresh()` actualiza la vista
+  - ✅ Restaurante ya en el historial → check `ilike` en `restaurant_history` del grupo → devuelve `alreadyVisited`; `CloseEventForm` muestra advertencia con fecha anterior + "Confirmar igual" (re-envío con `force=true`)
+  - ✅ Cierre sin restaurante → campo opcional; `name=null` en `restaurant_history`; nota en el form avisa "Sin restaurante registrado"
+
+---
+
+## [0.2.1] — 2026-03-24
+
+### Added
+- **US-18** Votar por un restaurante — `lib/actions/polls.ts`, `components/group/PollVoting.tsx`, `components/group/PollPanel.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Voto registrado → `castVote` UPSERT INSERT; actualización optimista inmediata; porcentajes visibles tras votar; realtime actualiza cuando otro miembro vota
+  - ✅ Cambio de voto dentro del plazo → misma UI, `castVote` UPSERT UPDATE; barra de porcentaje se recalcula
+  - ✅ Intento de votar fuera del plazo → `castVote` rechaza si `status=closed` o `closes_at` en el pasado; UI con botones deshabilitados y resultado final siempre visible
+  - ✅ Miembro que no votó antes del cierre → `!open && !userVoted` → badge "No participaste en esta votación"; resultado final visible
+
+  **Nota:** Requiere habilitar realtime para `poll_votes` en Supabase:
+  ```sql
+  alter publication supabase_realtime add table poll_votes;
+  ```
+
+---
+
+## [0.2.0] — 2026-03-24
+
+### Added
+- **US-17** Abrir votación de restaurantes — `lib/actions/polls.ts`, `components/group/PollForm.tsx`, `components/group/PollPanel.tsx`, `app/(auth)/grupo/[id]/page.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Votación creada exitosamente → `createPoll` INSERT poll + opciones, `status='open'`; `PollPanel` visible para todos los miembros (notificación in-app); `router.refresh()` actualiza la vista
+  - ✅ Menos de 2 opciones → validación client-side en `PollForm` + server-side en `createPoll`; error inline; form no se limpia
+  - ✅ Fecha de cierre en el pasado → input con `min=tomorrow` en UI + validación `closesAtDate <= new Date()` en server action; error inline
+  - ✅ Solo una votación activa por evento → check previo al INSERT; error "Ya existe... Podés editarla"; `PollPanel` muestra aviso al organizador cuando ya hay poll activo
+
+---
+
+## [0.1.3] — 2026-03-24
+
+### Added
+- **US-10** Ver resumen de confirmaciones — `lib/actions/attendances.ts`, `components/group/AttendanceSummaryDetailed.tsx`, `components/group/EventPanel.tsx`, `docs/architecture/schema.sql`, `supabase/migrations/20260324_profiles_select_group_members.sql`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Resumen completo visible → `AttendanceSummaryDetailed` muestra nombres por categoría (Van / Tal vez / No van) como pills coloreados + sección "Sin responder" cuando aplica. Solo visible para el organizador
+  - ✅ Todos confirmaron → `sin_responder.length === 0` oculta la sección y muestra badge verde "Todos respondieron"
+  - ✅ Compartir resumen → botón genera texto formateado con emoji + categorías + nombres, `navigator.clipboard.writeText()`, feedback visual "¡Copiado!" por 2s
+
+  **Nota:** Requiere ejecutar `supabase/migrations/20260324_profiles_select_group_members.sql` en Supabase antes de deployar. Agrega la política `"profiles: select group members"` necesaria para leer nombres de otros miembros.
+
+---
+
+## [0.1.2] — 2026-03-24
+
+### Added
+- **US-09** Confirmar asistencia — `lib/actions/attendances.ts`, `components/group/ConfirmAttendanceButtons.tsx`, `components/group/ConvocatoriaNotification.tsx`, `components/group/EventPanel.tsx`, `app/(auth)/grupo/[id]/page.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Confirmación exitosa → `ConfirmAttendanceButtons` en `ConvocatoriaNotification` (primera vez sin fila previa) → `upsertAttendance` INSERT, `router.refresh()` actualiza la página
+  - ✅ Cambio de estado → sección "Tu respuesta" en `EventPanel` con `ConfirmAttendanceButtons` cuando `userAttendance` existe → UPSERT actualiza la fila existente; `AttendanceSummary` refleja el cambio vía realtime
+  - ✅ Estado "Tal vez" → mismo flujo con `status='tal_vez'`, badge azul para el estado seleccionado
+  - ✅ Confirmación después del evento → `upsertAttendance` rechaza si `status=closed`; UI muestra `ReadOnlyBadge` sin botones
+
+---
+
+## [0.1.1] — 2026-03-24
+
+### Added
+- **US-08** Recibir notificación de convocatoria — `lib/actions/attendances.ts`, `components/group/ConvocatoriaNotification.tsx`, `app/(auth)/grupo/[id]/page.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Notificación recibida con acción directa → `ConvocatoriaNotification` muestra fecha, lugar, descripción y CTA "Confirmar asistencia" cuando `status=published` y el miembro no ha confirmado aún
+  - ✅ Recordatorio por falta de respuesta → `isReminder()` detecta ≥48h desde `events.notified_at`; el componente cambia a variante "Recordatorio" (badge rojo, mensaje urgente)
+  - ✅ Acceso desde notificación → routing `/dashboard → /grupo/[id]` preexistente garantiza que el usuario llega al panel del evento; `ConvocatoriaNotification` es visible en esa ruta
+
+  **Nota:** Notificaciones in-app only en MVP — no hay push ni email. El "recordatorio único" se implementa como variante visual de la misma card. La acción de confirmación (botón CTA) se completa en US-09.
 
 ---
 
@@ -53,6 +174,41 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
   - ✅ Link reutilizable con expiración → `getInvitationLinkStatus()` detecta expirado, admin puede generar nuevo
   - ✅ Revocar link activo → `UPDATE revoked_at`, UI refleja estado sin link
 
+- **US-07** Ver estado del evento en tiempo real — `lib/actions/events.ts`, `components/group/AttendanceSummary.tsx`, `components/group/EventPanel.tsx`, `app/(auth)/grupo/[id]/page.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Panel con evento activo → fecha, lugar, organizador (OrganizerPanel) y conteos va/no_va/tal_vez
+  - ✅ Panel sin evento activo → "La cena de este mes aún no fue convocada" (EventPanel empty state)
+  - ✅ Actualización en tiempo real → `supabase.channel()` en `AttendanceSummary`, re-fetch en cada INSERT/UPDATE/DELETE de `attendances`
+
+  **Nota:** Habilitar realtime en Supabase → Database → Replication:
+  ```sql
+  alter publication supabase_realtime add table attendances;
+  alter publication supabase_realtime add table events;
+  ```
+
+- **US-06** Notificar al grupo — `lib/actions/events.ts`, `components/group/NotifyButton.tsx`, `components/group/EventForm.tsx`, `components/group/EventPanel.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Notificación enviada al publicar → `publishEvent` sets `status=published` + `notified_at=now()`, botón en EventPanel cuando `status=pending`
+  - ✅ Miembro sin notificaciones activas → el evento aparece en el panel al abrir la app (RLS members, in-app only per technical-decisions.md)
+  - ✅ Re-notificación por cambio de datos → checkbox "Notificar al grupo sobre los cambios" en EventForm para eventos publicados, `updateEvent` setea `notified_at` si `notify=true`
+
+- **US-05** Crear evento del mes — `lib/actions/events.ts`, `components/group/EventForm.tsx`, `components/group/EventPanel.tsx`, `app/(auth)/grupo/[id]/page.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Creación exitosa → validación de organizador via rotation, INSERT separado, estado `pending`, visible para miembros
+  - ✅ Campos obligatorios vacíos → `event_date` requerida, error inline, form no se limpia
+  - ✅ Evento ya existente en el mes → check previo al INSERT, mensaje con opción de editar
+  - ✅ Edición posterior → `updateEvent` valida organizer_id inmutable + status ≠ closed, `<details>` inline en el panel
+
+- **US-11** Ver organizador del mes — `lib/actions/rotation.ts`, `components/group/OrganizerPanel.tsx`, `app/(auth)/grupo/[id]/page.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Organizador visible en el panel → nombre del organizador del mes actual destacado en la card
+  - ✅ El organizador soy yo → indicación "Te toca organizar" con badge + próximo paso hacia el evento
+  - ✅ Sin organizador asignado → mensaje "El turno de este mes aún no fue asignado"
+
 - **US-03** Cerrar sesión — `components/auth/SignOutButton.tsx`, `lib/actions/auth.ts`, `app/(auth)/grupo/[id]/page.tsx`
 
   Todos los escenarios Gherkin cubiertos:
@@ -86,17 +242,17 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 | 4 | US-02 | Login con Google | E01 Acceso & Autenticación | S (1-2d) | ⬜ Pendiente |
 | 5 | US-04 | Join por invitación | E01 Acceso & Autenticación | M (3-4d) | ⬜ Pendiente |
 | 6 | US-03 | Cerrar sesión | E01 Acceso & Autenticación | XS (<1d) | ✅ Done |
-| 7 | US-11 | Ver organizador del mes | E03 Turno rotativo | S (1-2d) | ⬜ Pendiente |
-| 8 | US-05 | Crear evento del mes | E02 Panel de evento | S (1-2d) | ⬜ Pendiente |
-| 9 | US-06 | Notificar al grupo | E02 Panel de evento | M (3-4d) | ⬜ Pendiente |
-| 10 | US-07 | Ver estado del evento en tiempo real | E02 Panel de evento | S (1-2d) | ⬜ Pendiente |
-| 11 | US-08 | Recibir notificación de convocatoria | E04 Confirmación | M (3-4d) | ⬜ Pendiente |
-| 12 | US-09 | Confirmar asistencia | E04 Confirmación | S (1-2d) | ⬜ Pendiente |
-| 13 | US-10 | Ver resumen de confirmaciones | E04 Confirmación | S (1-2d) | ⬜ Pendiente |
-| 14 | US-17 | Abrir votación de restaurantes | E06 Votación | M (3-4d) | ⬜ Pendiente |
-| 15 | US-18 | Votar por un restaurante | E06 Votación | S (1-2d) | ⬜ Pendiente |
-| 16 | US-14 | Cargar restaurante al cerrar evento | E05 Historial | S (1-2d) | ⬜ Pendiente |
-| 17 | US-16 | Consultar historial de restaurantes | E05 Historial | S (1-2d) | ⬜ Pendiente |
+| 7 | US-11 | Ver organizador del mes | E03 Turno rotativo | S (1-2d) | ✅ Done |
+| 8 | US-05 | Crear evento del mes | E02 Panel de evento | S (1-2d) | ✅ Done |
+| 9 | US-06 | Notificar al grupo | E02 Panel de evento | M (3-4d) | ✅ Done |
+| 10 | US-07 | Ver estado del evento en tiempo real | E02 Panel de evento | S (1-2d) | ✅ Done |
+| 11 | US-08 | Recibir notificación de convocatoria | E04 Confirmación | M (3-4d) | ✅ Done |
+| 12 | US-09 | Confirmar asistencia | E04 Confirmación | S (1-2d) | ✅ Done |
+| 13 | US-10 | Ver resumen de confirmaciones | E04 Confirmación | S (1-2d) | ✅ Done |
+| 14 | US-17 | Abrir votación de restaurantes | E06 Votación | M (3-4d) | ✅ Done |
+| 15 | US-18 | Votar por un restaurante | E06 Votación | S (1-2d) | ✅ Done |
+| 16 | US-14 | Cargar restaurante al cerrar evento | E05 Historial | S (1-2d) | ✅ Done |
+| 17 | US-16 | Consultar historial de restaurantes | E05 Historial | S (1-2d) | ✅ Done |
 | 18 | US-13 | Próximo organizador tras el cierre | E03 Turno rotativo | M (3-4d) | ⬜ Pendiente |
 | 19 | US-20 | Acceder al checklist del mes | E07 Checklist | M (3-4d) | ⬜ Pendiente |
 
