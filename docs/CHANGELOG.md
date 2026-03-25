@@ -13,7 +13,20 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 19 | 17 | 0 | 2 |
+| 19 | 18 | 0 | 1 |
+
+---
+
+## [0.2.5] — 2026-03-24
+
+### Added
+- **US-20** Acceder al checklist del mes — `supabase/migrations/20260324_checklist_global_templates.sql`, `lib/actions/checklist.ts`, `components/group/ChecklistPanel.tsx`, `app/(auth)/grupo/[id]/page.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Checklist disponible al ser asignado → `getOrCreateChecklist` crea 5 items desde templates globales al primer acceso; `ChecklistPanel` muestra tareas ordenadas por `order_index` + barra de progreso `X/N` con gradiente azul
+  - ✅ Tarea completada → `toggleChecklistItem` actualiza `status='done'` + `completed_at`; optimistic update inmediato; label tachado; progreso se recalcula; siguiente tarea se habilita (lógica secuencial: `items[idx-1].status === 'done'`)
+  - ✅ Checklist no disponible para no organizadores → `ChecklistPanel` con `isOrganizer=false` muestra "El checklist está disponible únicamente para el organizador del mes"
+  - ✅ Retomar checklist incompleto → `getOrCreateChecklist` detecta items existentes (`existing.length > 0`) y los devuelve sin recrear; `initialItems` prop hidrata el estado inicial sin flicker
 
 ---
 
