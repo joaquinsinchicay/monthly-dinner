@@ -426,14 +426,14 @@ Feature: US-07b — Estado vacío del dashboard sin eventos
     Given soy el admin o el organizador del mes
     And el grupo no tiene ningún evento creado en su historial
     When ingreso al dashboard del grupo
-    Then veo el mensaje "Tu clan está listo, pero falta la mesa."
-    And veo el mensaje "Has creado el espacio perfecto para los amantes del buen comer. Ahora solo falta coordinar la primera cita para que la magia suceda."
-    And veo el botón "Crear primer evento"
+    Then veo el mensaje "Configurá el grupo"
+    And veo el mensaje "Tu clan está listo, finalizá la configuración para dar comienzo a la experiencia culinaria."
+    And veo el botón "Completar configuración"
 
-  Scenario: Botón redirige a creación de evento
+  Scenario: Botón redirige a configuración del grupo
     Given estoy viendo el estado vacío como admin u organizador
-    When toco "Crear primer evento"
-    Then soy redirigido a la pantalla de creación de evento del mes
+    When toco "Completar configuración"
+    Then soy redirigido a /dashboard/[groupId]/settings
 
   Scenario: Miembro ve mensaje de espera sin CTA
     Given soy un miembro del grupo sin rol de organizador
