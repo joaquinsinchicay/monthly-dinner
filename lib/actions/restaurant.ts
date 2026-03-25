@@ -117,6 +117,9 @@ export async function closeEvent(
     return { success: false, error: 'No se pudo cerrar el evento. Intentá de nuevo.' }
   }
 
+  // US-13: auto-asignar organizador del próximo mes (security definer bypasea RLS)
+  await supabase.rpc('assign_next_rotation', { p_group_id: event.group_id })
+
   return { success: true, data: { closed: true } }
 }
 

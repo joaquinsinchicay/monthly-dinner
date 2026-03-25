@@ -8,7 +8,7 @@ import ConvocatoriaNotification from '@/components/group/ConvocatoriaNotificatio
 import PollPanel from '@/components/group/PollPanel'
 import RestaurantHistory from '@/components/group/RestaurantHistory'
 import SignOutButton from '@/components/auth/SignOutButton'
-import { getCurrentOrganizer } from '@/lib/actions/rotation'
+import { getCurrentOrganizer, getNextOrganizer } from '@/lib/actions/rotation'
 import { getCurrentEvent, getAttendanceCounts } from '@/lib/actions/events'
 import { getUserAttendance } from '@/lib/actions/attendances'
 import { getPollWithOptions } from '@/lib/actions/polls'
@@ -61,6 +61,10 @@ export default async function GrupoPage({ params }: Props) {
   const organizerResult = await getCurrentOrganizer(params.id)
   const organizer = organizerResult.success ? organizerResult.data : null
   const isOrganizer = organizer?.userId === user.id
+
+  // Próximo organizador (US-13) — asignado al cerrar el evento
+  const nextOrganizerResult = await getNextOrganizer(params.id)
+  const nextOrganizer = nextOrganizerResult.success ? nextOrganizerResult.data : null
 
   // Evento del mes actual (US-05)
   const eventResult = await getCurrentEvent(params.id)
@@ -118,8 +122,8 @@ export default async function GrupoPage({ params }: Props) {
           </h1>
         </div>
 
-        {/* US-11: Organizador del mes */}
-        <OrganizerPanel organizer={organizer ?? null} currentUserId={user.id} />
+        {/* US-11: Organizador del mes / US-13: Próximo organizador */}
+        <OrganizerPanel organizer={organizer ?? null} currentUserId={user.id} nextOrganizer={nextOrganizer} />
 
         {/* US-08: Notificación de convocatoria — visible cuando hay evento publicado y el
             miembro no confirmó. Muestra variante "recordatorio" si pasaron ≥48h. */}
