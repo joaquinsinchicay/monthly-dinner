@@ -87,11 +87,18 @@ create or replace trigger on_auth_user_created
 -- -----------------------------------------------------------------------------
 
 create table if not exists groups (
-  id          uuid primary key default uuid_generate_v4(),
-  name        text not null,
-  created_by  uuid not null references profiles(id) on delete restrict,
-  created_at  timestamptz not null default now(),
-  updated_at  timestamptz not null default now()
+  id                    uuid primary key default uuid_generate_v4(),
+  name                  text not null,
+  frequency             text not null check (frequency in ('mensual', 'quincenal', 'semanal')),
+  meeting_day_of_week   text check (meeting_day_of_week in ('lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo')),
+  meeting_day_of_month  integer check (meeting_day_of_month between 1 and 31),
+  created_by            uuid not null references profiles(id) on delete restrict,
+  created_at            timestamptz not null default now(),
+  updated_at            timestamptz not null default now(),
+  constraint meeting_day_consistency check (
+    (frequency = 'mensual' and meeting_day_of_month is not null and meeting_day_of_week is null) or
+    (frequency in ('semanal', 'quincenal') and meeting_day_of_week is not null and meeting_day_of_month is null)
+  )
 );
 
 alter table groups enable row level security;

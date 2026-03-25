@@ -13,9 +13,108 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 19 | 19 | 0 | 0 |
+| 22 | 22 | 0 | 0 |
 
-> **MVP completo** — todas las US implementadas y en producción.
+> **MVP completo** — todas las US implementadas.
+
+---
+
+## [0.3.1] — 2026-03-25
+
+### Updated
+- **US-01 / US-02** Redesign pantalla de login — `app/auth/login/page.tsx`, `components/auth/GoogleSignInButton.tsx`, `public/images/`
+
+  Cambios aprobados:
+  - Layout: dos bloques apilados (imagen arriba, texto + CTA abajo) sobre `surface (#fcf9f8)`, `max-w-[480px]`, centrado vertical en pantalla
+  - Hero image: `/public/images/login-hero.jpg`, `rounded-3xl`, `aspect-ratio 4/3`, `object-cover` — **requiere colocar el archivo de imagen en `public/images/login-hero.jpg`**
+  - Título: "Registra las cenas con amigos" — DM Serif Display 36px, `on_surface #1c1b1b`, `text-center`
+  - Botón: "Continuar con Google" — `bg-[#2563eb]` sólido, `rounded-full`, `py-4`, `text-base font-medium`, ícono Google oficial
+  - Texto legal: "Si no tenés cuenta se creará automáticamente." — 12px, `secondary #585f6c`
+  - Backend sin cambios: `signInWithGoogle` apunta a Google OAuth con `redirectTo` correcto
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ US-01: Registro exitoso / Email ya registrado → `signInWithOAuth` + Supabase maneja ambos casos con el mismo endpoint
+  - ✅ US-01: Cancelación OAuth → `auth/callback/route.ts` detecta `error=access_denied` y redirige a `/`
+  - ✅ US-02: Login exitoso → mismo flujo OAuth, Supabase reconoce cuenta existente
+  - ✅ US-02: Sesión persistente → `LoginPage` llama `getUser()` al cargar; `redirect('/dashboard')` si hay sesión
+  - ✅ US-02: Token expirado → `middleware.ts` redirige rutas protegidas a `/` si no hay usuario
+
+---
+
+## [0.3.0] — 2026-03-25
+
+### Updated
+- **US-07b** Redesign variante admin/organizador — `components/group/EmptyDashboard.tsx`
+
+  Cambios aprobados:
+  - Layout sin card/sombra — contenido centrado directamente sobre `surface (#fcf9f8)`
+  - Título Display Large: "Configurá" (`on_surface #1c1b1b`) + "el grupo" (`italic, primary #004ac6`)
+  - Copy: "Tu clan está listo, finalizá la configuración para dar comienzo a la experiencia culinaria."
+  - CTA: "Completar configuración →" → `href=/dashboard/[groupId]/settings`
+  - Footer: "POWERED BY THE DIGITAL MAÎTRE D'"
+  - Variante miembro sin cambios
+
+---
+
+## [0.2.9] — 2026-03-25
+
+### Added
+- **US-07b** Estado vacío del dashboard sin eventos — `app/(auth)/grupo/[id]/page.tsx`, `components/group/EmptyDashboard.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Admin u organizador ve el estado vacío con CTA → `EmptyDashboard` con `isAdminOrOrganizer=true` muestra card con título editorial "Tu clan está listo, *pero falta la mesa.*", body descriptivo y botón gradiente "Crear primer evento →"
+  - ✅ Botón redirige a creación de evento → `href="/grupo/[groupId]/eventos/nuevo"` mediante `<Link>`
+  - ✅ Miembro ve mensaje de espera sin CTA → `isAdminOrOrganizer=false` renderiza texto plano "Aún no hay eventos. El organizador del mes está preparando la primera cita." sin botón
+  - ✅ Estado vacío desaparece al crear el primer evento → `COUNT(*)` sobre `events` por `group_id`; `!hasEvents` controla el render; al crear el primer evento `hasEvents=true` y el componente desaparece
+  - ✅ Estado vacío no se muestra si hay historial previo → el COUNT incluye eventos de cualquier estado (pending/published/closed), no solo el mes actual
+
+---
+
+## [0.2.8] — 2026-03-25
+
+### Added
+- **US-00d** Pantalla de confirmación post-creación de grupo — `app/(auth)/grupo-creado/[id]/page.tsx`, `components/group/GroupCreatedView.tsx`, `components/group/CreateGroupForm.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Redirección automática tras crear el grupo → `CreateGroupForm` usa `router.replace('/grupo-creado/[id]')` en lugar de `router.push`
+  - ✅ No puedo volver con el botón atrás → `router.replace` reemplaza la entrada del historial del formulario
+  - ✅ Resumen del grupo visible → nombre, frecuencia capitalizada, día formateado con `formatDay()` (mensual: "Día X de cada mes" / semanal: "Todos los [día]" / quincenal: "Cada dos [día]")
+  - ✅ Mensaje de bienvenida al rol de admin → badge "Administrador" + párrafo explicando gestión de invitaciones, fechas y lugares
+  - ✅ Próximos pasos visibles → "Invitar miembros" y "Configurar rotación", cada uno con descripción breve
+  - ✅ Navegación al dashboard → botón "Ir al Dashboard" → `router.push('/grupo/[id]')`
+  - ✅ Acceso directo por URL bloqueado → `page.tsx` verifica `created_at`: si el grupo tiene más de 10 minutos → `redirect('/grupo/[id]')`
+
+---
+
+## [0.2.7] — 2026-03-25
+
+### Added
+- **US-00c** Configurar frecuencia y día al crear el grupo — `types/index.ts`, `lib/actions/groups.ts`, `components/group/CreateGroupForm.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Frecuencia mensual muestra días del mes → selector numérico 1–31 renderizado cuando `frequency === 'mensual'`
+  - ✅ Frecuencia semanal muestra días de la semana → `DAYS_OF_WEEK` renderizado cuando `frequency === 'semanal'`
+  - ✅ Frecuencia quincenal muestra días de la semana → mismo bloque `else` cubre `quincenal` y `semanal`
+  - ✅ Campos obligatorios — frecuencia y día → `handleSubmit` valida `!dayValue` con error inline; server action valida antes del INSERT
+  - ✅ Mensaje informativo visible al cargar → `<p>` siempre visible al pie del formulario (no condicional)
+  - ✅ Datos guardados con el grupo → INSERT incluye `frequency` + `meeting_day_of_month` o `meeting_day_of_week`; SELECT devuelve los tres campos
+
+  **Nota:** Requiere ejecutar el ALTER TABLE en Supabase antes de deployar:
+  ```sql
+  ALTER TABLE groups
+    ADD COLUMN frequency text NOT NULL DEFAULT 'mensual'
+      CHECK (frequency IN ('mensual', 'quincenal', 'semanal')),
+    ADD COLUMN meeting_day_of_week text
+      CHECK (meeting_day_of_week IN ('lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo')),
+    ADD COLUMN meeting_day_of_month integer
+      CHECK (meeting_day_of_month BETWEEN 1 AND 31);
+
+  ALTER TABLE groups
+    ADD CONSTRAINT meeting_day_consistency CHECK (
+      (frequency = 'mensual' AND meeting_day_of_month IS NOT NULL AND meeting_day_of_week IS NULL) OR
+      (frequency IN ('semanal', 'quincenal') AND meeting_day_of_week IS NOT NULL AND meeting_day_of_month IS NULL)
+    );
+  ```
 
 ---
 
@@ -246,29 +345,31 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 ## [Unreleased] — En desarrollo
 
-### Pendiente de implementación
+### Estado de implementación
 
 | # | ID | User Story | Épica | Esfuerzo | Estado |
 |---|---|---|---|---|---|
 | 1 | US-00 | Crear grupo | E00 Creación de grupo | M (3-4d) | ✅ Done |
 | 2 | US-00b | Generar link de invitación al crear el grupo | E00 Creación de grupo | S (1-2d) | ✅ Done |
-| 3 | US-01 | Registro con Google | E01 Acceso & Autenticación | S (1-2d) | ✅ Done |
-| 4 | US-02 | Login con Google | E01 Acceso & Autenticación | S (1-2d) | ⬜ Pendiente |
-| 5 | US-04 | Join por invitación | E01 Acceso & Autenticación | M (3-4d) | ⬜ Pendiente |
-| 6 | US-03 | Cerrar sesión | E01 Acceso & Autenticación | XS (<1d) | ✅ Done |
-| 7 | US-11 | Ver organizador del mes | E03 Turno rotativo | S (1-2d) | ✅ Done |
-| 8 | US-05 | Crear evento del mes | E02 Panel de evento | S (1-2d) | ✅ Done |
-| 9 | US-06 | Notificar al grupo | E02 Panel de evento | M (3-4d) | ✅ Done |
-| 10 | US-07 | Ver estado del evento en tiempo real | E02 Panel de evento | S (1-2d) | ✅ Done |
-| 11 | US-08 | Recibir notificación de convocatoria | E04 Confirmación | M (3-4d) | ✅ Done |
-| 12 | US-09 | Confirmar asistencia | E04 Confirmación | S (1-2d) | ✅ Done |
-| 13 | US-10 | Ver resumen de confirmaciones | E04 Confirmación | S (1-2d) | ✅ Done |
-| 14 | US-17 | Abrir votación de restaurantes | E06 Votación | M (3-4d) | ✅ Done |
-| 15 | US-18 | Votar por un restaurante | E06 Votación | S (1-2d) | ✅ Done |
-| 16 | US-14 | Cargar restaurante al cerrar evento | E05 Historial | S (1-2d) | ✅ Done |
-| 17 | US-16 | Consultar historial de restaurantes | E05 Historial | S (1-2d) | ✅ Done |
-| 18 | US-13 | Próximo organizador tras el cierre | E03 Turno rotativo | M (3-4d) | ⬜ Pendiente |
-| 19 | US-20 | Acceder al checklist del mes | E07 Checklist | M (3-4d) | ⬜ Pendiente |
+| 3 | US-00c | Configurar frecuencia y día al crear el grupo | E00 Creación de grupo | S (1-2d) | ✅ Done |
+| 4 | US-00d | Pantalla de confirmación post-creación de grupo | E00 Creación de grupo | S (1-2d) | ✅ Done |
+| 5 | US-01 | Registro con Google | E01 Acceso & Autenticación | S (1-2d) | ✅ Done |
+| 6 | US-02 | Login con Google | E01 Acceso & Autenticación | S (1-2d) | ✅ Done |
+| 7 | US-04 | Join por invitación | E01 Acceso & Autenticación | M (3-4d) | ✅ Done |
+| 8 | US-03 | Cerrar sesión | E01 Acceso & Autenticación | XS (<1d) | ✅ Done |
+| 9 | US-11 | Ver organizador del mes | E03 Turno rotativo | S (1-2d) | ✅ Done |
+| 10 | US-05 | Crear evento del mes | E02 Panel de evento | S (1-2d) | ✅ Done |
+| 11 | US-06 | Notificar al grupo | E02 Panel de evento | M (3-4d) | ✅ Done |
+| 12 | US-07 | Ver estado del evento en tiempo real | E02 Panel de evento | S (1-2d) | ✅ Done |
+| 13 | US-08 | Recibir notificación de convocatoria | E04 Confirmación | M (3-4d) | ✅ Done |
+| 14 | US-09 | Confirmar asistencia | E04 Confirmación | S (1-2d) | ✅ Done |
+| 15 | US-10 | Ver resumen de confirmaciones | E04 Confirmación | S (1-2d) | ✅ Done |
+| 16 | US-17 | Abrir votación de restaurantes | E06 Votación | M (3-4d) | ✅ Done |
+| 17 | US-18 | Votar por un restaurante | E06 Votación | S (1-2d) | ✅ Done |
+| 18 | US-14 | Cargar restaurante al cerrar evento | E05 Historial | S (1-2d) | ✅ Done |
+| 19 | US-16 | Consultar historial de restaurantes | E05 Historial | S (1-2d) | ✅ Done |
+| 20 | US-13 | Próximo organizador tras el cierre | E03 Turno rotativo | M (3-4d) | ✅ Done |
+| 21 | US-20 | Acceder al checklist del mes | E07 Checklist | M (3-4d) | ✅ Done |
 
 ---
 
@@ -310,7 +411,7 @@ El proyecto sigue [Semantic Versioning](https://semver.org/):
 
 - `0.x.0` — iteraciones del MVP (cada épica completa sube el minor)
 - `0.0.x` — fixes y ajustes dentro de una épica
-- `1.0.0` — MVP completo con las 19 US en producción
+- `1.0.0` — MVP completo con las 21 US en producción
 
 ---
 

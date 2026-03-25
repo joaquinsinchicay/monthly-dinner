@@ -15,13 +15,22 @@ Los tipos referenciados están definidos en `types/index.ts`.
 ```ts
 // app/(dashboard)/group/actions.ts
 async function createGroup(
-  input: { name: string }
+  input: {
+    name: string
+    frequency: 'mensual' | 'quincenal' | 'semanal'
+    meeting_day_of_week?: 'lunes' | 'martes' | 'miércoles' | 'jueves' | 'viernes' | 'sábado' | 'domingo'  // para frecuencia semanal y quincenal
+    meeting_day_of_month?: number  // 1-31, para frecuencia mensual
+  }
 ): Promise<ActionResult<Group>>
 ```
 - Inserta en `groups` con `created_by = auth.uid()`
 - El trigger `on_group_created` inserta al creador en `members` como `admin`
 - El trigger `on_group_created_invitation` genera el primer `invitation_link`
 - Retorna el grupo creado
+- **US-00d:** la respuesta `Group` de esta action alimenta directamente la pantalla de confirmación post-creación (`/grupo-creado`). El componente cliente recibe el objeto y lo renderiza sin fetch adicional.
+- **Validación:** exactamente uno de `meeting_day_of_week` o `meeting_day_of_month` debe estar presente según la frecuencia:
+  - `frequency = 'mensual'` → `meeting_day_of_month` requerido, `meeting_day_of_week` debe ser `undefined`
+  - `frequency = 'semanal' | 'quincenal'` → `meeting_day_of_week` requerido, `meeting_day_of_month` debe ser `undefined`
 
 ### `revokeInvitationLink`
 ```ts
@@ -111,6 +120,11 @@ async function notifyGroup(
 - Valida que `auth.uid() = organizer_id`
 - Actualiza `status = 'published'` y `notified_at = now()`
 - Dispara notificación in-app a todos los miembros del grupo
+
+### Nota — Estado vacío US-07b
+El estado vacío del dashboard (grupo sin ningún evento en su historial) no requiere un server action dedicado. Se resuelve con dos queries inline en el Server Component:
+1. **¿Tiene eventos el grupo?** → `COUNT(*)` sobre `events` filtrado por `group_id`. Si el resultado es `0`, se renderiza el estado vacío.
+2. **¿Cuál es el rol del usuario?** → SELECT sobre `members` con `user_id = auth.uid()` y `group_id`. El campo `role` determina si se muestra el CTA "Crear primer evento" (`admin` o es el organizador del mes) o el mensaje de espera (rol `member` sin turno activo).
 
 ---
 

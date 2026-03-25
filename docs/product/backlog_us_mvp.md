@@ -3,9 +3,9 @@
 
 User Stories con Acceptance Criteria en formato Gherkin — ordenadas por prioridad de desarrollo
 
-| Versión | Stack | US totales | Fecha |
-|---|---|---|---|
-| MVP v1.0 | Next.js + Supabase | 19 User Stories | Marzo 2026 |
+| Versión | Stack | US totales | Completadas | Pendientes | Fecha |
+|---|---|---|---|---|---|
+| MVP v1.0 | Next.js + Supabase | 22 | 21 | 1 (US-07b) | Marzo 2026 |
 
 ---
 
@@ -79,6 +79,101 @@ Feature: US-00b — Link de invitación inicial
     Given hay un link de invitación activo
     When el admin lo revoca desde la configuración del grupo
     Then el link queda inválido y cualquier acceso posterior muestra el mensaje de link no válido
+```
+
+---
+
+### US-00c — Configurar frecuencia y día al crear el grupo
+
+> *Como usuario registrado, quiero definir la frecuencia y el día de reunión al crear el grupo, para que el sistema pueda generar los eventos automáticamente y todos los miembros sepan cuándo se reúne el grupo.*
+
+| Prioridad | Esfuerzo | Descripción |
+|---|---|---|
+| Alta — P0c | S (1-2 días) | Complemento directo de US-00. Sin frecuencia y día no hay base para generar eventos ni rotación. Depende de US-00. |
+
+**Acceptance Criteria — Gherkin**
+
+```gherkin
+Feature: US-00c — Configurar frecuencia y día al crear el grupo
+
+  Scenario: Selección de frecuencia mensual muestra días del mes
+    Given estoy completando el formulario de creación de grupo
+    When selecciono la frecuencia "Mensual"
+    Then el campo "Día" muestra un selector numérico con los días del mes (1 al 31)
+
+  Scenario: Selección de frecuencia semanal muestra días de la semana
+    Given estoy completando el formulario de creación de grupo
+    When selecciono la frecuencia "Semanal"
+    Then el campo "Día" muestra los 7 días de la semana como opciones seleccionables
+
+  Scenario: Selección de frecuencia quincenal muestra días de la semana
+    Given estoy completando el formulario de creación de grupo
+    When selecciono la frecuencia "Quincenal"
+    Then el campo "Día" muestra los 7 días de la semana como opciones seleccionables
+
+  Scenario: Campos obligatorios — frecuencia y día
+    Given estoy en el formulario de creación de grupo
+    When intento confirmar sin seleccionar frecuencia o día
+    Then el sistema indica que ambos campos son obligatorios y no crea el grupo
+
+  Scenario: Mensaje informativo visible al cargar el formulario
+    Given accedo al formulario de creación de grupo
+    When la pantalla carga
+    Then veo el mensaje: "Como creador, tendrás el rol de administrador para gestionar las invitaciones, proponer fechas y coordinar los lugares de encuentro"
+
+  Scenario: Datos de frecuencia y día guardados con el grupo
+    Given completé nombre, frecuencia y día correctamente
+    When confirmo la creación del grupo
+    Then el grupo queda creado con los tres atributos guardados y accesibles desde la configuración del grupo
+```
+
+---
+
+### US-00d — Pantalla de confirmación post-creación de grupo
+
+> *Como usuario que acaba de crear un grupo, quiero ver una pantalla de confirmación con el resumen del grupo, mi rol y los próximos pasos, para entender qué tengo que hacer a continuación sin tener que explorar la app.*
+
+| Prioridad | Esfuerzo | Descripción |
+|---|---|---|
+| Alta — P0d | S (1-2 días) | Cierra el flujo de onboarding de US-00 y US-00c. Sin esta pantalla el usuario llega al dashboard sin contexto de qué hacer primero. Depende de US-00, US-00b y US-00c. |
+
+**Acceptance Criteria — Gherkin**
+
+```gherkin
+Feature: US-00d — Pantalla de confirmación post-creación de grupo
+
+  Scenario: Redirección automática tras crear el grupo
+    Given completé el formulario de creación con nombre, frecuencia y día
+    When el grupo se crea exitosamente
+    Then soy redirigido automáticamente a la pantalla de confirmación
+    And no puedo volver al formulario de creación con el botón atrás
+
+  Scenario: Resumen del grupo visible
+    Given estoy en la pantalla de confirmación
+    When la pantalla carga
+    Then veo el nombre del grupo, la frecuencia seleccionada y el día de reunión configurado
+
+  Scenario: Mensaje de bienvenida al rol de admin
+    Given estoy en la pantalla de confirmación
+    When la pantalla carga
+    Then veo un mensaje que me indica que soy el administrador del grupo
+    And el mensaje explica que puedo gestionar invitaciones, proponer fechas y coordinar lugares
+
+  Scenario: Próximos pasos visibles
+    Given estoy en la pantalla de confirmación
+    When la pantalla carga
+    Then veo dos próximos pasos sugeridos: "Invitar miembros" y "Configurar rotación"
+    And cada paso tiene una descripción breve de qué implica
+
+  Scenario: Navegación al dashboard
+    Given estoy en la pantalla de confirmación
+    When toco "Ir al Dashboard"
+    Then soy redirigido al dashboard del grupo recién creado
+
+  Scenario: Acceso directo por URL bloqueado
+    Given el grupo ya fue creado
+    When intento acceder a la URL de confirmación directamente
+    Then soy redirigido al dashboard del grupo sin mostrar la pantalla de confirmación
 ```
 
 ---
@@ -310,6 +405,54 @@ Feature: US-07 — Ver estado del evento
     Given estoy viendo el panel del evento
     When otro miembro confirma su asistencia
     Then el contador de confirmaciones se actualiza sin necesidad de recargar la pantalla
+```
+
+---
+
+### US-07b — Estado vacío del dashboard sin eventos
+
+> *Como miembro del grupo, quiero ver un mensaje contextual cuando el grupo no tiene ningún evento creado, para entender en qué estado está el grupo y qué acción corresponde según mi rol.*
+
+| Prioridad | Esfuerzo | Descripción |
+|---|---|---|
+| Alta — P8b | S (1-2 días) | Complemento de US-07. Sin este estado el dashboard queda en blanco para grupos nuevos. Depende de US-05 (crear evento) y US-11 (organizador del mes). |
+
+**Acceptance Criteria — Gherkin**
+
+```gherkin
+Feature: US-07b — Estado vacío del dashboard sin eventos
+
+  Scenario: Admin u organizador ve el estado vacío con CTA
+    Given soy el admin o el organizador del mes
+    And el grupo no tiene ningún evento creado en su historial
+    When ingreso al dashboard del grupo
+    Then veo el mensaje "Configurá el grupo"
+    And veo el mensaje "Tu clan está listo, finalizá la configuración para dar comienzo a la experiencia culinaria."
+    And veo el botón "Completar configuración"
+
+  Scenario: Botón redirige a configuración del grupo
+    Given estoy viendo el estado vacío como admin u organizador
+    When toco "Completar configuración"
+    Then soy redirigido a /dashboard/[groupId]/settings
+
+  Scenario: Miembro ve mensaje de espera sin CTA
+    Given soy un miembro del grupo sin rol de organizador
+    And el grupo no tiene ningún evento creado en su historial
+    When ingreso al dashboard del grupo
+    Then veo el mensaje "Aún no hay eventos. El organizador del mes está preparando la primera cita."
+    And no veo el botón "Crear primer evento"
+
+  Scenario: Estado vacío desaparece al crear el primer evento
+    Given el admin creó el primer evento del grupo
+    When cualquier miembro ingresa al dashboard
+    Then ya no se muestra el estado vacío sino el panel del evento activo
+
+  Scenario: Estado vacío no se muestra si hay historial previo
+    Given el grupo tiene al menos un evento cerrado en su historial
+    And no hay evento activo para el mes actual
+    When ingreso al dashboard
+    Then no se muestra el estado vacío de "grupo nuevo"
+    And se muestra el estado correspondiente al mes sin evento activo
 ```
 
 ---

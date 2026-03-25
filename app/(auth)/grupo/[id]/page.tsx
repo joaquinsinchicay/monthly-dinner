@@ -15,6 +15,7 @@ import { getPollWithOptions } from '@/lib/actions/polls'
 import { getRestaurantHistory } from '@/lib/actions/restaurant'
 import { getOrCreateChecklist } from '@/lib/actions/checklist'
 import ChecklistPanel from '@/components/group/ChecklistPanel'
+import EmptyDashboard from '@/components/group/EmptyDashboard'
 import { getInvitationLinkStatus } from '@/types'
 import type { MemberRole } from '@/types'
 
@@ -58,6 +59,15 @@ export default async function GrupoPage({ params }: Props) {
 
   const activeLink =
     (links ?? []).find((l) => getInvitationLinkStatus(l) === 'active') ?? null
+
+  // US-07b — ¿El grupo tiene algún evento en su historial?
+  // COUNT sobre events (sin filtro de mes) para determinar si el grupo es nuevo.
+  const { count: eventsCount } = await supabase
+    .from('events')
+    .select('id', { count: 'exact', head: true })
+    .eq('group_id', params.id)
+  const hasEvents = (eventsCount ?? 0) > 0
+  const isAdmin = member.role === 'admin'
 
   // Organizador del mes actual (US-11)
   const organizerResult = await getCurrentOrganizer(params.id)
@@ -133,6 +143,14 @@ export default async function GrupoPage({ params }: Props) {
 
         {/* US-11: Organizador del mes / US-13: Próximo organizador */}
         <OrganizerPanel organizer={organizer ?? null} currentUserId={user.id} nextOrganizer={nextOrganizer} />
+
+        {/* US-07b: Estado vacío — visible solo cuando el grupo no tiene ningún evento */}
+        {!hasEvents && (
+          <EmptyDashboard
+            groupId={params.id}
+            isAdminOrOrganizer={isAdmin || isOrganizer}
+          />
+        )}
 
         {/* US-20: Checklist del mes — visible para el organizador cuando hay evento activo;
             para no organizadores muestra mensaje explicativo */}
