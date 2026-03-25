@@ -6,11 +6,13 @@ import OrganizerPanel from '@/components/group/OrganizerPanel'
 import EventPanel from '@/components/group/EventPanel'
 import ConvocatoriaNotification from '@/components/group/ConvocatoriaNotification'
 import PollPanel from '@/components/group/PollPanel'
+import RestaurantHistory from '@/components/group/RestaurantHistory'
 import SignOutButton from '@/components/auth/SignOutButton'
 import { getCurrentOrganizer } from '@/lib/actions/rotation'
 import { getCurrentEvent, getAttendanceCounts } from '@/lib/actions/events'
 import { getUserAttendance } from '@/lib/actions/attendances'
 import { getPollWithOptions } from '@/lib/actions/polls'
+import { getRestaurantHistory } from '@/lib/actions/restaurant'
 import { getInvitationLinkStatus } from '@/types'
 import type { MemberRole } from '@/types'
 
@@ -82,6 +84,10 @@ export default async function GrupoPage({ params }: Props) {
   // que el usuario llega al panel del evento, no a la pantalla de inicio.
   const showNotification = currentEvent?.status === 'published' && !userAttendance && !isOrganizer
 
+  // Historial de restaurantes del grupo (US-16)
+  const historyResult = await getRestaurantHistory(params.id)
+  const restaurantHistory = historyResult.success ? historyResult.data : []
+
   // Votación del mes actual (US-17) — solo si hay evento publicado
   const pollResult =
     currentEvent && currentEvent.status !== 'pending'
@@ -140,6 +146,9 @@ export default async function GrupoPage({ params }: Props) {
             isOrganizer={isOrganizer}
           />
         )}
+
+        {/* US-16: Historial de restaurantes */}
+        <RestaurantHistory entries={restaurantHistory} />
 
         {/* Scenario: Link generado automáticamente al crear el grupo */}
         <div className="rounded-2xl bg-white p-6 shadow-[0px_10px_30px_-5px_rgba(28,27,27,0.07)]">

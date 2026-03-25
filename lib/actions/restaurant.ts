@@ -14,6 +14,15 @@ export interface RestaurantHistoryEntry {
   created_at: string
 }
 
+export interface Attendee {
+  id: string
+  name: string
+}
+
+export interface RestaurantHistoryEntryWithNames extends RestaurantHistoryEntry {
+  attendees: Attendee[]
+}
+
 export type CloseEventResult =
   | { closed: true }
   | { closed: false; alreadyVisited: { name: string; visited_at: string } }
@@ -111,10 +120,12 @@ export async function closeEvent(
   return { success: true, data: { closed: true } }
 }
 
-// Retorna el historial de restaurantes del grupo, ordenado por fecha descendente.
+// Scenario: Historial con registros — lista ordenada por fecha con nombre, fecha y asistentes.
+// Scenario: Historial vacío — devuelve array vacío.
+// Requiere política RLS "profiles: select group members" (migración US-10).
 export async function getRestaurantHistory(
   groupId: string
-): Promise<ActionResult<RestaurantHistoryEntry[]>> {
+): Promise<ActionResult<RestaurantHistoryEntryWithNames[]>> {
   const supabase = createClient()
 
   const {
@@ -123,7 +134,7 @@ export async function getRestaurantHistory(
 
   if (!user) return { success: false, error: 'No autenticado' }
 
-  const { data, error } = await supabase
+  const { data: rows, error } = await supabase
     .from('restaurant_history')
     .select('id, event_id, group_id, name, visited_at, attendee_ids, created_by, created_at')
     .eq('group_id', groupId)
@@ -131,5 +142,32 @@ export async function getRestaurantHistory(
 
   if (error) return { success: false, error: 'No se pudo obtener el historial.' }
 
-  return { success: true, data: data ?? [] }
+  const entries = rows ?? []
+  if (entries.length === 0) return { success: true, data: [] }
+
+  // Resolver nombres de asistentes: colectar todos los UUIDs únicos y hacer un solo SELECT
+  const allIds = Array.from(new Set(entries.flatMap((e) => e.attendee_ids as string[])))
+
+  const profileMap: Record<string, string> = {}
+  if (allIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .in('id', allIds)
+
+    for (const p of profiles ?? []) {
+      profileMap[p.id] = p.full_name ?? 'Miembro'
+    }
+  }
+
+  const enriched: RestaurantHistoryEntryWithNames[] = entries.map((e) => ({
+    ...e,
+    attendee_ids: e.attendee_ids as string[],
+    attendees: (e.attendee_ids as string[]).map((id) => ({
+      id,
+      name: profileMap[id] ?? 'Miembro',
+    })),
+  }))
+
+  return { success: true, data: enriched }
 }
