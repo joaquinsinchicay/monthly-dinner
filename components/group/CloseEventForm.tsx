@@ -108,7 +108,7 @@ export default function CloseEventForm({ eventId }: Props) {
         />
         {!restaurantName.trim() && (
           <p className="mt-1 text-xs text-[#585f6c]">
-            Si no lo completás, el evento se cierra como "Sin restaurante registrado".
+            Si no lo completás, el evento se cierra como &ldquo;Sin restaurante registrado&rdquo;.
           </p>
         )}
       </div>
