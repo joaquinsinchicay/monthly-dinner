@@ -13,9 +13,25 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 21 | 20 | 0 | 1 |
+| 21 | 21 | 0 | 0 |
 
-> 20/21 US completadas — US-00d pendiente de implementación.
+> **MVP completo** — todas las US implementadas.
+
+---
+
+## [0.2.8] — 2026-03-25
+
+### Added
+- **US-00d** Pantalla de confirmación post-creación de grupo — `app/(auth)/grupo-creado/[id]/page.tsx`, `components/group/GroupCreatedView.tsx`, `components/group/CreateGroupForm.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Redirección automática tras crear el grupo → `CreateGroupForm` usa `router.replace('/grupo-creado/[id]')` en lugar de `router.push`
+  - ✅ No puedo volver con el botón atrás → `router.replace` reemplaza la entrada del historial del formulario
+  - ✅ Resumen del grupo visible → nombre, frecuencia capitalizada, día formateado con `formatDay()` (mensual: "Día X de cada mes" / semanal: "Todos los [día]" / quincenal: "Cada dos [día]")
+  - ✅ Mensaje de bienvenida al rol de admin → badge "Administrador" + párrafo explicando gestión de invitaciones, fechas y lugares
+  - ✅ Próximos pasos visibles → "Invitar miembros" y "Configurar rotación", cada uno con descripción breve
+  - ✅ Navegación al dashboard → botón "Ir al Dashboard" → `router.push('/grupo/[id]')`
+  - ✅ Acceso directo por URL bloqueado → `page.tsx` verifica `created_at`: si el grupo tiene más de 10 minutos → `redirect('/grupo/[id]')`
 
 ---
 
@@ -285,7 +301,7 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 | 1 | US-00 | Crear grupo | E00 Creación de grupo | M (3-4d) | ✅ Done |
 | 2 | US-00b | Generar link de invitación al crear el grupo | E00 Creación de grupo | S (1-2d) | ✅ Done |
 | 3 | US-00c | Configurar frecuencia y día al crear el grupo | E00 Creación de grupo | S (1-2d) | ✅ Done |
-| 4 | US-00d | Pantalla de confirmación post-creación de grupo | E00 Creación de grupo | S (1-2d) | ⬜ Pendiente |
+| 4 | US-00d | Pantalla de confirmación post-creación de grupo | E00 Creación de grupo | S (1-2d) | ✅ Done |
 | 5 | US-01 | Registro con Google | E01 Acceso & Autenticación | S (1-2d) | ✅ Done |
 | 6 | US-02 | Login con Google | E01 Acceso & Autenticación | S (1-2d) | ✅ Done |
 | 7 | US-04 | Join por invitación | E01 Acceso & Autenticación | M (3-4d) | ✅ Done |

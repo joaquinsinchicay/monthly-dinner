@@ -175,7 +175,7 @@ El diseño se apoya en "Tonal Layering" y espacio negativo, no en bordes duros. 
 | 1 | US-00 | Crear grupo | E00 Creación de grupo | M (3-4d) | ✅ Completada |
 | 2 | US-00b | Generar link de invitación al crear el grupo | E00 Creación de grupo | S (1-2d) | ✅ Completada |
 | 3 | US-00c | Configurar frecuencia y día al crear el grupo | E00 Creación de grupo | S (1-2d) | ✅ Completada |
-| 4 | US-00d | Pantalla de confirmación post-creación de grupo | E00 Creación de grupo | S (1-2d) | ⏳ Pendiente |
+| 4 | US-00d | Pantalla de confirmación post-creación de grupo | E00 Creación de grupo | S (1-2d) | ✅ Completada |
 | 5 | US-01 | Registro con Google | E01 Acceso & Autenticación | S (1-2d) | ✅ Completada |
 | 6 | US-02 | Login con Google | E01 Acceso & Autenticación | S (1-2d) | ✅ Completada |
 | 7 | US-04 | Join por invitación | E01 Acceso & Autenticación | M (3-4d) | ✅ Completada |
