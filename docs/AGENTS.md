@@ -72,7 +72,7 @@ monthly-dinner es una app web mobile-first para grupos de amigos que se reúnen 
 |---|---|---|
 | profiles | US-01, US-02 | Perfil del usuario autenticado. `id = auth.uid()` |
 | groups | US-00, US-00c | Grupos de cena. El admin crea. Incluye `frequency` ('mensual' / 'quincenal' / 'semanal') y `meeting_day_of_week` o `meeting_day_of_month` según frecuencia. Solo SELECT para miembros. |
-| members | US-00, US-01, US-04 | Membresía usuario-grupo. Roles: `member` / `admin`. |
+| members | US-00, US-01, US-04, US-NAV-01 | Membresía usuario-grupo. Roles: `member` / `admin`. US-NAV-01 requiere SELECT filtrado por `user_id = auth.uid()` para listar todos los grupos del usuario — la política RLS existente ("SELECT: mismo grupo") ya lo cubre porque el JOIN con `groups` devuelve todos los grupos donde el usuario tiene membresía. |
 | invitation_links | US-00b, US-04 | Links de invitación. Solo admins crean, editan y revocan. |
 | events | US-05, US-06, US-07, US-07b | Evento mensual. Solo el organizador inserta y edita. Un `COUNT(*) = 0` sobre `events` filtrado por `group_id` es la condición que dispara el estado vacío de US-07b. |
 | attendances | US-09, US-10 | Confirmaciones de asistencia. Estados: `va` / `no_va` / `tal_vez`. |
@@ -168,7 +168,7 @@ El diseño se apoya en "Tonal Layering" y espacio negativo, no en bordes duros. 
 
 ## 06 — Backlog MVP — Orden de desarrollo
 
-22 User Stories ordenadas por dependencia técnica y journey del usuario. El código de cada US debe satisfacer todos los Acceptance Criteria Gherkin definidos en el backlog.
+25 User Stories ordenadas por dependencia técnica y journey del usuario. El código de cada US debe satisfacer todos los Acceptance Criteria Gherkin definidos en el backlog.
 
 | # | ID | User Story | Épica | Esfuerzo | Estado |
 |---|---|---|---|---|---|
@@ -194,6 +194,9 @@ El diseño se apoya en "Tonal Layering" y espacio negativo, no en bordes duros. 
 | 20 | US-16 | Consultar historial de restaurantes | E05 Historial | S (1-2d) | ✅ Completada |
 | 21 | US-13 | Próximo organizador tras el cierre | E03 Turno rotativo | M (3-4d) | ✅ Completada |
 | 22 | US-20 | Acceder al checklist del mes | E07 Checklist | M (3-4d) | ✅ Completada |
+| 23 | US-NAV-01 | Selector de grupo en el header | ENAV Navegación global | S (1-2d) | ⏳ Pendiente |
+| 24 | US-NAV-02 | Avatar con menú de sesión | ENAV Navegación global | XS (<1d) | ⏳ Pendiente |
+| 25 | US-NAV-03 | Layout dashboard grupo recién creado | ENAV Navegación global | S (1-2d) | ⏳ Pendiente |
 
 ---
 
@@ -215,6 +218,10 @@ monthly-dinner/
 │   └── layout.tsx       → root layout
 ├── components/
 │   ├── ui/              → shadcn components
+│   ├── layout/          → componentes de navegación global
+│   │   ├── DashboardHeader.tsx  → header con selector de grupo y avatar (US-NAV-01, US-NAV-02)
+│   │   ├── GroupSelector.tsx    → dropdown de grupos (US-NAV-01)
+│   │   └── AvatarMenu.tsx       → menú del avatar (US-NAV-02)
 │   └── [feature]/       → componentes por feature
 ├── lib/
 │   ├── supabase/        → client, server, middleware

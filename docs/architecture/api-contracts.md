@@ -276,4 +276,24 @@ async function toggleChecklistItem(
 
 ---
 
+## ENAV — Navegación global
+
+### `getUserGroups` (query inline — no server action)
+```ts
+// components/layout/GroupSelector — query inline en Server Component
+// No requiere server action — query directa desde Server Component
+async function getUserGroups(): Promise<Group[]>
+// SELECT id, name FROM groups
+// JOIN members ON groups.id = members.group_id
+// WHERE members.user_id = auth.uid()
+```
+- US-NAV-01 consume esta query para listar los grupos del usuario en el dropdown del header
+- La política RLS existente en `members` (SELECT: mismo grupo) cubre este patrón — el JOIN retorna todas las filas donde `user_id = auth.uid()`
+
+### Nota — US-NAV-02
+- Reutiliza `signOut` de E01 — no requiere action nuevo
+- La opción "Configuración del grupo" redirige a `/dashboard/[groupId]/settings` — no requiere action nuevo
+
+---
+
 *monthly-dinner · API Contracts · MVP v1.0 · Marzo 2026*

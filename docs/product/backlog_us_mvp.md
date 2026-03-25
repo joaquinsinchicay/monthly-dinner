@@ -5,7 +5,7 @@ User Stories con Acceptance Criteria en formato Gherkin — ordenadas por priori
 
 | Versión | Stack | US totales | Completadas | Pendientes | Fecha |
 |---|---|---|---|---|---|
-| MVP v1.0 | Next.js + Supabase | 22 | 21 | 1 (US-07b) | Marzo 2026 |
+| MVP v1.0 | Next.js + Supabase | 25 | 21 | 4 (US-07b, US-NAV-01, US-NAV-02, US-NAV-03) | Marzo 2026 |
 
 ---
 
@@ -793,6 +793,130 @@ Feature: US-20 — Checklist del organizador
     Given empecé el checklist pero no lo terminé
     When vuelvo a ingresar a la app
     Then veo el checklist con el progreso guardado y las tareas pendientes resaltadas
+```
+
+---
+
+## ENAV 🧭 Navegación global
+
+### US-NAV-01 — Selector de grupo en el header
+
+> *Como miembro de uno o más grupos, quiero ver un selector en el menú superior que muestre el grupo actual y me permita cambiar entre mis grupos, para navegar sin fricciones entre espacios distintos.*
+
+| Prioridad | Esfuerzo | Descripción |
+|---|---|---|
+| Alta | S (1-2 días) | Componente de navegación global. Prerequisito para usuarios con múltiples grupos. Depende de US-00 y US-04. |
+
+**Acceptance Criteria — Gherkin**
+
+```gherkin
+Feature: US-NAV-01 — Selector de grupo en el header
+
+  Scenario: Header muestra el grupo activo
+    Given estoy autenticado y tengo al menos un grupo
+    When ingreso al dashboard
+    Then veo en el header el label "GRUPO ACTUAL" y el nombre
+        del grupo activo con un chevron indicando que es clickeable
+
+  Scenario: Dropdown lista los grupos del usuario
+    Given tengo más de un grupo
+    When toco el selector de grupo
+    Then se despliega un dropdown con la lista de todos mis grupos
+    And el grupo activo aparece destacado visualmente
+
+  Scenario: Cambio de grupo activo
+    Given el dropdown está abierto
+    When selecciono un grupo diferente
+    Then el dashboard se actualiza mostrando el contexto del grupo seleccionado
+    And el header refleja el nuevo grupo activo
+
+  Scenario: Usuario con un solo grupo
+    Given pertenezco a un único grupo
+    When veo el header
+    Then el nombre del grupo se muestra sin chevron ni comportamiento de dropdown
+```
+
+---
+
+### US-NAV-02 — Avatar con menú de sesión en el header
+
+> *Como usuario autenticado, quiero ver mi avatar en el header y poder acceder a la configuración del grupo y cerrar sesión desde ahí, para gestionar mi acceso y el grupo desde cualquier pantalla.*
+
+| Prioridad | Esfuerzo | Descripción |
+|---|---|---|
+| Alta | XS (< 1 día) | Reemplaza o complementa el flujo de US-03 (cerrar sesión). Depende de US-01 y US-02. |
+
+**Acceptance Criteria — Gherkin**
+
+```gherkin
+Feature: US-NAV-02 — Avatar con menú de sesión
+
+  Scenario: Avatar visible en el header
+    Given estoy autenticado
+    When ingreso a cualquier pantalla del dashboard
+    Then veo mi avatar en la esquina superior derecha del header
+    And el avatar muestra mi foto de perfil de Google o mis iniciales
+        si no hay foto
+
+  Scenario: Menú del avatar muestra dos opciones
+    Given estoy viendo el dashboard
+    When toco mi avatar
+    Then se despliega un menú con dos opciones:
+        "Configuración del grupo" y "Cerrar sesión"
+
+  Scenario: Acceso a configuración del grupo
+    Given el menú del avatar está abierto
+    When selecciono "Configuración del grupo"
+    Then soy redirigido a /dashboard/[groupId]/settings
+    And el menú se cierra
+
+  Scenario: Cierre de sesión desde el avatar
+    Given el menú del avatar está abierto
+    When selecciono "Cerrar sesión"
+    Then se muestra un diálogo de confirmación
+    And al confirmar mi sesión se cierra y soy redirigido al login
+
+  Scenario: Cierre del menú sin acción
+    Given el menú del avatar está abierto
+    When toco fuera del menú
+    Then el menú se cierra sin ejecutar ninguna acción
+```
+
+---
+
+### US-NAV-03 — Layout del dashboard para grupo recién creado
+
+> *Como admin que acaba de crear un grupo, quiero ver el dashboard con el header de navegación completo y únicamente la sección para finalizar la configuración, para tener el contexto correcto sin ruido visual innecesario.*
+
+| Prioridad | Esfuerzo | Descripción |
+|---|---|---|
+| Alta | S (1-2 días) | Define el layout base del dashboard en estado inicial. Depende de US-07b, US-NAV-01 y US-NAV-02. |
+
+**Acceptance Criteria — Gherkin**
+
+```gherkin
+Feature: US-NAV-03 — Layout dashboard grupo recién creado
+
+  Scenario: Dashboard muestra solo la sección de configuración pendiente
+    Given acabo de crear un grupo y no completé la configuración
+    When ingreso al dashboard
+    Then veo el header con el selector de grupo y el avatar
+    And el cuerpo de la pantalla muestra únicamente la card
+        de "Completar configuración"
+    And no se muestran otras secciones como eventos, historial ni rotación
+
+  Scenario: Card de configuración centrada en pantalla
+    Given estoy en el dashboard de un grupo recién creado
+    When la pantalla carga
+    Then la card ocupa el centro de la pantalla con padding generoso
+    And el fondo de la card tiene un degradado sutil de blanco a gris muy claro
+    And el título muestra "Configurá el grupo" con "grupo" en color primary
+
+  Scenario: Navegación inferior ausente en estado inicial
+    Given el grupo no tiene configuración completa
+    When veo el dashboard
+    Then no se muestra la barra de navegación inferior
+    And el único punto de acción es el botón "Completar configuración"
 ```
 
 ---
