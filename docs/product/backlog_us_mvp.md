@@ -3,9 +3,9 @@
 
 User Stories con Acceptance Criteria en formato Gherkin — ordenadas por prioridad de desarrollo
 
-| Versión | Stack | US totales | Fecha |
-|---|---|---|---|
-| MVP v1.0 | Next.js + Supabase | 19 User Stories | Marzo 2026 |
+| Versión | Stack | US totales | Completadas | Pendientes | Fecha |
+|---|---|---|---|---|---|
+| MVP v1.0 | Next.js + Supabase | 21 | 19 | 2 (US-00c, US-00d) | Marzo 2026 |
 
 ---
 
@@ -125,6 +125,55 @@ Feature: US-00c — Configurar frecuencia y día al crear el grupo
     Given completé nombre, frecuencia y día correctamente
     When confirmo la creación del grupo
     Then el grupo queda creado con los tres atributos guardados y accesibles desde la configuración del grupo
+```
+
+---
+
+### US-00d — Pantalla de confirmación post-creación de grupo
+
+> *Como usuario que acaba de crear un grupo, quiero ver una pantalla de confirmación con el resumen del grupo, mi rol y los próximos pasos, para entender qué tengo que hacer a continuación sin tener que explorar la app.*
+
+| Prioridad | Esfuerzo | Descripción |
+|---|---|---|
+| Alta — P0d | S (1-2 días) | Cierra el flujo de onboarding de US-00 y US-00c. Sin esta pantalla el usuario llega al dashboard sin contexto de qué hacer primero. Depende de US-00, US-00b y US-00c. |
+
+**Acceptance Criteria — Gherkin**
+
+```gherkin
+Feature: US-00d — Pantalla de confirmación post-creación de grupo
+
+  Scenario: Redirección automática tras crear el grupo
+    Given completé el formulario de creación con nombre, frecuencia y día
+    When el grupo se crea exitosamente
+    Then soy redirigido automáticamente a la pantalla de confirmación
+    And no puedo volver al formulario de creación con el botón atrás
+
+  Scenario: Resumen del grupo visible
+    Given estoy en la pantalla de confirmación
+    When la pantalla carga
+    Then veo el nombre del grupo, la frecuencia seleccionada y el día de reunión configurado
+
+  Scenario: Mensaje de bienvenida al rol de admin
+    Given estoy en la pantalla de confirmación
+    When la pantalla carga
+    Then veo un mensaje que me indica que soy el administrador del grupo
+    And el mensaje explica que puedo gestionar invitaciones, proponer fechas y coordinar lugares
+
+  Scenario: Próximos pasos visibles
+    Given estoy en la pantalla de confirmación
+    When la pantalla carga
+    Then veo dos próximos pasos sugeridos: "Invitar miembros" y "Configurar rotación"
+    And cada paso tiene una descripción breve de qué implica
+
+  Scenario: Navegación al dashboard
+    Given estoy en la pantalla de confirmación
+    When toco "Ir al Dashboard"
+    Then soy redirigido al dashboard del grupo recién creado
+
+  Scenario: Acceso directo por URL bloqueado
+    Given el grupo ya fue creado
+    When intento acceder a la URL de confirmación directamente
+    Then soy redirigido al dashboard del grupo sin mostrar la pantalla de confirmación
 ```
 
 ---

@@ -27,6 +27,7 @@ async function createGroup(
 - El trigger `on_group_created` inserta al creador en `members` como `admin`
 - El trigger `on_group_created_invitation` genera el primer `invitation_link`
 - Retorna el grupo creado
+- **US-00d:** la respuesta `Group` de esta action alimenta directamente la pantalla de confirmación post-creación (`/grupo-creado`). El componente cliente recibe el objeto y lo renderiza sin fetch adicional.
 - **Validación:** exactamente uno de `meeting_day_of_week` o `meeting_day_of_month` debe estar presente según la frecuencia:
   - `frequency = 'mensual'` → `meeting_day_of_month` requerido, `meeting_day_of_week` debe ser `undefined`
   - `frequency = 'semanal' | 'quincenal'` → `meeting_day_of_week` requerido, `meeting_day_of_month` debe ser `undefined`
