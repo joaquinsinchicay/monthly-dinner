@@ -146,7 +146,7 @@ export async function getRestaurantHistory(
   if (entries.length === 0) return { success: true, data: [] }
 
   // Resolver nombres de asistentes: colectar todos los UUIDs únicos y hacer un solo SELECT
-  const allIds = [...new Set(entries.flatMap((e) => e.attendee_ids as string[]))]
+  const allIds = Array.from(new Set(entries.flatMap((e) => e.attendee_ids as string[])))
 
   const profileMap: Record<string, string> = {}
   if (allIds.length > 0) {
