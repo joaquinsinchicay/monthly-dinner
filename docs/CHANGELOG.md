@@ -13,7 +13,19 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 19 | 14 | 0 | 5 |
+| 19 | 15 | 0 | 4 |
+
+---
+
+## [0.2.2] — 2026-03-24
+
+### Added
+- **US-14** Cargar restaurante al cerrar evento — `lib/actions/restaurant.ts`, `components/group/CloseEventForm.tsx`, `components/group/EventPanel.tsx`
+
+  Todos los escenarios Gherkin cubiertos:
+  - ✅ Restaurante cargado al cerrar → `closeEvent` INSERT `restaurant_history` con snapshot `attendee_ids` (va) + UPDATE `events.status='closed'`; `router.refresh()` actualiza la vista
+  - ✅ Restaurante ya en el historial → check `ilike` en `restaurant_history` del grupo → devuelve `alreadyVisited`; `CloseEventForm` muestra advertencia con fecha anterior + "Confirmar igual" (re-envío con `force=true`)
+  - ✅ Cierre sin restaurante → campo opcional; `name=null` en `restaurant_history`; nota en el form avisa "Sin restaurante registrado"
 
 ---
 
@@ -202,7 +214,7 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 | 13 | US-10 | Ver resumen de confirmaciones | E04 Confirmación | S (1-2d) | ✅ Done |
 | 14 | US-17 | Abrir votación de restaurantes | E06 Votación | M (3-4d) | ✅ Done |
 | 15 | US-18 | Votar por un restaurante | E06 Votación | S (1-2d) | ✅ Done |
-| 16 | US-14 | Cargar restaurante al cerrar evento | E05 Historial | S (1-2d) | ⬜ Pendiente |
+| 16 | US-14 | Cargar restaurante al cerrar evento | E05 Historial | S (1-2d) | ✅ Done |
 | 17 | US-16 | Consultar historial de restaurantes | E05 Historial | S (1-2d) | ⬜ Pendiente |
 | 18 | US-13 | Próximo organizador tras el cierre | E03 Turno rotativo | M (3-4d) | ⬜ Pendiente |
 | 19 | US-20 | Acceder al checklist del mes | E07 Checklist | M (3-4d) | ⬜ Pendiente |
