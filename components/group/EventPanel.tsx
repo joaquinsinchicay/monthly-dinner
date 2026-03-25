@@ -3,6 +3,7 @@ import NotifyButton from '@/components/group/NotifyButton'
 import AttendanceSummary from '@/components/group/AttendanceSummary'
 import AttendanceSummaryDetailed from '@/components/group/AttendanceSummaryDetailed'
 import ConfirmAttendanceButtons from '@/components/group/ConfirmAttendanceButtons'
+import CloseEventForm from '@/components/group/CloseEventForm'
 import type { Event } from '@/types'
 import type { AttendanceCounts } from '@/lib/actions/events'
 import type { UserAttendance, AttendanceStatus } from '@/lib/actions/attendances'
@@ -77,9 +78,12 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
   }
 
   // Evento existe — mostrar datos + acciones para el organizador
-  const canEdit = isOrganizer && event!.organizer_id === currentUserId && event!.status !== 'closed'
+  const isEventOrganizer = isOrganizer && event!.organizer_id === currentUserId
+  const canEdit = isEventOrganizer && event!.status !== 'closed'
   // Scenario: Notificación enviada al publicar — botón visible cuando status = pending
-  const canNotify = isOrganizer && event!.organizer_id === currentUserId && event!.status === 'pending'
+  const canNotify = isEventOrganizer && event!.status === 'pending'
+  // Scenario: Cerrar evento — solo para el organizador, solo si está published
+  const canClose = isEventOrganizer && event!.status === 'published'
 
   // Scenario: Cambio de estado — visible cuando el usuario ya confirmó (tiene userAttendance)
   // y el evento no está pending (pending = aún no convocado).
@@ -156,6 +160,18 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
           </summary>
           <div className="mt-4">
             <EventForm groupId={groupId} existing={event!} />
+          </div>
+        </details>
+      )}
+
+      {/* US-14: Cerrar evento — organizador, solo cuando published */}
+      {canClose && (
+        <details className="mt-3">
+          <summary className="cursor-pointer text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
+            Cerrar evento
+          </summary>
+          <div className="mt-4">
+            <CloseEventForm eventId={event!.id} />
           </div>
         </details>
       )}
