@@ -74,7 +74,7 @@ monthly-dinner es una app web mobile-first para grupos de amigos que se reúnen 
 | groups | US-00, US-00c | Grupos de cena. El admin crea. Incluye `frequency` ('mensual' / 'quincenal' / 'semanal') y `meeting_day_of_week` o `meeting_day_of_month` según frecuencia. Solo SELECT para miembros. |
 | members | US-00, US-01, US-04 | Membresía usuario-grupo. Roles: `member` / `admin`. |
 | invitation_links | US-00b, US-04 | Links de invitación. Solo admins crean, editan y revocan. |
-| events | US-05, US-06, US-07 | Evento mensual. Solo el organizador inserta y edita. |
+| events | US-05, US-06, US-07, US-07b | Evento mensual. Solo el organizador inserta y edita. Un `COUNT(*) = 0` sobre `events` filtrado por `group_id` es la condición que dispara el estado vacío de US-07b. |
 | attendances | US-09, US-10 | Confirmaciones de asistencia. Estados: `va` / `no_va` / `tal_vez`. |
 | rotation | US-11, US-13 | Turno rotativo. Solo admins gestionan. Todos pueden ver. |
 | polls | US-17, US-18 | Votaciones de restaurante. El organizador crea y gestiona. |
@@ -168,7 +168,7 @@ El diseño se apoya en "Tonal Layering" y espacio negativo, no en bordes duros. 
 
 ## 06 — Backlog MVP — Orden de desarrollo
 
-21 User Stories ordenadas por dependencia técnica y journey del usuario. El código de cada US debe satisfacer todos los Acceptance Criteria Gherkin definidos en el backlog.
+22 User Stories ordenadas por dependencia técnica y journey del usuario. El código de cada US debe satisfacer todos los Acceptance Criteria Gherkin definidos en el backlog.
 
 | # | ID | User Story | Épica | Esfuerzo | Estado |
 |---|---|---|---|---|---|
@@ -184,15 +184,16 @@ El diseño se apoya en "Tonal Layering" y espacio negativo, no en bordes duros. 
 | 10 | US-05 | Crear evento del mes | E02 Panel de evento | S (1-2d) | ✅ Completada |
 | 11 | US-06 | Notificar al grupo | E02 Panel de evento | M (3-4d) | ✅ Completada |
 | 12 | US-07 | Ver estado del evento en tiempo real | E02 Panel de evento | S (1-2d) | ✅ Completada |
-| 13 | US-08 | Recibir notificación de convocatoria | E04 Confirmación | M (3-4d) | ✅ Completada |
-| 14 | US-09 | Confirmar asistencia | E04 Confirmación | S (1-2d) | ✅ Completada |
-| 15 | US-10 | Ver resumen de confirmaciones | E04 Confirmación | S (1-2d) | ✅ Completada |
-| 16 | US-17 | Abrir votación de restaurantes | E06 Votación | M (3-4d) | ✅ Completada |
-| 17 | US-18 | Votar por un restaurante | E06 Votación | S (1-2d) | ✅ Completada |
-| 18 | US-14 | Cargar restaurante al cerrar evento | E05 Historial | S (1-2d) | ✅ Completada |
-| 19 | US-16 | Consultar historial de restaurantes | E05 Historial | S (1-2d) | ✅ Completada |
-| 20 | US-13 | Próximo organizador tras el cierre | E03 Turno rotativo | M (3-4d) | ✅ Completada |
-| 21 | US-20 | Acceder al checklist del mes | E07 Checklist | M (3-4d) | ✅ Completada |
+| 13 | US-07b | Estado vacío del dashboard sin eventos | E02 Panel de evento | S (1-2d) | ⏳ Pendiente |
+| 14 | US-08 | Recibir notificación de convocatoria | E04 Confirmación | M (3-4d) | ✅ Completada |
+| 15 | US-09 | Confirmar asistencia | E04 Confirmación | S (1-2d) | ✅ Completada |
+| 16 | US-10 | Ver resumen de confirmaciones | E04 Confirmación | S (1-2d) | ✅ Completada |
+| 17 | US-17 | Abrir votación de restaurantes | E06 Votación | M (3-4d) | ✅ Completada |
+| 18 | US-18 | Votar por un restaurante | E06 Votación | S (1-2d) | ✅ Completada |
+| 19 | US-14 | Cargar restaurante al cerrar evento | E05 Historial | S (1-2d) | ✅ Completada |
+| 20 | US-16 | Consultar historial de restaurantes | E05 Historial | S (1-2d) | ✅ Completada |
+| 21 | US-13 | Próximo organizador tras el cierre | E03 Turno rotativo | M (3-4d) | ✅ Completada |
+| 22 | US-20 | Acceder al checklist del mes | E07 Checklist | M (3-4d) | ✅ Completada |
 
 ---
 

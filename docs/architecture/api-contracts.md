@@ -121,6 +121,11 @@ async function notifyGroup(
 - Actualiza `status = 'published'` y `notified_at = now()`
 - Dispara notificación in-app a todos los miembros del grupo
 
+### Nota — Estado vacío US-07b
+El estado vacío del dashboard (grupo sin ningún evento en su historial) no requiere un server action dedicado. Se resuelve con dos queries inline en el Server Component:
+1. **¿Tiene eventos el grupo?** → `COUNT(*)` sobre `events` filtrado por `group_id`. Si el resultado es `0`, se renderiza el estado vacío.
+2. **¿Cuál es el rol del usuario?** → SELECT sobre `members` con `user_id = auth.uid()` y `group_id`. El campo `role` determina si se muestra el CTA "Crear primer evento" (`admin` o es el organizador del mes) o el mensaje de espera (rol `member` sin turno activo).
+
 ---
 
 ## E03 — Turno rotativo
