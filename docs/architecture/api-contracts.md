@@ -296,4 +296,42 @@ async function getUserGroups(): Promise<Group[]>
 
 ---
 
+## ESET — Configuración del grupo
+
+```ts
+// app/(dashboard)/[groupId]/settings/actions.ts
+
+async function updateGroupName(
+  input: { group_id: string; name: string }
+): Promise<ActionResult<Group>>
+// Valida que auth.uid() sea admin del grupo
+// Valida que name no esté vacío
+// Actualiza groups.name
+
+async function updateMemberRole(
+  input: {
+    group_id: string
+    member_id: string
+    role: 'member' | 'admin'
+  }
+): Promise<ActionResult<Member>>
+// Valida que auth.uid() sea admin del grupo
+// Valida que no sea el único admin antes de degradar
+// Actualiza members.role
+
+async function reorderRotation(
+  input: {
+    group_id: string
+    ordered_user_ids: string[]  // array de user_ids en el nuevo orden
+  }
+): Promise<ActionResult<Rotation[]>>
+// Valida que auth.uid() sea admin del grupo
+// Actualiza order_index de cada registro en rotation
+// según la posición en ordered_user_ids
+```
+
+> **Nota — enlace de invitación:** el enlace de invitación ya no se gestiona como sección independiente en esta pantalla. Se accede desde la sección de miembros via el botón "Agregar". `revokeInvitationLink` y `generateNewInvitationLink` siguen definidos en E00.
+
+---
+
 *monthly-dinner · API Contracts · MVP v1.0 · Marzo 2026*
