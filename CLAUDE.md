@@ -90,13 +90,13 @@ monthly-dinner es una app web mobile-first para grupos de amigos que se reúnen 
 |---|---|---|
 | profiles | INSERT / SELECT / UPDATE | `auth.uid() = id` — solo el propio usuario |
 | groups | INSERT / SELECT | INSERT: `auth.uid()` queda como admin / SELECT: solo miembros del grupo |
-| members | INSERT / SELECT / UPDATE / DELETE | INSERT real: `user_id = auth.uid()` / INSERT guest: solo admin del grupo / DELETE guest: solo admin del grupo / SELECT: mismo grupo / UPDATE: propio perfil |
+| members | INSERT / SELECT / UPDATE / DELETE | INSERT real: `user_id = auth.uid()` / INSERT guest: solo admin del grupo / DELETE guest: solo admin del grupo / DELETE non-guest: solo admin del grupo (no puede eliminarse a sí mismo) / SELECT: mismo grupo / UPDATE: propio perfil o admin del grupo |
 | invitation_links | INSERT / SELECT / UPDATE / DELETE | INSERT, UPDATE, DELETE: solo admin del grupo / SELECT: miembros del grupo |
 | events | INSERT / SELECT / UPDATE | INSERT y UPDATE: `organizer_id = auth.uid()` / SELECT: miembros del grupo |
-| attendances | ALL / SELECT | ALL propio: `member_id IN (SELECT id FROM members WHERE user_id = auth.uid())` / ALL guest (admin): admin del grupo puede escribir attendances de guests / SELECT: miembros del grupo via events |
+| attendances | ALL / SELECT | ALL propio: `member_id IN (SELECT id FROM members WHERE user_id = auth.uid())` / ALL guest (admin): admin del grupo puede escribir attendances de guests / DELETE admin: admin puede eliminar cualquier attendance de su grupo (limpieza al remover miembro) / SELECT: miembros del grupo via events |
 | restaurant_history | INSERT / SELECT | INSERT: `group_id` del evento donde `organizer_id = auth.uid()` |
 | rotation | ALL / SELECT | ALL: admin del grupo / SELECT: miembros del grupo |
-| polls / options / votes | ALL / SELECT | ALL: organizer o dueño del voto / SELECT: miembros del grupo via events |
+| polls / options / votes | ALL / SELECT | ALL: organizer o dueño del voto / DELETE admin (poll_votes): admin puede eliminar cualquier voto de su grupo (limpieza al remover miembro) / SELECT: miembros del grupo via events |
 | checklist_items | ALL | Solo el organizador del evento puede gestionar |
 | checklist_templates | ALL / SELECT | ALL: admin del grupo / SELECT: miembros del grupo o templates globales |
 
