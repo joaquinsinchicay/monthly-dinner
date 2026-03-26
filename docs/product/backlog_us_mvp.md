@@ -5,7 +5,7 @@ User Stories con Acceptance Criteria en formato Gherkin — ordenadas por priori
 
 | Versión | Stack | US totales | Completadas | Pendientes | Fecha |
 |---|---|---|---|---|---|
-| MVP v1.0 | Next.js + Supabase | 25 | 21 | 4 (US-07b, US-NAV-01, US-NAV-02, US-NAV-03) | Marzo 2026 |
+| MVP v1.0 | Next.js + Supabase | 27 | 26 | 1 | Marzo 2026 |
 
 ---
 
@@ -96,35 +96,49 @@ Feature: US-00b — Link de invitación inicial
 ```gherkin
 Feature: US-00c — Configurar frecuencia y día al crear el grupo
 
-  Scenario: Selección de frecuencia mensual muestra días del mes
-    Given estoy completando el formulario de creación de grupo
-    When selecciono la frecuencia "Mensual"
-    Then el campo "Día" muestra un selector numérico con los días del mes (1 al 31)
-
-  Scenario: Selección de frecuencia semanal muestra días de la semana
+  Scenario: Frecuencia semanal muestra solo día de la semana
     Given estoy completando el formulario de creación de grupo
     When selecciono la frecuencia "Semanal"
-    Then el campo "Día" muestra los 7 días de la semana como opciones seleccionables
+    Then veo únicamente el selector de día de la semana
+    And no se muestra el campo de semana del mes
+    And la vista previa muestra "Todos los [día seleccionado]"
 
-  Scenario: Selección de frecuencia quincenal muestra días de la semana
+  Scenario: Frecuencia quincenal muestra semanas en par y día
     Given estoy completando el formulario de creación de grupo
     When selecciono la frecuencia "Quincenal"
-    Then el campo "Día" muestra los 7 días de la semana como opciones seleccionables
+    Then veo el selector de semanas del mes con dos opciones: "1° y 3°" y "2° y 4°"
+    And veo el selector de día de la semana
+    And la vista previa muestra "El 1° y 3° [día] de cada mes" o
+        "El 2° y 4° [día] de cada mes" según la selección
 
-  Scenario: Campos obligatorios — frecuencia y día
+  Scenario: Frecuencia mensual muestra semana del mes y día
+    Given estoy completando el formulario de creación de grupo
+    When selecciono la frecuencia "Mensual"
+    Then veo el selector de semana del mes con opciones: 1°, 2°, 3°, 4° y Última
+    And veo el selector de día de la semana
+    And la vista previa muestra "El [ordinal] [día] de cada mes"
+
+  Scenario: Vista previa en tiempo real
+    Given estoy completando el formulario con frecuencia mensual
+    When selecciono "1°" como semana y "Jueves" como día
+    Then veo la vista previa actualizada: "El primer jueves de cada mes"
+
+  Scenario: Cambio de frecuencia resetea campos dependientes
+    Given seleccioné frecuencia, semana y día
+    When cambio la frecuencia a otro valor
+    Then los campos de semana y día se resetean
+    And la vista previa desaparece hasta completar la nueva selección
+
+  Scenario: Campos obligatorios según frecuencia
     Given estoy en el formulario de creación de grupo
-    When intento confirmar sin seleccionar frecuencia o día
-    Then el sistema indica que ambos campos son obligatorios y no crea el grupo
+    When intento confirmar sin completar todos los campos visibles
+    Then el sistema indica qué campos son obligatorios y no crea el grupo
 
-  Scenario: Mensaje informativo visible al cargar el formulario
-    Given accedo al formulario de creación de grupo
-    When la pantalla carga
-    Then veo el mensaje: "Como creador, tendrás el rol de administrador para gestionar las invitaciones, proponer fechas y coordinar los lugares de encuentro"
-
-  Scenario: Datos de frecuencia y día guardados con el grupo
-    Given completé nombre, frecuencia y día correctamente
+  Scenario: Datos guardados correctamente con el grupo
+    Given completé nombre, frecuencia, semana (si aplica) y día
     When confirmo la creación del grupo
-    Then el grupo queda creado con los tres atributos guardados y accesibles desde la configuración del grupo
+    Then el grupo queda creado con frequency, meeting_week
+        y meeting_day_of_week guardados según la frecuencia seleccionada
 ```
 
 ---
@@ -517,6 +531,60 @@ Feature: US-13 — Próximo organizador
     Given todos los miembros del grupo ya organizaron una vez
     When se cierra el último evento del ciclo
     Then la rotación vuelve a empezar desde el primer miembro y todos reciben notificación
+```
+
+---
+
+### US-11b — Configurar y editar rotación desde settings
+
+> *Como admin del grupo, quiero poder generar y modificar la rotación de responsables en todo momento, para que siempre haya un organizador asignado por mes sin depender de que alguien lo haga manualmente.*
+
+| Prioridad | Esfuerzo | Descripción |
+|---|---|---|
+| Alta — P5b | M (3-4 días) | Visible en la pantalla de settings. Si no hay rotación: dos acciones (manual / aleatoria). Si hay rotación: edición inline por mes. Depende de US-11. |
+
+**Acceptance Criteria — Gherkin**
+
+```gherkin
+Feature: US-11b — Configurar y editar rotación
+
+  Scenario: Sin rotación — acciones disponibles para el admin
+    Given soy admin del grupo y no hay rotación configurada
+    When accedo a la sección "Rotación de Responsables" en settings
+    Then veo dos botones: "Generar aleatoriamente" y "Configurar manualmente"
+    And el mensaje "No hay rotación configurada aún" sigue visible hasta que se genere una
+
+  Scenario: Generar rotación aleatoria
+    Given soy admin y no hay rotación configurada
+    When selecciono "Generar aleatoriamente"
+    Then el sistema asigna un miembro diferente por mes en orden aleatorio
+    And la rotación generada se muestra en la lista con nombre y mes asignado
+    And puedo confirmarla o regenerarla antes de guardar
+
+  Scenario: Configurar rotación manualmente
+    Given soy admin y no hay rotación configurada
+    When selecciono "Configurar manualmente"
+    Then se abre un modo de edición donde puedo asignar un miembro a cada mes
+    And cada fila muestra el mes (ej: "Abril 2026") y un selector con los miembros del grupo
+    And solo puedo guardar si todos los meses tienen un miembro asignado
+
+  Scenario: Con rotación existente — edición siempre visible
+    Given soy admin y ya hay una rotación configurada
+    When accedo a settings
+    Then veo la lista de meses con el miembro asignado a cada uno
+    And hay un botón "Editar rotación" visible en todo momento
+    And puedo modificar el asignado de cualquier mes y guardar los cambios
+
+  Scenario: Miembro sin cuenta en la rotación
+    Given hay miembros con estado "SIN CUENTA" en el grupo
+    When genero o configuro la rotación
+    Then esos miembros aparecen en el selector pero con el tag "SIN CUENTA" visible
+    And pueden ser asignados igual — la restricción de cuenta no bloquea la rotación
+
+  Scenario: Solo el admin ve las acciones de edición
+    Given soy miembro regular del grupo
+    When accedo a settings
+    Then veo la rotación como solo lectura, sin botones de editar ni generar
 ```
 
 ---

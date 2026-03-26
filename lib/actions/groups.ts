@@ -10,8 +10,8 @@ const VALID_DAYS_OF_WEEK = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes'
 export async function createGroup(input: {
   name: string
   frequency: 'mensual' | 'quincenal' | 'semanal'
-  meeting_day_of_week?: string
-  meeting_day_of_month?: number
+  meeting_day_of_week: 'lunes' | 'martes' | 'miércoles' | 'jueves' | 'viernes' | 'sábado' | 'domingo'
+  meeting_week?: number
 }): Promise<ActionResult<Group>> {
   const supabase = createClient()
 
@@ -33,28 +33,31 @@ export async function createGroup(input: {
     return { success: false, error: 'La frecuencia seleccionada no es válida' }
   }
 
-  // Validar consistencia de día según frecuencia (US-00c)
-  if (input.frequency === 'mensual') {
+  if (
+    !input.meeting_day_of_week ||
+    !(VALID_DAYS_OF_WEEK as readonly string[]).includes(input.meeting_day_of_week)
+  ) {
+    return { success: false, error: 'El día de la semana es obligatorio' }
+  }
+
+  // Validar meeting_week según frecuencia (US-00c cascada)
+  if (input.frequency === 'semanal') {
+    if (input.meeting_week !== undefined) {
+      return { success: false, error: 'La frecuencia semanal no requiere semana del mes' }
+    }
+  } else if (input.frequency === 'mensual') {
     if (
-      input.meeting_day_of_month === undefined ||
-      input.meeting_day_of_month < 1 ||
-      input.meeting_day_of_month > 31
+      input.meeting_week === undefined ||
+      ![1, 2, 3, 4, 5].includes(input.meeting_week)
     ) {
-      return { success: false, error: 'El día del mes es obligatorio para frecuencia mensual (1–31)' }
+      return { success: false, error: 'La frecuencia mensual requiere seleccionar la semana del mes (1° a Última)' }
     }
-    if (input.meeting_day_of_week !== undefined) {
-      return { success: false, error: 'No se puede especificar día de la semana para frecuencia mensual' }
-    }
-  } else {
-    // semanal | quincenal
+  } else if (input.frequency === 'quincenal') {
     if (
-      !input.meeting_day_of_week ||
-      !(VALID_DAYS_OF_WEEK as readonly string[]).includes(input.meeting_day_of_week)
+      input.meeting_week === undefined ||
+      ![1, 2].includes(input.meeting_week)
     ) {
-      return { success: false, error: 'El día de la semana es obligatorio' }
-    }
-    if (input.meeting_day_of_month !== undefined) {
-      return { success: false, error: 'No se puede especificar día del mes para frecuencia semanal o quincenal' }
+      return { success: false, error: 'La frecuencia quincenal requiere seleccionar "1° y 3°" o "2° y 4°"' }
     }
   }
 
@@ -73,10 +76,13 @@ export async function createGroup(input: {
     }
   }
 
-  const insertPayload =
-    input.frequency === 'mensual'
-      ? { name, created_by: user.id, frequency: input.frequency, meeting_day_of_month: input.meeting_day_of_month }
-      : { name, created_by: user.id, frequency: input.frequency, meeting_day_of_week: input.meeting_day_of_week }
+  const insertPayload = {
+    name,
+    created_by: user.id,
+    frequency: input.frequency,
+    meeting_day_of_week: input.meeting_day_of_week,
+    meeting_week: input.meeting_week ?? null,
+  }
 
   // INSERT separado del SELECT para evitar que INSERT...RETURNING evalúe
   // groups: select members antes de que el trigger inserte la membresía.
@@ -89,7 +95,7 @@ export async function createGroup(input: {
 
   const { data: group, error: selectError } = await supabase
     .from('groups')
-    .select('id, name, frequency, meeting_day_of_week, meeting_day_of_month, created_by, created_at, updated_at')
+    .select('id, name, frequency, meeting_week, meeting_day_of_week, created_by, created_at, updated_at')
     .eq('created_by', user.id)
     .order('created_at', { ascending: false })
     .limit(1)

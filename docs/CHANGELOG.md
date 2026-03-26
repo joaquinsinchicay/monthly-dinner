@@ -13,9 +13,59 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 26 | 26 | 0 | 0 |
+| 27 | 27 | 0 | 0 |
 
-> **MVP completo** — todas las US implementadas (incluye ENAV y ESET).
+> **MVP completo** — todas las US implementadas (incluye ENAV, ESET y US-21 guests).
+
+---
+
+## [0.4.5] — 2026-03-26
+
+### Added — US-21 Agregar miembro sin cuenta (guest)
+
+- **Migración DB:** `user_id` nullable en `members`. Columnas `is_guest boolean DEFAULT false` y `display_name text`. Constraints `members_identity_check` (user_id OR display_name requerido) y `members_guest_coherence` (coherencia is_guest/user_id/display_name).
+- **Migración attendances:** `member_id` convertido de `user_id` a `members.id` en filas existentes. RLS actualizado: políticas `insert own / update own / delete own` ahora usan `member_id IN (SELECT id FROM members WHERE user_id = auth.uid())`. Nueva política `attendances: admin write guest` para que admins confirmen por guests.
+- **RLS members:** Nuevas políticas `members: insert guest` y `members: delete guest` — solo admins del grupo.
+- **`types/index.ts`:** `Member.user_id` ahora `string | null`. Campos `is_guest` y `display_name` agregados. Helper `getMemberDisplayName()` exportado. `MemberWithProfile.profile` ahora nullable.
+- **`lib/actions/members.ts`:** Nuevo archivo. Actions `addGuestMember` (valida admin, nombre ≤80 chars) y `deleteGuestMember` (valida admin + is_guest).
+- **`lib/actions/attendances.ts`:** `upsertAttendance` acepta `guestMemberId?` opcional para que admins confirmen por guests. Ahora resuelve `members.id` antes de hacer upsert (flujo normal). `getAttendanceDetails` usa JOIN `members → profiles` con soporte LEFT JOIN para guests. `getUserAttendance` resuelve `members.id` del usuario antes de buscar.
+- **`components/settings/SettingsMembersSection.tsx`:** Modal "Agregar" con tab toggle "Invitar por link" / "Agregar sin cuenta". Pill "Sin cuenta" para guests. Opción "Eliminar del grupo" en menú de guests. Avatar de guests usa iniciales sobre fondo `#ede9e8`.
+- **`components/group/AttendanceSummaryDetailed.tsx`:** Prop `isAdmin?`. Sección "Confirmar por invitados" con `GuestStatusSelector` inline para cada guest sin responder — solo visible para admins.
+- **`components/group/EventPanel.tsx`:** Prop `isAdmin?` agregada y pasada a `AttendanceSummaryDetailed`.
+- **`app/(auth)/grupo/[id]/page.tsx`:** `isAdmin` pasado a `EventPanel`.
+- **`app/(dashboard)/dashboard/[groupId]/settings/page.tsx`:** Query de members incluye `is_guest` y `display_name`.
+
+---
+
+## [0.4.4] — 2026-03-26
+
+### Added — Google avatar support
+
+- **Migración DB:** `avatar_url TEXT` agregado a `profiles` (idempotente). Trigger `handle_new_user` creado/reemplazado: inserta o actualiza `full_name` y `avatar_url` desde `raw_user_meta_data` en cada signup con Google OAuth.
+- **`components/ui/avatar-user.tsx`:** Nuevo componente `<AvatarUser>`. Props: `avatarUrl`, `fullName`, `size` (sm=28px / md=36px / lg=48px). Muestra foto de Google con `<Image>` o inicial del nombre como fallback. Sin bordes, `rounded-full`, fondo `surface_container_low` (#f6f3f2).
+- **`components/layout/AvatarMenu.tsx`:** Refactorizado para usar `<AvatarUser size="md">`. Eliminado código inline de imagen/iniciales.
+- **`next.config.mjs`:** `remotePatterns` configurado para `lh3.googleusercontent.com` (dominio de fotos de Google).
+- **`CLAUDE.md`:** Sección 04 tabla `profiles` actualizada con descripción de `avatar_url` y trigger.
+
+---
+
+## [0.4.3] — 2026-03-26
+
+### Changed — US-00c frecuencia en cascada
+
+- **Migración DB:** `meeting_day_of_month` eliminado de `groups`. Nueva columna `meeting_week integer CHECK (1-5)`. Constraint `meeting_day_consistency` reemplazado con lógica de 3 flujos (semanal / quincenal / mensual).
+- **`types/index.ts`:** `Group.meeting_day_of_month` eliminado. Agregado `meeting_week?: number` con convención: mensual 1-5 (5=última), quincenal 1|2, semanal undefined.
+- **`lib/actions/groups.ts`:** `createGroup` actualizado con firma nueva y validaciones en cascada por frecuencia. SELECT de retorno incluye `meeting_week`.
+- **`components/group/CreateGroupForm.tsx`:** Formulario reemplazado con sistema de pills seleccionables. Lógica condicional en 3 flujos: semanal (solo día), quincenal (semanas en par + día), mensual (semana 1-5 + día). Vista previa en tiempo real. Reset de campos dependientes al cambiar frecuencia.
+
+  Escenarios Gherkin cubiertos:
+  - ✅ Frecuencia semanal muestra solo día de la semana
+  - ✅ Frecuencia quincenal muestra semanas en par y día
+  - ✅ Frecuencia mensual muestra semana del mes y día
+  - ✅ Vista previa en tiempo real
+  - ✅ Cambio de frecuencia resetea campos dependientes
+  - ✅ Campos obligatorios según frecuencia
+  - ✅ Datos guardados correctamente con el grupo
 
 ---
 

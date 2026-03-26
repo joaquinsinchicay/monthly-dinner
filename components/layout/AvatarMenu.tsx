@@ -2,22 +2,12 @@
 
 import { useState, useRef, useEffect, useTransition } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import Image from 'next/image'
-import { Settings, LogOut } from 'lucide-react'
+import { Settings, LogOut, Plus } from 'lucide-react'
 import { signOut } from '@/lib/actions/auth'
+import AvatarUser from '@/components/ui/avatar-user'
 
 interface Props {
   profile: { full_name: string | null; avatar_url: string | null } | null
-}
-
-function getInitials(name: string | null | undefined): string {
-  if (!name) return '?'
-  return name
-    .split(' ')
-    .slice(0, 2)
-    .map((n) => n[0] ?? '')
-    .join('')
-    .toUpperCase()
 }
 
 // Scenario: Avatar visible en el header — foto de perfil de Google o iniciales.
@@ -54,6 +44,11 @@ export default function AvatarMenu({ profile }: Props) {
     router.push(`/dashboard/${activeGroupId}/settings`)
   }
 
+  function handleCreateGroup() {
+    setMenuOpen(false)
+    router.push('/group/new')
+  }
+
   function handleSignOutRequest() {
     setMenuOpen(false)
     setDialogOpen(true)
@@ -76,22 +71,11 @@ export default function AvatarMenu({ profile }: Props) {
           aria-expanded={menuOpen}
           className="relative h-10 w-10 overflow-hidden rounded-full ring-2 ring-[#004ac6] focus:outline-none"
         >
-          {profile?.avatar_url ? (
-            <Image
-              src={profile.avatar_url}
-              alt={profile.full_name ?? 'Avatar'}
-              fill
-              sizes="40px"
-              className="object-cover"
-            />
-          ) : (
-            <span
-              className="flex h-full w-full items-center justify-center bg-[#ede9e8] text-[13px] font-semibold text-[#1c1b1b]"
-              style={{ fontFamily: 'DM Serif Display, serif' }}
-            >
-              {getInitials(profile?.full_name)}
-            </span>
-          )}
+          <AvatarUser
+            avatarUrl={profile?.avatar_url ?? null}
+            fullName={profile?.full_name ?? '?'}
+            size="md"
+          />
         </button>
 
         {/* Scenario: Menú del avatar muestra dos opciones */}
@@ -110,10 +94,20 @@ export default function AvatarMenu({ profile }: Props) {
               Configuración del grupo
             </button>
 
+            {/* Ítem 2: Crear nuevo grupo */}
+            <button
+              role="menuitem"
+              onClick={handleCreateGroup}
+              className="flex w-full items-center gap-3 px-4 py-3 text-left text-[15px] text-[#1c1b1b] transition-colors hover:bg-[#f6f3f2]"
+            >
+              <Plus size={16} className="shrink-0 text-[#585f6c]" />
+              Crear nuevo grupo
+            </button>
+
             {/* Separador: espacio en blanco, sin hr */}
             <div className="h-1" />
 
-            {/* Ítem 2: Cerrar sesión */}
+            {/* Ítem 3: Cerrar sesión */}
             <button
               role="menuitem"
               onClick={handleSignOutRequest}

@@ -91,15 +91,32 @@ create table if not exists groups (
   name                  text not null,
   frequency             text not null check (frequency in ('mensual', 'quincenal', 'semanal')),
   meeting_day_of_week   text check (meeting_day_of_week in ('lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo')),
-  meeting_day_of_month  integer check (meeting_day_of_month between 1 and 31),
+  meeting_week          integer check (meeting_week between 1 and 5),
+  -- 1=primera, 2=segunda, 3=tercera, 4=cuarta, 5=última
+  -- NULL cuando frequency = 'semanal'
+  -- Para frequency = 'quincenal': meeting_week = 1 → "1° y 3° semana"
+  --                               meeting_week = 2 → "2° y 4° semana"
   created_by            uuid not null references profiles(id) on delete restrict,
   created_at            timestamptz not null default now(),
-  updated_at            timestamptz not null default now(),
-  constraint meeting_day_consistency check (
-    (frequency = 'mensual' and meeting_day_of_month is not null and meeting_day_of_week is null) or
-    (frequency in ('semanal', 'quincenal') and meeting_day_of_week is not null and meeting_day_of_month is null)
-  )
+  updated_at            timestamptz not null default now()
 );
+
+alter table groups drop constraint if exists meeting_day_consistency;
+
+alter table groups
+  add constraint meeting_day_consistency check (
+    (frequency = 'semanal'
+      and meeting_day_of_week is not null
+      and meeting_week is null) or
+    (frequency = 'mensual'
+      and meeting_day_of_week is not null
+      and meeting_week between 1 and 5) or
+    (frequency = 'quincenal'
+      and meeting_day_of_week is not null
+      and meeting_week in (1, 2))
+    -- meeting_week = 1 representa "1° y 3° semana"
+    -- meeting_week = 2 representa "2° y 4° semana"
+  );
 
 alter table groups enable row level security;
 

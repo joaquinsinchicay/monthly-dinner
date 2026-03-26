@@ -5,27 +5,77 @@ import { useRouter } from 'next/navigation'
 import { createGroup } from '@/lib/actions/groups'
 
 type Frequency = 'mensual' | 'quincenal' | 'semanal'
+type DayOfWeek = 'lunes' | 'martes' | 'miércoles' | 'jueves' | 'viernes' | 'sábado' | 'domingo'
 
-const DAYS_OF_WEEK = [
-  'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo',
-] as const
+const DAYS: { label: string; value: DayOfWeek }[] = [
+  { label: 'Lun', value: 'lunes' },
+  { label: 'Mar', value: 'martes' },
+  { label: 'Mié', value: 'miércoles' },
+  { label: 'Jue', value: 'jueves' },
+  { label: 'Vie', value: 'viernes' },
+  { label: 'Sáb', value: 'sábado' },
+  { label: 'Dom', value: 'domingo' },
+]
 
-const DAYS_OF_MONTH = Array.from({ length: 31 }, (_, i) => i + 1)
+const MONTHLY_WEEKS: { label: string; value: number }[] = [
+  { label: '1°', value: 1 },
+  { label: '2°', value: 2 },
+  { label: '3°', value: 3 },
+  { label: '4°', value: 4 },
+  { label: 'Última', value: 5 },
+]
 
-const selectClass =
-  'w-full rounded-xl bg-[#f6f3f2] px-4 py-3 text-sm text-[#1c1b1b] outline-none focus:ring-2 focus:ring-[#004ac6] disabled:opacity-50 transition-shadow appearance-none cursor-pointer'
+const BIWEEKLY_WEEKS: { label: string; value: number }[] = [
+  { label: '1° y 3°', value: 1 },
+  { label: '2° y 4°', value: 2 },
+]
+
+const ORDINALS = ['primer', 'segundo', 'tercer', 'cuarto', 'último']
+
+function buildPreview(
+  frequency: Frequency | '',
+  meetingWeek: number | null,
+  meetingDay: DayOfWeek | '',
+): string {
+  if (!frequency || !meetingDay) return ''
+
+  if (frequency === 'semanal') {
+    return `Todos los ${meetingDay}`
+  }
+
+  if (!meetingWeek) return ''
+
+  if (frequency === 'quincenal') {
+    const label = meetingWeek === 1 ? '1° y 3°' : '2° y 4°'
+    return `El ${label} ${meetingDay} de cada mes`
+  }
+
+  // mensual
+  const ordinal = ORDINALS[(meetingWeek === 5 ? 4 : meetingWeek - 1)]
+  return `El ${ordinal} ${meetingDay} de cada mes`
+}
 
 export default function CreateGroupForm() {
   const router = useRouter()
-  const [frequency, setFrequency] = useState<Frequency>('mensual')
-  const [dayValue, setDayValue] = useState<string>('')
-  const [errors, setErrors] = useState<{ name?: string; day?: string; general?: string }>({})
+  const [frequency, setFrequency] = useState<Frequency | ''>('')
+  const [meetingWeek, setMeetingWeek] = useState<number | null>(null)
+  const [meetingDay, setMeetingDay] = useState<DayOfWeek | ''>('')
+  const [errors, setErrors] = useState<{
+    name?: string
+    frequency?: string
+    week?: string
+    day?: string
+    general?: string
+  }>({})
   const [isPending, startTransition] = useTransition()
+
+  const preview = buildPreview(frequency, meetingWeek, meetingDay)
 
   function handleFrequencyChange(value: Frequency) {
     setFrequency(value)
-    setDayValue('')                                  // resetear día al cambiar frecuencia
-    setErrors(prev => ({ ...prev, day: undefined }))
+    setMeetingWeek(null)
+    setMeetingDay('')
+    setErrors(prev => ({ ...prev, frequency: undefined, week: undefined, day: undefined }))
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -36,16 +86,15 @@ export default function CreateGroupForm() {
 
     const newErrors: typeof errors = {}
 
-    if (!name) {
-      newErrors.name = 'El nombre del grupo es obligatorio'
+    if (!name) newErrors.name = 'El nombre del grupo es obligatorio'
+    if (!frequency) newErrors.frequency = 'Seleccioná una frecuencia'
+    if (frequency && frequency !== 'semanal' && !meetingWeek) {
+      newErrors.week =
+        frequency === 'quincenal'
+          ? 'Seleccioná las semanas del mes'
+          : 'Seleccioná la semana del mes'
     }
-
-    if (!dayValue) {
-      newErrors.day =
-        frequency === 'mensual'
-          ? 'Seleccioná el día del mes'
-          : 'Seleccioná el día de la semana'
-    }
+    if (frequency && !meetingDay) newErrors.day = 'Seleccioná el día de la semana'
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
@@ -55,26 +104,25 @@ export default function CreateGroupForm() {
     setErrors({})
 
     startTransition(async () => {
-      const input =
-        frequency === 'mensual'
-          ? { name, frequency, meeting_day_of_month: parseInt(dayValue, 10) }
-          : { name, frequency, meeting_day_of_week: dayValue }
-
-      const result = await createGroup(input)
+      const result = await createGroup({
+        name,
+        frequency: frequency as Frequency,
+        meeting_day_of_week: meetingDay as DayOfWeek,
+        meeting_week: frequency === 'semanal' ? undefined : (meetingWeek ?? undefined),
+      })
 
       if (!result.success) {
         setErrors({ general: result.error })
         return
       }
 
-      // router.replace evita que el botón atrás vuelva al formulario (US-00d)
       router.replace(`/grupo-creado/${result.data.id}`)
     })
   }
 
   return (
     <form onSubmit={handleSubmit} noValidate>
-      <div className="space-y-5">
+      <div className="space-y-6">
 
         {/* Nombre del grupo */}
         <div className="space-y-2">
@@ -98,65 +146,105 @@ export default function CreateGroupForm() {
           )}
         </div>
 
-        {/* Frecuencia */}
+        {/* Frecuencia — pills */}
         <div className="space-y-2">
-          <label
-            htmlFor="frequency"
-            className="block text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]"
-          >
+          <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
             Frecuencia
-          </label>
-          <select
-            id="frequency"
-            value={frequency}
-            onChange={e => handleFrequencyChange(e.target.value as Frequency)}
-            disabled={isPending}
-            className={selectClass}
-          >
-            <option value="mensual">Mensual</option>
-            <option value="quincenal">Quincenal</option>
-            <option value="semanal">Semanal</option>
-          </select>
-        </div>
-
-        {/* Día — condicional según frecuencia */}
-        <div className="space-y-2">
-          <label
-            htmlFor="day"
-            className="block text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]"
-          >
-            Día
-          </label>
-          <select
-            id="day"
-            value={dayValue}
-            onChange={e => setDayValue(e.target.value)}
-            disabled={isPending}
-            className={selectClass}
-          >
-            <option value="" disabled>
-              {frequency === 'mensual' ? 'Día del mes' : 'Día de la semana'}
-            </option>
-            {frequency === 'mensual'
-              ? DAYS_OF_MONTH.map(d => (
-                  <option key={d} value={String(d)}>
-                    {d}
-                  </option>
-                ))
-              : DAYS_OF_WEEK.map(d => (
-                  <option key={d} value={d}>
-                    {d.charAt(0).toUpperCase() + d.slice(1)}
-                  </option>
-                ))}
-          </select>
-          {errors.day && (
-            <p className="text-sm text-[#ba1a1a]">{errors.day}</p>
+          </p>
+          <div className="flex gap-2">
+            {(['mensual', 'quincenal', 'semanal'] as Frequency[]).map(f => (
+              <button
+                key={f}
+                type="button"
+                disabled={isPending}
+                onClick={() => handleFrequencyChange(f)}
+                className={`flex-1 rounded-full py-2 text-sm font-medium transition-colors ${
+                  frequency === f
+                    ? 'bg-[#004ac6] text-white'
+                    : 'bg-[#f6f3f2] text-[#1c1b1b] hover:bg-[#eceae9]'
+                } disabled:opacity-50`}
+              >
+                {f.charAt(0).toUpperCase() + f.slice(1)}
+              </button>
+            ))}
+          </div>
+          {errors.frequency && (
+            <p className="text-sm text-[#ba1a1a]">{errors.frequency}</p>
           )}
         </div>
 
+        {/* Semana del mes — condicional: mensual o quincenal */}
+        {(frequency === 'mensual' || frequency === 'quincenal') && (
+          <div className="space-y-2">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
+              {frequency === 'quincenal' ? 'Semanas del mes' : 'Semana del mes'}
+            </p>
+            <div className="flex gap-2 flex-wrap">
+              {(frequency === 'quincenal' ? BIWEEKLY_WEEKS : MONTHLY_WEEKS).map(w => (
+                <button
+                  key={w.value}
+                  type="button"
+                  disabled={isPending}
+                  onClick={() => {
+                    setMeetingWeek(w.value)
+                    setErrors(prev => ({ ...prev, week: undefined }))
+                  }}
+                  className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                    meetingWeek === w.value
+                      ? 'bg-[#004ac6] text-white'
+                      : 'bg-[#f6f3f2] text-[#1c1b1b] hover:bg-[#eceae9]'
+                  } disabled:opacity-50`}
+                >
+                  {w.label}
+                </button>
+              ))}
+            </div>
+            {errors.week && (
+              <p className="text-sm text-[#ba1a1a]">{errors.week}</p>
+            )}
+          </div>
+        )}
+
+        {/* Día de la semana — visible cuando hay frecuencia seleccionada */}
+        {frequency && (
+          <div className="space-y-2">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
+              Día
+            </p>
+            <div className="flex gap-1.5 flex-wrap">
+              {DAYS.map(d => (
+                <button
+                  key={d.value}
+                  type="button"
+                  disabled={isPending}
+                  onClick={() => {
+                    setMeetingDay(d.value)
+                    setErrors(prev => ({ ...prev, day: undefined }))
+                  }}
+                  className={`rounded-full px-3 py-2 text-sm font-medium transition-colors ${
+                    meetingDay === d.value
+                      ? 'bg-[#004ac6] text-white'
+                      : 'bg-[#f6f3f2] text-[#1c1b1b] hover:bg-[#eceae9]'
+                  } disabled:opacity-50`}
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
+            {errors.day && (
+              <p className="text-sm text-[#ba1a1a]">{errors.day}</p>
+            )}
+          </div>
+        )}
+
+        {/* Vista previa en tiempo real */}
+        {preview && (
+          <p className="text-sm text-[#585f6c]">{preview}</p>
+        )}
+
       </div>
 
-      {/* Error general (duplicado de nombre, error de servidor) */}
+      {/* Error general */}
       {errors.general && (
         <p className="mt-3 text-sm text-[#ba1a1a]">{errors.general}</p>
       )}
@@ -169,7 +257,6 @@ export default function CreateGroupForm() {
         {isPending ? 'Creando...' : 'Crear grupo'}
       </button>
 
-      {/* Mensaje informativo — visible al cargar (Gherkin: Scenario "Mensaje informativo") */}
       <p className="mt-4 text-xs leading-relaxed text-[#585f6c]">
         Como creador, tendrás el rol de administrador para gestionar las invitaciones,
         proponer fechas y coordinar los lugares de encuentro.

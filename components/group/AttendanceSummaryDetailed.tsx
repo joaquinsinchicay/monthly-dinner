@@ -2,12 +2,13 @@
 
 import { useEffect, useState, useTransition } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { getAttendanceDetails } from '@/lib/actions/attendances'
-import type { AttendanceDetails, AttendanceMember } from '@/lib/actions/attendances'
+import { getAttendanceDetails, upsertAttendance } from '@/lib/actions/attendances'
+import type { AttendanceDetails, AttendanceMember, AttendanceStatus } from '@/lib/actions/attendances'
 
 interface Props {
   eventId: string
   groupId: string
+  isAdmin?: boolean
 }
 
 // Scenario: Compartir resumen — genera texto listo para copiar
@@ -53,11 +54,70 @@ function MemberList({ members, label, colorClass }: {
   )
 }
 
+// Selector inline de estado para guests — solo visible para admins
+function GuestStatusSelector({
+  eventId,
+  member,
+  onChanged,
+}: {
+  eventId: string
+  member: AttendanceMember
+  onChanged: () => void
+}) {
+  const [saving, setSaving] = useState(false)
+  const [localError, setLocalError] = useState<string | null>(null)
+
+  async function handleSelect(status: AttendanceStatus) {
+    setSaving(true)
+    setLocalError(null)
+    const result = await upsertAttendance(eventId, status, member.id)
+    setSaving(false)
+    if (!result.success) {
+      setLocalError(result.error)
+      return
+    }
+    onChanged()
+  }
+
+  const options: { status: AttendanceStatus; label: string; bg: string; text: string }[] = [
+    { status: 'va',      label: 'Va',       bg: 'bg-[#f0ede9]', text: 'text-[#1c1b1b]' },
+    { status: 'tal_vez', label: 'Tal vez',  bg: 'bg-[#f0ede9]', text: 'text-[#1c1b1b]' },
+    { status: 'no_va',   label: 'No va',    bg: 'bg-[#f0ede9]', text: 'text-[#1c1b1b]' },
+  ]
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center justify-between">
+        <span className="text-[13px] text-[#1c1b1b]">{member.name}</span>
+        <span className="text-[11px] font-semibold uppercase tracking-[0.04em] text-[#585f6c] bg-[#ede9e8] rounded-full px-2 py-0.5">
+          Sin cuenta
+        </span>
+      </div>
+      <div className="flex gap-1.5 mt-0.5">
+        {options.map((opt) => (
+          <button
+            key={opt.status}
+            disabled={saving}
+            onClick={() => handleSelect(opt.status)}
+            className={`rounded-full px-3 py-1 text-[11px] font-semibold ${opt.bg} ${opt.text} hover:opacity-80 disabled:opacity-50 transition-opacity`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+      {localError && (
+        <p className="text-[11px] text-[#ba1a1a]">{localError}</p>
+      )}
+    </div>
+  )
+}
+
 // Scenario: Resumen completo visible — Para el organizador, muestra nombres por categoría.
 // Scenario: Todos confirmaron — sin_responder vacío → badge "Todos respondieron".
 // Scenario: Compartir resumen — botón genera texto formateado para copiar.
+// Scenario: Admin confirma por guests — selector inline en sin_responder (solo guests).
 // Actualización en tiempo real via supabase.channel() — mismo patrón que AttendanceSummary.
-export default function AttendanceSummaryDetailed({ eventId, groupId }: Props) {
+export default function AttendanceSummaryDetailed({ eventId, groupId, isAdmin = false }: Props) {
   const [details, setDetails] = useState<AttendanceDetails | null>(null)
   const [copied, setCopied] = useState(false)
   const [, startTransition] = useTransition()
@@ -114,6 +174,13 @@ export default function AttendanceSummaryDetailed({ eventId, groupId }: Props) {
   const allResponded = details.sin_responder.length === 0
   const totalConfirmed = details.va.length + details.no_va.length + details.tal_vez.length
 
+  // Guests sin responder — admin puede confirmar por ellos
+  const guestsSinResponder = isAdmin
+    ? details.sin_responder.filter((m) => m.is_guest)
+    : []
+  // Miembros reales sin responder — siempre solo lectura
+  const realSinResponder = details.sin_responder.filter((m) => !m.is_guest)
+
   return (
     <div className="mt-4 space-y-3">
 
@@ -142,17 +209,36 @@ export default function AttendanceSummaryDetailed({ eventId, groupId }: Props) {
       ) : null}
 
       {/* Scenario: Resumen completo visible — Van, No van, Tal vez con nombres */}
-      <MemberList members={details.va} label="Van" colorClass="bg-[#6ffbbe] text-[#006242]" />
+      <MemberList members={details.va}      label="Van"     colorClass="bg-[#6ffbbe] text-[#006242]" />
       <MemberList members={details.tal_vez} label="Tal vez" colorClass="bg-[#dce2f3] text-[#004ac6]" />
-      <MemberList members={details.no_va} label="No van" colorClass="bg-[#ffdad6] text-[#ba1a1a]" />
+      <MemberList members={details.no_va}   label="No van"  colorClass="bg-[#ffdad6] text-[#ba1a1a]" />
 
-      {/* Scenario: Sin responder — solo visible cuando no todos confirmaron */}
-      {!allResponded && details.sin_responder.length > 0 && (
+      {/* Scenario: Sin responder — miembros reales (solo lectura) */}
+      {!allResponded && realSinResponder.length > 0 && (
         <MemberList
-          members={details.sin_responder}
+          members={realSinResponder}
           label="Sin responder"
           colorClass="bg-[#f0ede9] text-[#585f6c]"
         />
+      )}
+
+      {/* Scenario: Admin confirma por guests — selector inline por cada guest sin responder */}
+      {guestsSinResponder.length > 0 && (
+        <div>
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
+            Confirmar por invitados ({guestsSinResponder.length})
+          </p>
+          <div className="space-y-3 rounded-xl bg-[#f6f3f2] px-4 py-3">
+            {guestsSinResponder.map((m) => (
+              <GuestStatusSelector
+                key={m.id}
+                eventId={eventId}
+                member={m}
+                onChanged={fetchDetails}
+              />
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Scenario: Compartir resumen */}

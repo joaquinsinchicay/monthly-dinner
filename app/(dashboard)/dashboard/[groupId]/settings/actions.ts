@@ -125,7 +125,109 @@ export async function updateMemberRole(
   return { success: true, data: { id: updated.id, role: updated.role } }
 }
 
-// ACTION 3 — reorderRotation
+// ACTION 3 — removeMember
+export async function removeMember(
+  input: { group_id: string; user_id: string }
+): Promise<ActionResult> {
+  const supabase = createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return { success: false, error: 'No autenticado' }
+
+  // No puede eliminar a sí mismo
+  if (input.user_id === user.id) {
+    return { success: false, error: 'No podés eliminarte a vos mismo del grupo' }
+  }
+
+  // Verificar que el usuario autenticado es admin del grupo
+  const { data: myMembership } = await supabase
+    .from('members')
+    .select('role')
+    .eq('group_id', input.group_id)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (!myMembership || myMembership.role !== 'admin') {
+    return { success: false, error: 'Solo los admins pueden eliminar miembros' }
+  }
+
+  // Obtener el member record del usuario a eliminar
+  const { data: targetMember } = await supabase
+    .from('members')
+    .select('id, role')
+    .eq('group_id', input.group_id)
+    .eq('user_id', input.user_id)
+    .eq('is_guest', false)
+    .maybeSingle()
+
+  if (!targetMember) {
+    return { success: false, error: 'Miembro no encontrado en este grupo' }
+  }
+
+  // Si el miembro a eliminar es admin, verificar que quede al menos 1 admin
+  if (targetMember.role === 'admin') {
+    const { count: adminCount } = await supabase
+      .from('members')
+      .select('id', { count: 'exact', head: true })
+      .eq('group_id', input.group_id)
+      .eq('role', 'admin')
+
+    if ((adminCount ?? 0) <= 1) {
+      return { success: false, error: 'No podés eliminar al único admin del grupo' }
+    }
+  }
+
+  // Limpiar attendances del miembro en este grupo
+  await supabase
+    .from('attendances')
+    .delete()
+    .eq('member_id', targetMember.id)
+
+  // Limpiar poll_votes del miembro en este grupo
+  // (poll_votes usa user_id, filtrado por polls de este grupo via subquery)
+  const { data: groupPolls } = await supabase
+    .from('polls')
+    .select('id')
+    .eq('group_id', input.group_id)
+
+  if (groupPolls && groupPolls.length > 0) {
+    const pollIds = groupPolls.map((p) => p.id)
+    await supabase
+      .from('poll_votes')
+      .delete()
+      .eq('user_id', input.user_id)
+      .in('poll_id', pollIds)
+  }
+
+  // Limpiar rotation futura del miembro en este grupo
+  await supabase
+    .from('rotation')
+    .delete()
+    .eq('group_id', input.group_id)
+    .eq('user_id', input.user_id)
+    .gte('month', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10))
+
+  // Eliminar el miembro
+  const { error } = await supabase
+    .from('members')
+    .delete()
+    .eq('id', targetMember.id)
+    .eq('group_id', input.group_id)
+
+  if (error) {
+    return { success: false, error: 'No se pudo eliminar el miembro. Intentá de nuevo.' }
+  }
+
+  revalidatePath(`/dashboard/${input.group_id}/settings`)
+  revalidatePath(`/dashboard/${input.group_id}`)
+
+  return { success: true, data: undefined }
+}
+
+// ACTION 4 — reorderRotation
 export async function reorderRotation(
   input: { group_id: string; ordered_user_ids: string[] }
 ): Promise<ActionResult<{ id: string; order_index: number; user_id: string }[]>> {
