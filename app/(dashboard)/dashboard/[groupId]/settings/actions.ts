@@ -25,7 +25,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import type { ActionResult, Member, MemberRole } from '@/types'
+import type { ActionResult, MemberRole } from '@/types'
 
 // ACTION 1 — updateGroupName
 export async function updateGroupName(

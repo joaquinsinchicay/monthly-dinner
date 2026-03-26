@@ -20,7 +20,6 @@ export default function SettingsNameSection({ groupId, initialName, invitationTo
   const [error, setError] = useState<string | null>(null)
 
   // Invitation link state
-  const [copied, setCopied] = useState(false)
   const [checkIcon, setCheckIcon] = useState(false)
   const [inviteLoading, setInviteLoading] = useState(false)
   const [inviteError, setInviteError] = useState<string | null>(null)
