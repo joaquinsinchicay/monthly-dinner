@@ -19,6 +19,18 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 ---
 
+## [0.4.2] — 2026-03-26
+
+### Changed — US-SET-01 refinements
+
+- **Botón "Volver al dashboard"** agregado en `settings/page.tsx` — flecha `←` + label "Dashboard", color `primary (#004ac6)`, encima de la primera sección.
+- **Sección de enlace de invitación eliminada** de `SettingsNameSection` — el enlace de invitación se gestiona únicamente desde el botón "Agregar" en la sección de miembros. Props e internals de invitation link removidos del componente.
+
+  Escenarios Gherkin cubiertos:
+  - ✅ Volver al dashboard desde configuración → redirect a `/dashboard/[groupId]`
+
+---
+
 ## [0.4.1] — 2026-03-26
 
 ### Added — ESET Configuración del grupo
@@ -31,7 +43,7 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
   - Server Component que resuelve todos los datos antes de renderizar (miembros, rotación, grupo, link de invitación)
   - **SettingsMembersSection**: lista de miembros con avatares, pills de rol (ADMIN / MIEMBRO), menú ⋮ con opciones "Hacer admin" / "Hacer miembro", diálogo de confirmación antes de ejecutar el cambio, validación de último admin. Botón "Agregar" muestra el token de invitación en un dialog.
   - **SettingsRotationSection**: avatares en fila horizontal separados por `›`, badge HOY + ring azul para el primer turno, modo reordenamiento con @dnd-kit/sortable (horizontalListSortingStrategy), botón "Reordenar" → "Guardar orden" / "Cancelar".
-  - **SettingsNameSection**: edición inline del nombre del clan (input aparece debajo sin modal), sección de enlace de invitación con botón copiar (ícono togglea a check por 2s), fallback "Link expirado" + botón "Generar nuevo".
+  - **SettingsNameSection**: edición inline del nombre del clan (input aparece debajo sin modal).
   - Server actions: `updateGroupName`, `updateMemberRole`, `reorderRotation` con validaciones de admin, nombre vacío y último admin.
   - @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities instalados.
   - ⚠️ RLS: falta política `members: update admin` en schema.sql — documentada con comentario en actions.ts.
@@ -44,8 +56,7 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
   - ✅ Validación: no se puede degradar al único admin
   - ✅ Reordenar rotación con drag & drop
   - ✅ Editar nombre del clan inline
-  - ✅ Copiar enlace de invitación (ícono check por 2s)
-  - ✅ Generar nuevo enlace cuando el anterior expiró
+  - ✅ Agregar miembro via link de invitación (desde botón "Agregar" en sección miembros)
 
 ---
 
