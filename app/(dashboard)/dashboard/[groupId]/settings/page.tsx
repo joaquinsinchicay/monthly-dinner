@@ -35,10 +35,10 @@ export default async function SettingsPage({ params }: Props) {
     redirect(`/dashboard/${groupId}`)
   }
 
-  // Miembros con perfil
+  // Miembros con perfil (incluye guests con is_guest=true y display_name)
   const { data: membersRaw } = await supabase
     .from('members')
-    .select('id, role, user_id, profiles(id, full_name, avatar_url)')
+    .select('id, role, user_id, is_guest, display_name, profiles(id, full_name, avatar_url)')
     .eq('group_id', groupId)
 
   const members = (membersRaw ?? []).map((m) => {
@@ -49,8 +49,10 @@ export default async function SettingsPage({ params }: Props) {
     } | null
     return {
       id: m.id,
-      user_id: m.user_id,
+      user_id: m.user_id as string | null,
       role: m.role as 'member' | 'admin',
+      is_guest: m.is_guest ?? false,
+      display_name: m.display_name ?? null,
       profile,
     }
   })

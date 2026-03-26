@@ -72,10 +72,10 @@ monthly-dinner es una app web mobile-first para grupos de amigos que se reúnen 
 |---|---|---|
 | profiles | US-01, US-02 | Perfil del usuario autenticado. `id = auth.uid()`. Columnas: `full_name`, `avatar_url` (URL de foto de Google OAuth, puede ser NULL). El trigger `handle_new_user` rellena ambas columnas al registrarse. |
 | groups | US-00, US-00c | Grupos de cena. El admin crea. Incluye `frequency` ('mensual' / 'quincenal' / 'semanal'), `meeting_day_of_week` (siempre requerido) y `meeting_week` (requerido para mensual y quincenal, NULL para semanal). Para quincenal: `meeting_week = 1` → "1° y 3° semana", `meeting_week = 2` → "2° y 4° semana". Solo SELECT para miembros. |
-| members | US-00, US-01, US-04, US-NAV-01 | Membresía usuario-grupo. Roles: `member` / `admin`. US-NAV-01 requiere SELECT filtrado por `user_id = auth.uid()` para listar todos los grupos del usuario — la política RLS existente ("SELECT: mismo grupo") ya lo cubre porque el JOIN con `groups` devuelve todos los grupos donde el usuario tiene membresía. |
+| members | US-00, US-01, US-04, US-21, US-NAV-01 | Membresía usuario-grupo. Roles: `member` / `admin`. Soporta guests (`is_guest=true`, `user_id=NULL`, `display_name` requerido). Columnas: `user_id` (nullable), `is_guest boolean DEFAULT false`, `display_name text`. Constraints: `members_identity_check` (user_id OR display_name), `members_guest_coherence`. |
 | invitation_links | US-00b, US-04 | Links de invitación. Solo admins crean, editan y revocan. |
 | events | US-05, US-06, US-07, US-07b | Evento mensual. Solo el organizador inserta y edita. Un `COUNT(*) = 0` sobre `events` filtrado por `group_id` es la condición que dispara el estado vacío de US-07b. |
-| attendances | US-09, US-10 | Confirmaciones de asistencia. Estados: `va` / `no_va` / `tal_vez`. |
+| attendances | US-09, US-10, US-21 | Confirmaciones de asistencia. Estados: `va` / `no_va` / `tal_vez`. `member_id` referencia `members.id` (no `auth.uid()`). Admins pueden confirmar por guests vía `upsertAttendance(eventId, status, guestMemberId)`. |
 | rotation | US-11, US-13 | Turno rotativo. Solo admins gestionan. Todos pueden ver. |
 | polls | US-17, US-18 | Votaciones de restaurante. El organizador crea y gestiona. |
 | poll_options | US-17 | Opciones de votación. Mínimo 2 por poll. |
@@ -90,10 +90,10 @@ monthly-dinner es una app web mobile-first para grupos de amigos que se reúnen 
 |---|---|---|
 | profiles | INSERT / SELECT / UPDATE | `auth.uid() = id` — solo el propio usuario |
 | groups | INSERT / SELECT | INSERT: `auth.uid()` queda como admin / SELECT: solo miembros del grupo |
-| members | INSERT / SELECT / UPDATE | INSERT: `user_id = auth.uid()` / SELECT: mismo grupo / UPDATE: propio perfil |
+| members | INSERT / SELECT / UPDATE / DELETE | INSERT real: `user_id = auth.uid()` / INSERT guest: solo admin del grupo / DELETE guest: solo admin del grupo / SELECT: mismo grupo / UPDATE: propio perfil |
 | invitation_links | INSERT / SELECT / UPDATE / DELETE | INSERT, UPDATE, DELETE: solo admin del grupo / SELECT: miembros del grupo |
 | events | INSERT / SELECT / UPDATE | INSERT y UPDATE: `organizer_id = auth.uid()` / SELECT: miembros del grupo |
-| attendances | ALL / SELECT | ALL: `member_id = auth.uid()` / SELECT: miembros del grupo via events |
+| attendances | ALL / SELECT | ALL propio: `member_id IN (SELECT id FROM members WHERE user_id = auth.uid())` / ALL guest (admin): admin del grupo puede escribir attendances de guests / SELECT: miembros del grupo via events |
 | restaurant_history | INSERT / SELECT | INSERT: `group_id` del evento donde `organizer_id = auth.uid()` |
 | rotation | ALL / SELECT | ALL: admin del grupo / SELECT: miembros del grupo |
 | polls / options / votes | ALL / SELECT | ALL: organizer o dueño del voto / SELECT: miembros del grupo via events |
@@ -207,6 +207,7 @@ El diseño se apoya en "Tonal Layering" y espacio negativo, no en bordes duros. 
 | 24 | US-NAV-02 | Avatar con menú de sesión | ENAV Navegación global | XS (<1d) | ✅ Completada |
 | 25 | US-NAV-03 | Layout dashboard grupo recién creado | ENAV Navegación global | S (1-2d) | ✅ Completada |
 | 26 | US-SET-01 | Configuración del grupo | ESET Configuración | L (5-7d) | ✅ Completada |
+| 27 | US-21 | Agregar miembro sin cuenta (guest) | E00 Creación de grupo | S (1-2d) | ✅ Completada |
 
 ---
 
