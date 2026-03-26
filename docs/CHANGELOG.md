@@ -19,6 +19,26 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 ---
 
+## [0.4.3] — 2026-03-26
+
+### Changed — US-00c frecuencia en cascada
+
+- **Migración DB:** `meeting_day_of_month` eliminado de `groups`. Nueva columna `meeting_week integer CHECK (1-5)`. Constraint `meeting_day_consistency` reemplazado con lógica de 3 flujos (semanal / quincenal / mensual).
+- **`types/index.ts`:** `Group.meeting_day_of_month` eliminado. Agregado `meeting_week?: number` con convención: mensual 1-5 (5=última), quincenal 1|2, semanal undefined.
+- **`lib/actions/groups.ts`:** `createGroup` actualizado con firma nueva y validaciones en cascada por frecuencia. SELECT de retorno incluye `meeting_week`.
+- **`components/group/CreateGroupForm.tsx`:** Formulario reemplazado con sistema de pills seleccionables. Lógica condicional en 3 flujos: semanal (solo día), quincenal (semanas en par + día), mensual (semana 1-5 + día). Vista previa en tiempo real. Reset de campos dependientes al cambiar frecuencia.
+
+  Escenarios Gherkin cubiertos:
+  - ✅ Frecuencia semanal muestra solo día de la semana
+  - ✅ Frecuencia quincenal muestra semanas en par y día
+  - ✅ Frecuencia mensual muestra semana del mes y día
+  - ✅ Vista previa en tiempo real
+  - ✅ Cambio de frecuencia resetea campos dependientes
+  - ✅ Campos obligatorios según frecuencia
+  - ✅ Datos guardados correctamente con el grupo
+
+---
+
 ## [0.4.2] — 2026-03-26
 
 ### Changed — US-SET-01 refinements

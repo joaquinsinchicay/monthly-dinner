@@ -41,7 +41,7 @@ export interface Group {
   name: string
   frequency: 'mensual' | 'quincenal' | 'semanal'
   meeting_day_of_week: 'lunes' | 'martes' | 'miércoles' | 'jueves' | 'viernes' | 'sábado' | 'domingo' | null
-  meeting_day_of_month: number | null
+  meeting_week?: number    // 1-5. mensual: 1-5 (5=última). quincenal: 1|2. semanal: undefined
   created_by: string       // uuid — profiles.id
   created_at: string
   updated_at: string
