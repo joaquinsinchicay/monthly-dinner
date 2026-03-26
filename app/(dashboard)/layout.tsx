@@ -23,7 +23,7 @@ export default async function DashboardLayout({
 
   const userGroups = (memberships ?? [])
     .map((m) => {
-      const g = m.groups as { id: string; name: string } | null
+      const g = (m.groups as { id: string; name: string }[] | null)?.[0] ?? null
       return g ? { id: g.id, name: g.name } : null
     })
     .filter((g): g is { id: string; name: string } => g !== null)
