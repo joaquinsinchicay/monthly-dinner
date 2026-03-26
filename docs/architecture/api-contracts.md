@@ -330,7 +330,7 @@ async function reorderRotation(
 // según la posición en ordered_user_ids
 ```
 
-> **Nota — `revokeInvitationLink` y `generateNewInvitationLink`:** ya están definidos en E00 y se reutilizan en esta pantalla sin necesidad de nuevos contratos.
+> **Nota — enlace de invitación:** el enlace de invitación ya no se gestiona como sección independiente en esta pantalla. Se accede desde la sección de miembros via el botón "Agregar". `revokeInvitationLink` y `generateNewInvitationLink` siguen definidos en E00.
 
 ---
 

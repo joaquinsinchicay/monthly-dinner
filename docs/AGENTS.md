@@ -107,7 +107,7 @@ US-SET-01 (Configuración del grupo) no agrega tablas ni columnas nuevas. Opera 
 - `members`: SELECT (ver lista de miembros), UPDATE (cambiar rol) — solo admin del grupo
 - `rotation`: SELECT (ver orden de rotación), UPDATE (reordenar) — solo admin del grupo
 - `groups`: UPDATE (editar nombre del grupo) — solo admin del grupo
-- `invitation_links`: SELECT (ver enlace activo), INSERT (regenerar si expiró) — solo admin del grupo
+- `invitation_links`: SELECT + INSERT accesible desde la sección de miembros via botón "Agregar" — no es una sección independiente en la pantalla
 
 ---
 

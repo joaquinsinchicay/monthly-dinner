@@ -925,7 +925,7 @@ Feature: US-NAV-03 — Layout dashboard grupo recién creado
 
 ### US-SET-01 — Configuración del grupo
 
-> *Como admin del grupo, quiero acceder a una pantalla de configuración para gestionar miembros, rotación, nombre del grupo y el enlace de invitación, para tener el control completo del clan desde un solo lugar.*
+> *Como admin del grupo, quiero acceder a una pantalla de configuración para gestionar miembros, rotación y nombre del grupo, para tener el control completo del clan desde un solo lugar.*
 
 | Prioridad | Esfuerzo | Descripción |
 |---|---|---|
@@ -1011,20 +1011,12 @@ Feature: US-SET-01 — Configuración del grupo
     When intento guardar con el campo vacío
     Then el sistema indica que el nombre es obligatorio y no guarda el cambio
 
-  ## Enlace de invitación
+  ## Navegación
 
-  Scenario: Ver y copiar enlace de invitación
-    Given estoy en la sección de enlace de invitación
-    When la pantalla carga
-    Then veo el enlace activo del grupo
-    And al tocar el ícono de copiar el enlace se copia al portapapeles
-    And veo una confirmación visual breve
-
-  Scenario: Enlace expirado muestra opción de regenerar
-    Given el enlace de invitación activo expiró
-    When accedo a la sección de enlace
-    Then veo un mensaje indicando que el enlace expiró
-    And puedo generar uno nuevo con un solo toque
+  Scenario: Volver al dashboard desde configuración
+    Given estoy en la pantalla de configuración /dashboard/[groupId]/settings
+    When toco el botón "Dashboard" con flecha hacia atrás
+    Then soy redirigido a /dashboard/[groupId]
 ```
 
 ---
