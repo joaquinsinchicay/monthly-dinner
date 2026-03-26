@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useTransition } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { Settings, LogOut } from 'lucide-react'
+import { Settings, LogOut, Plus } from 'lucide-react'
 import { signOut } from '@/lib/actions/auth'
 import AvatarUser from '@/components/ui/avatar-user'
 
@@ -42,6 +42,11 @@ export default function AvatarMenu({ profile }: Props) {
   function handleSettings() {
     setMenuOpen(false)
     router.push(`/dashboard/${activeGroupId}/settings`)
+  }
+
+  function handleCreateGroup() {
+    setMenuOpen(false)
+    router.push('/group/new')
   }
 
   function handleSignOutRequest() {
@@ -89,10 +94,20 @@ export default function AvatarMenu({ profile }: Props) {
               Configuración del grupo
             </button>
 
+            {/* Ítem 2: Crear nuevo grupo */}
+            <button
+              role="menuitem"
+              onClick={handleCreateGroup}
+              className="flex w-full items-center gap-3 px-4 py-3 text-left text-[15px] text-[#1c1b1b] transition-colors hover:bg-[#f6f3f2]"
+            >
+              <Plus size={16} className="shrink-0 text-[#585f6c]" />
+              Crear nuevo grupo
+            </button>
+
             {/* Separador: espacio en blanco, sin hr */}
             <div className="h-1" />
 
-            {/* Ítem 2: Cerrar sesión */}
+            {/* Ítem 3: Cerrar sesión */}
             <button
               role="menuitem"
               onClick={handleSignOutRequest}
