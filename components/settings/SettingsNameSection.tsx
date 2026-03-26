@@ -8,26 +8,15 @@ import { useRouter } from 'next/navigation'
 interface Props {
   groupId: string
   initialName: string
-  invitationToken: string | null
 }
 
-export default function SettingsNameSection({ groupId, initialName, invitationToken }: Props) {
+export default function SettingsNameSection({ groupId, initialName }: Props) {
   const router = useRouter()
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(initialName)
   const [draftName, setDraftName] = useState(initialName)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  // Invitation link state
-  const [checkIcon, setCheckIcon] = useState(false)
-  const [inviteLoading, setInviteLoading] = useState(false)
-  const [inviteError, setInviteError] = useState<string | null>(null)
-  const [currentToken, setCurrentToken] = useState(invitationToken)
-
-  const inviteUrl = currentToken
-    ? `https://monthly-dinner.vercel.app/join/${currentToken}`
-    : null
 
   async function handleSaveName() {
     setLoading(true)
@@ -44,32 +33,6 @@ export default function SettingsNameSection({ groupId, initialName, invitationTo
 
     setName(result.data.name)
     setEditing(false)
-    router.refresh()
-  }
-
-  async function handleCopyLink() {
-    if (!inviteUrl) return
-    await navigator.clipboard.writeText(inviteUrl)
-    setCheckIcon(true)
-    setTimeout(() => setCheckIcon(false), 2000)
-  }
-
-  async function handleGenerateNew() {
-    setInviteLoading(true)
-    setInviteError(null)
-
-    // Import dynamically to avoid circular dependency
-    const { generateInvitationLink } = await import('@/lib/actions/invitation-links')
-    const result = await generateInvitationLink(groupId)
-
-    setInviteLoading(false)
-
-    if (!result.success) {
-      setInviteError('No se pudo generar el enlace. Intentá de nuevo.')
-      return
-    }
-
-    setCurrentToken(result.data.token)
     router.refresh()
   }
 
@@ -132,51 +95,6 @@ export default function SettingsNameSection({ groupId, initialName, invitationTo
         )}
       </div>
 
-      {/* Card enlace de invitación */}
-      <div className="rounded-2xl bg-white shadow-[0px_4px_16px_-4px_rgba(28,27,27,0.08)] px-4 py-4">
-        <div className="mb-2 text-[11px] font-medium tracking-[0.05em] uppercase text-[#585f6c]">
-          ENLACE DE INVITACIÓN
-        </div>
-
-        {inviteUrl ? (
-          <div className="flex items-center gap-2">
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] text-[#1c1b1b] truncate">{inviteUrl}</p>
-            </div>
-            <button
-              onClick={handleCopyLink}
-              aria-label="Copiar enlace"
-              className="shrink-0 p-2 rounded-full text-[#004ac6] hover:bg-[#f0ede8] transition-colors"
-            >
-              {checkIcon ? (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              ) : (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg>
-              )}
-            </button>
-          </div>
-        ) : (
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-[14px] text-[#ba1a1a]">Link expirado</p>
-            <button
-              onClick={handleGenerateNew}
-              disabled={inviteLoading}
-              className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-60"
-            >
-              {inviteLoading ? 'Generando...' : 'Generar nuevo'}
-            </button>
-          </div>
-        )}
-
-        {inviteError && (
-          <p className="mt-2 text-[13px] text-[#ba1a1a]">{inviteError}</p>
-        )}
-      </div>
     </section>
   )
 }

@@ -122,11 +122,10 @@ export default async function SettingsPage({ params }: Props) {
           rotation={rotation}
         />
 
-        {/* Sección 3 — Nombre + Enlace */}
+        {/* Sección 3 — Nombre */}
         <SettingsNameSection
           groupId={groupId}
           initialName={group.name}
-          invitationToken={invitationLink?.token ?? null}
         />
 
         {/* Footer */}
