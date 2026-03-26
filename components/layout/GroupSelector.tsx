@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { ChevronDown } from 'lucide-react'
 
 interface Group {
@@ -11,19 +11,21 @@ interface Group {
 
 interface Props {
   groups: Group[]
-  activeGroupId: string
 }
 
 // Scenario: Header muestra el grupo activo — label "GRUPO ACTUAL" + nombre del grupo.
 // Scenario: Dropdown lista los grupos del usuario — panel flotante con todos los grupos.
 // Scenario: Cambio de grupo activo — router.push al seleccionar un grupo distinto.
 // Scenario: Usuario con un solo grupo — sin chevron ni dropdown.
-export default function GroupSelector({ groups, activeGroupId }: Props) {
+export default function GroupSelector({ groups }: Props) {
   const [open, setOpen] = useState(false)
   const router = useRouter()
+  const params = useParams()
   const ref = useRef<HTMLDivElement>(null)
 
-  const activeGroup = groups.find((g) => g.id === activeGroupId)
+  // Lee el grupo activo desde la URL (/dashboard/[groupId]) o usa el primero disponible
+  const activeGroupId = (params?.groupId as string) ?? groups[0]?.id ?? ''
+  const activeGroup = groups.find((g) => g.id === activeGroupId) ?? groups[0]
   const hasMultiple = groups.length > 1
 
   // Scenario: Al tocar fuera — cerrar dropdown sin acción
@@ -38,10 +40,10 @@ export default function GroupSelector({ groups, activeGroupId }: Props) {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [open])
 
-  // Scenario: Cambio de grupo activo — redirect y cierre del dropdown
+  // Scenario: Cambio de grupo activo — redirect a /dashboard/[groupId] y cierre del dropdown
   function handleSelect(groupId: string) {
     setOpen(false)
-    router.push(`/grupo/${groupId}`)
+    router.push(`/dashboard/${groupId}`)
   }
 
   return (

@@ -1,14 +1,13 @@
 'use client'
 
 import { useState, useRef, useEffect, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
 import { Settings, LogOut } from 'lucide-react'
 import { signOut } from '@/lib/actions/auth'
 
 interface Props {
   profile: { full_name: string | null; avatar_url: string | null } | null
-  activeGroupId: string
 }
 
 function getInitials(name: string | null | undefined): string {
@@ -26,12 +25,16 @@ function getInitials(name: string | null | undefined): string {
 // Scenario: Acceso a configuración del grupo — redirect a /dashboard/[groupId]/settings.
 // Scenario: Cierre de sesión desde el avatar — diálogo de confirmación + signOut.
 // Scenario: Cierre del menú sin acción — click fuera cierra sin ejecutar nada.
-export default function AvatarMenu({ profile, activeGroupId }: Props) {
+export default function AvatarMenu({ profile }: Props) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const ref = useRef<HTMLDivElement>(null)
   const router = useRouter()
+  const params = useParams()
+
+  // Lee el grupo activo desde la URL (/dashboard/[groupId])
+  const activeGroupId = (params?.groupId as string) ?? ''
 
   // Scenario: Cierre del menú sin acción
   useEffect(() => {
