@@ -19,6 +19,18 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 ---
 
+## [0.4.4] — 2026-03-26
+
+### Added — Google avatar support
+
+- **Migración DB:** `avatar_url TEXT` agregado a `profiles` (idempotente). Trigger `handle_new_user` creado/reemplazado: inserta o actualiza `full_name` y `avatar_url` desde `raw_user_meta_data` en cada signup con Google OAuth.
+- **`components/ui/avatar-user.tsx`:** Nuevo componente `<AvatarUser>`. Props: `avatarUrl`, `fullName`, `size` (sm=28px / md=36px / lg=48px). Muestra foto de Google con `<Image>` o inicial del nombre como fallback. Sin bordes, `rounded-full`, fondo `surface_container_low` (#f6f3f2).
+- **`components/layout/AvatarMenu.tsx`:** Refactorizado para usar `<AvatarUser size="md">`. Eliminado código inline de imagen/iniciales.
+- **`next.config.mjs`:** `remotePatterns` configurado para `lh3.googleusercontent.com` (dominio de fotos de Google).
+- **`CLAUDE.md`:** Sección 04 tabla `profiles` actualizada con descripción de `avatar_url` y trigger.
+
+---
+
 ## [0.4.3] — 2026-03-26
 
 ### Changed — US-00c frecuencia en cascada
