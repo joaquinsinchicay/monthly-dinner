@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
+import Link from 'next/link'
+import { ArrowLeft } from 'lucide-react'
 import SettingsMembersSection from '@/components/settings/SettingsMembersSection'
 import SettingsRotationSection from '@/components/settings/SettingsRotationSection'
 import SettingsNameSection from '@/components/settings/SettingsNameSection'
@@ -96,6 +98,15 @@ export default async function SettingsPage({ params }: Props) {
   return (
     <main className="min-h-screen bg-[#fcf9f8] px-4 pb-16 pt-20">
       <div className="mx-auto max-w-[480px] space-y-10">
+
+        {/* Botón volver */}
+        <Link
+          href={`/dashboard/${groupId}`}
+          className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#004ac6]"
+        >
+          <ArrowLeft size={16} />
+          Dashboard
+        </Link>
 
         {/* Sección 1 — Miembros */}
         <SettingsMembersSection
