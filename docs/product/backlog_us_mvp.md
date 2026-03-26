@@ -5,7 +5,7 @@ User Stories con Acceptance Criteria en formato Gherkin — ordenadas por priori
 
 | Versión | Stack | US totales | Completadas | Pendientes | Fecha |
 |---|---|---|---|---|---|
-| MVP v1.0 | Next.js + Supabase | 26 | 26 | 0 | Marzo 2026 |
+| MVP v1.0 | Next.js + Supabase | 27 | 26 | 1 | Marzo 2026 |
 
 ---
 
@@ -531,6 +531,60 @@ Feature: US-13 — Próximo organizador
     Given todos los miembros del grupo ya organizaron una vez
     When se cierra el último evento del ciclo
     Then la rotación vuelve a empezar desde el primer miembro y todos reciben notificación
+```
+
+---
+
+### US-11b — Configurar y editar rotación desde settings
+
+> *Como admin del grupo, quiero poder generar y modificar la rotación de responsables en todo momento, para que siempre haya un organizador asignado por mes sin depender de que alguien lo haga manualmente.*
+
+| Prioridad | Esfuerzo | Descripción |
+|---|---|---|
+| Alta — P5b | M (3-4 días) | Visible en la pantalla de settings. Si no hay rotación: dos acciones (manual / aleatoria). Si hay rotación: edición inline por mes. Depende de US-11. |
+
+**Acceptance Criteria — Gherkin**
+
+```gherkin
+Feature: US-11b — Configurar y editar rotación
+
+  Scenario: Sin rotación — acciones disponibles para el admin
+    Given soy admin del grupo y no hay rotación configurada
+    When accedo a la sección "Rotación de Responsables" en settings
+    Then veo dos botones: "Generar aleatoriamente" y "Configurar manualmente"
+    And el mensaje "No hay rotación configurada aún" sigue visible hasta que se genere una
+
+  Scenario: Generar rotación aleatoria
+    Given soy admin y no hay rotación configurada
+    When selecciono "Generar aleatoriamente"
+    Then el sistema asigna un miembro diferente por mes en orden aleatorio
+    And la rotación generada se muestra en la lista con nombre y mes asignado
+    And puedo confirmarla o regenerarla antes de guardar
+
+  Scenario: Configurar rotación manualmente
+    Given soy admin y no hay rotación configurada
+    When selecciono "Configurar manualmente"
+    Then se abre un modo de edición donde puedo asignar un miembro a cada mes
+    And cada fila muestra el mes (ej: "Abril 2026") y un selector con los miembros del grupo
+    And solo puedo guardar si todos los meses tienen un miembro asignado
+
+  Scenario: Con rotación existente — edición siempre visible
+    Given soy admin y ya hay una rotación configurada
+    When accedo a settings
+    Then veo la lista de meses con el miembro asignado a cada uno
+    And hay un botón "Editar rotación" visible en todo momento
+    And puedo modificar el asignado de cualquier mes y guardar los cambios
+
+  Scenario: Miembro sin cuenta en la rotación
+    Given hay miembros con estado "SIN CUENTA" en el grupo
+    When genero o configuro la rotación
+    Then esos miembros aparecen en el selector pero con el tag "SIN CUENTA" visible
+    And pueden ser asignados igual — la restricción de cuenta no bloquea la rotación
+
+  Scenario: Solo el admin ve las acciones de edición
+    Given soy miembro regular del grupo
+    When accedo a settings
+    Then veo la rotación como solo lectura, sin botones de editar ni generar
 ```
 
 ---

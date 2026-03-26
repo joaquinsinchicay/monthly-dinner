@@ -3,7 +3,7 @@ import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import SettingsMembersSection from '@/components/settings/SettingsMembersSection'
-import SettingsRotationSection from '@/components/settings/SettingsRotationSection'
+import RotationManager from '@/components/rotation/RotationManager'
 import SettingsNameSection from '@/components/settings/SettingsNameSection'
 
 interface Props {
@@ -119,8 +119,10 @@ export default async function SettingsPage({ params }: Props) {
         />
 
         {/* Sección 2 — Rotación */}
-        <SettingsRotationSection
+        <RotationManager
           groupId={groupId}
+          isAdmin={currentMember.role === 'admin'}
+          members={members}
           rotation={rotation}
         />
 

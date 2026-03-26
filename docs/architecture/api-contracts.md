@@ -160,6 +160,40 @@ async function assignNextOrganizer(
 - Inserta en `rotation` — falla si ya existe un registro para ese `group_id + month`
 - Actualiza `notified_at` al notificar al organizador
 
+### `generateRandomRotation`
+```ts
+// app/(dashboard)/rotation/actions.ts
+async function generateRandomRotation(
+  input: {
+    group_id: string
+    entries: { user_id: string; month: string }[]  // calculado en cliente
+  }
+): Promise<ActionResult<Rotation[]>>
+```
+- Valida que `auth.uid()` sea admin del grupo
+- Inserta múltiples entradas en `rotation` — una por par `(user_id, month)` provisto
+- Falla si ya existe un registro para algún `group_id + month` (restricción única en DB)
+- El shuffle y el cálculo de meses se realiza en el cliente (preview antes de confirmar)
+
+### `updateRotationEntry`
+```ts
+async function updateRotationEntry(
+  input: { rotation_id: string; user_id: string; group_id: string }
+): Promise<ActionResult<Rotation>>
+```
+- Valida que `auth.uid()` sea admin del grupo (verificado a través de `rotation.group_id`)
+- Actualiza el `user_id` de la entrada de rotación indicada
+- Retorna la entrada actualizada
+
+### `getFullRotation`
+```ts
+async function getFullRotation(
+  input: { group_id: string }
+): Promise<ActionResult<RotationWithProfile[]>>
+```
+- Retorna todas las entradas de rotación del grupo ordenadas por `month ASC`
+- Join con `profiles` para incluir `full_name` y `avatar_url`
+
 ---
 
 ## E04 — Confirmación de asistencia
