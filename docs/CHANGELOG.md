@@ -13,9 +13,27 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 26 | 26 | 0 | 0 |
+| 27 | 27 | 0 | 0 |
 
-> **MVP completo** — todas las US implementadas (incluye ENAV y ESET).
+> **MVP completo** — todas las US implementadas (incluye ENAV, ESET y US-21 guests).
+
+---
+
+## [0.4.5] — 2026-03-26
+
+### Added — US-21 Agregar miembro sin cuenta (guest)
+
+- **Migración DB:** `user_id` nullable en `members`. Columnas `is_guest boolean DEFAULT false` y `display_name text`. Constraints `members_identity_check` (user_id OR display_name requerido) y `members_guest_coherence` (coherencia is_guest/user_id/display_name).
+- **Migración attendances:** `member_id` convertido de `user_id` a `members.id` en filas existentes. RLS actualizado: políticas `insert own / update own / delete own` ahora usan `member_id IN (SELECT id FROM members WHERE user_id = auth.uid())`. Nueva política `attendances: admin write guest` para que admins confirmen por guests.
+- **RLS members:** Nuevas políticas `members: insert guest` y `members: delete guest` — solo admins del grupo.
+- **`types/index.ts`:** `Member.user_id` ahora `string | null`. Campos `is_guest` y `display_name` agregados. Helper `getMemberDisplayName()` exportado. `MemberWithProfile.profile` ahora nullable.
+- **`lib/actions/members.ts`:** Nuevo archivo. Actions `addGuestMember` (valida admin, nombre ≤80 chars) y `deleteGuestMember` (valida admin + is_guest).
+- **`lib/actions/attendances.ts`:** `upsertAttendance` acepta `guestMemberId?` opcional para que admins confirmen por guests. Ahora resuelve `members.id` antes de hacer upsert (flujo normal). `getAttendanceDetails` usa JOIN `members → profiles` con soporte LEFT JOIN para guests. `getUserAttendance` resuelve `members.id` del usuario antes de buscar.
+- **`components/settings/SettingsMembersSection.tsx`:** Modal "Agregar" con tab toggle "Invitar por link" / "Agregar sin cuenta". Pill "Sin cuenta" para guests. Opción "Eliminar del grupo" en menú de guests. Avatar de guests usa iniciales sobre fondo `#ede9e8`.
+- **`components/group/AttendanceSummaryDetailed.tsx`:** Prop `isAdmin?`. Sección "Confirmar por invitados" con `GuestStatusSelector` inline para cada guest sin responder — solo visible para admins.
+- **`components/group/EventPanel.tsx`:** Prop `isAdmin?` agregada y pasada a `AttendanceSummaryDetailed`.
+- **`app/(auth)/grupo/[id]/page.tsx`:** `isAdmin` pasado a `EventPanel`.
+- **`app/(dashboard)/dashboard/[groupId]/settings/page.tsx`:** Query de members incluye `is_guest` y `display_name`.
 
 ---
 

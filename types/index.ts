@@ -54,14 +54,24 @@ export interface Group {
 export interface Member {
   id: string
   group_id: string
-  user_id: string
+  user_id: string | null    // null para guests
   role: MemberRole
+  is_guest: boolean
+  display_name: string | null  // solo para guests
   joined_at: string
 }
 
-// Miembro con perfil expandido (join con profiles)
+// Miembro con perfil expandido (join con profiles — null para guests)
 export interface MemberWithProfile extends Member {
-  profile: Profile
+  profile: Profile | null
+}
+
+// Helper: nombre a mostrar para cualquier tipo de miembro
+export function getMemberDisplayName(
+  member: Member & { profile?: { full_name: string | null } | null }
+): string {
+  if (member.is_guest && member.display_name) return member.display_name
+  return member.profile?.full_name ?? 'Miembro'
 }
 
 // -----------------------------------------------------------------------------

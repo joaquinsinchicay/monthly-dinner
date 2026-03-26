@@ -174,6 +174,7 @@ export default async function GrupoPage({ params }: Props) {
           event={currentEvent ?? null}
           currentUserId={user.id}
           isOrganizer={isOrganizer}
+          isAdmin={isAdmin}
           attendanceCounts={attendanceCounts}
           userAttendance={userAttendance}
         />

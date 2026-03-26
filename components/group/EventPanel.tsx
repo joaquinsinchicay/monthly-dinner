@@ -13,6 +13,7 @@ interface Props {
   event: Event | null
   currentUserId: string
   isOrganizer: boolean
+  isAdmin?: boolean
   attendanceCounts?: AttendanceCounts
   userAttendance?: UserAttendance | null
   // US-10: groupId ya está en Props — AttendanceSummaryDetailed lo usa para sin_responder
@@ -33,7 +34,7 @@ const STATUS_LABEL: Record<string, string> = {
   closed: 'Cerrado',
 }
 
-export default function EventPanel({ groupId, event, currentUserId, isOrganizer, attendanceCounts, userAttendance }: Props) {
+export default function EventPanel({ groupId, event, currentUserId, isOrganizer, isAdmin = false, attendanceCounts, userAttendance }: Props) {
 
   // Scenario: no hay evento + usuario NO es organizador → empty state
   if (!event && !isOrganizer) {
@@ -134,6 +135,7 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
         <AttendanceSummaryDetailed
           eventId={event!.id}
           groupId={groupId}
+          isAdmin={isAdmin}
         />
       )}
       {event!.status !== 'pending' && !isOrganizer && attendanceCounts && (
