@@ -15,7 +15,7 @@ export default async function DashboardPage() {
     .from('members')
     .select('group_id')
     .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
+    .order('joined_at', { ascending: false })
     .limit(1)
     .maybeSingle()
 

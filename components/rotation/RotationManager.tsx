@@ -3,8 +3,7 @@
 import { useState, useCallback } from 'react'
 import { Shuffle, Pencil, RotateCcw, Link2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { generateRandomRotation, linkAccountToRotationSlot, getUnlinkedMembers } from '@/app/(dashboard)/rotation/actions'
-import { reorderRotation } from '@/app/(dashboard)/dashboard/[groupId]/settings/actions'
+import { generateRandomRotation, linkAccountToRotationSlot, getUnlinkedMembers, updateRotationEntry } from '@/app/(dashboard)/rotation/actions'
 
 // ── Utils ─────────────────────────────────────────────────────────────────────
 
@@ -239,15 +238,29 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
   async function saveEdit() {
     setLoading(true)
     setError(null)
-    const result = await reorderRotation({
-      group_id: groupId,
-      ordered_rotation_ids: editItems.map((i) => i.id),
-    })
-    setLoading(false)
-    if (!result.success) {
-      setError(result.error)
-      return
+
+    for (const item of editItems) {
+      const original = rotation.find((r) => r.id === item.id)
+      const memberChanged =
+        original?.member_id !== item.member_id ||
+        original?.user_id !== item.user_id
+      if (!memberChanged || !item.member_id) continue
+
+      const result = await updateRotationEntry({
+        rotation_id: item.id,
+        group_id: groupId,
+        member_id: item.member_id,
+        user_id: item.user_id,
+        display_name: item.display_name,
+      })
+      if (!result.success) {
+        setLoading(false)
+        setError(result.error)
+        return
+      }
     }
+
+    setLoading(false)
     setMode('view')
     router.refresh()
   }
