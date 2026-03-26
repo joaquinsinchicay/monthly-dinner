@@ -100,6 +100,15 @@ monthly-dinner es una app web mobile-first para grupos de amigos que se reúnen 
 | checklist_items | ALL | Solo el organizador del evento puede gestionar |
 | checklist_templates | ALL / SELECT | ALL: admin del grupo / SELECT: miembros del grupo o templates globales |
 
+### Nota — US-SET-01
+
+US-SET-01 (Configuración del grupo) no agrega tablas ni columnas nuevas. Opera sobre tablas existentes — todas las operaciones requieren `role = 'admin'` en el grupo:
+
+- `members`: SELECT (ver lista de miembros), UPDATE (cambiar rol) — solo admin del grupo
+- `rotation`: SELECT (ver orden de rotación), UPDATE (reordenar) — solo admin del grupo
+- `groups`: UPDATE (editar nombre del grupo) — solo admin del grupo
+- `invitation_links`: SELECT (ver enlace activo), INSERT (regenerar si expiró) — solo admin del grupo
+
 ---
 
 ## 05 — Design System
@@ -197,6 +206,7 @@ El diseño se apoya en "Tonal Layering" y espacio negativo, no en bordes duros. 
 | 23 | US-NAV-01 | Selector de grupo en el header | ENAV Navegación global | S (1-2d) | ⏳ Pendiente |
 | 24 | US-NAV-02 | Avatar con menú de sesión | ENAV Navegación global | XS (<1d) | ⏳ Pendiente |
 | 25 | US-NAV-03 | Layout dashboard grupo recién creado | ENAV Navegación global | S (1-2d) | ⏳ Pendiente |
+| 26 | US-SET-01 | Configuración del grupo | ESET Configuración | L (5-7d) | ⏳ Pendiente |
 
 ---
 
@@ -213,7 +223,8 @@ monthly-dinner/
 │   │   ├── events/      → panel de evento mensual
 │   │   ├── poll/        → votación de restaurantes
 │   │   ├── history/     → historial de cenas
-│   │   └── checklist/   → checklist del organizador
+│   │   ├── checklist/   → checklist del organizador
+│   │   └── [groupId]/settings/ → configuración del grupo (US-SET-01)
 │   ├── api/             → route handlers (server actions)
 │   └── layout.tsx       → root layout
 ├── components/

@@ -921,4 +921,112 @@ Feature: US-NAV-03 — Layout dashboard grupo recién creado
 
 ---
 
+## ESET ⚙️ Configuración del grupo
+
+### US-SET-01 — Configuración del grupo
+
+> *Como admin del grupo, quiero acceder a una pantalla de configuración para gestionar miembros, rotación, nombre del grupo y el enlace de invitación, para tener el control completo del clan desde un solo lugar.*
+
+| Prioridad | Esfuerzo | Descripción |
+|---|---|---|
+| Alta | L (5-7 días) | Pantalla central de administración. Destino del botón "Completar configuración" y del menú del avatar. Depende de US-NAV-02, US-NAV-03, US-00b y US-11. |
+
+**Acceptance Criteria — Gherkin**
+
+```gherkin
+Feature: US-SET-01 — Configuración del grupo
+
+  ## Acceso
+
+  Scenario: Acceso desde "Completar configuración"
+    Given soy admin y estoy en el dashboard con grupo recién creado
+    When toco "Completar configuración"
+    Then soy redirigido a /dashboard/[groupId]/settings
+
+  Scenario: Acceso desde el menú del avatar
+    Given estoy en cualquier pantalla del dashboard
+    When abro el menú del avatar y selecciono "Configuración del grupo"
+    Then soy redirigido a /dashboard/[groupId]/settings
+
+  Scenario: Acceso denegado a no admins
+    Given soy miembro del grupo sin rol de admin
+    When intento acceder a /dashboard/[groupId]/settings
+    Then soy redirigido al dashboard sin acceder a la configuración
+
+  ## Miembros del clan
+
+  Scenario: Ver lista de miembros
+    Given accedo a la pantalla de configuración
+    When la pantalla carga
+    Then veo la lista de miembros con su nombre, avatar y rol (ADMIN / MIEMBRO)
+
+  Scenario: Agregar miembro via link de invitación
+    Given estoy en la sección de miembros
+    When toco "Agregar"
+    Then veo el enlace de invitación activo con opción de copiar al portapapeles
+    And veo confirmación visual al copiar
+
+  Scenario: Cambiar rol de un miembro
+    Given estoy en la lista de miembros
+    When toco el menú de opciones de un miembro (⋮)
+    Then veo la opción de cambiar su rol a admin o miembro según su rol actual
+    And al confirmar el cambio el rol se actualiza en la lista
+
+  Scenario: No se puede cambiar el rol del propio admin
+    Given soy el único admin del grupo
+    When intento cambiar mi propio rol
+    Then el sistema no permite la acción e indica que debe haber al menos un admin
+
+  ## Rotación de responsables
+
+  Scenario: Ver orden de rotación
+    Given accedo a la pantalla de configuración
+    When la pantalla carga
+    Then veo los avatares de los miembros en el orden actual de rotación
+    And el miembro con turno activo aparece destacado con la etiqueta "HOY"
+
+  Scenario: Reordenar rotación con drag & drop
+    Given estoy en la sección de rotación
+    When toco "Reordenar"
+    Then los avatares se vuelven arrastrables
+    And puedo cambiar el orden arrastrando cada miembro a una nueva posición
+    And al soltar el orden se actualiza visualmente en tiempo real
+
+  Scenario: Guardar nuevo orden de rotación
+    Given reordené los miembros
+    When confirmo el nuevo orden
+    Then el orden queda guardado en la tabla rotation
+    And la rotación futura respeta el nuevo orden
+
+  ## Nombre del clan
+
+  Scenario: Editar nombre del grupo
+    Given estoy en la sección "Ajustes del Clan"
+    When toco "Nombre del Clan"
+    Then puedo editar el nombre del grupo inline o en un modal
+    And al guardar el nuevo nombre se refleja en el header y en toda la app
+
+  Scenario: Nombre vacío no permitido
+    Given estoy editando el nombre del grupo
+    When intento guardar con el campo vacío
+    Then el sistema indica que el nombre es obligatorio y no guarda el cambio
+
+  ## Enlace de invitación
+
+  Scenario: Ver y copiar enlace de invitación
+    Given estoy en la sección de enlace de invitación
+    When la pantalla carga
+    Then veo el enlace activo del grupo
+    And al tocar el ícono de copiar el enlace se copia al portapapeles
+    And veo una confirmación visual breve
+
+  Scenario: Enlace expirado muestra opción de regenerar
+    Given el enlace de invitación activo expiró
+    When accedo a la sección de enlace
+    Then veo un mensaje indicando que el enlace expiró
+    And puedo generar uno nuevo con un solo toque
+```
+
+---
+
 *Joaquin Fernandez Sinchi — Product Manager · A-CSPO | Buenos Aires, Argentina | Marzo 2026*
