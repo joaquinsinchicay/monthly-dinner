@@ -5,7 +5,7 @@ User Stories con Acceptance Criteria en formato Gherkin — ordenadas por priori
 
 | Versión | Stack | US totales | Completadas | Pendientes | Fecha |
 |---|---|---|---|---|---|
-| MVP v1.0 | Next.js + Supabase | 25 | 21 | 4 (US-07b, US-NAV-01, US-NAV-02, US-NAV-03) | Marzo 2026 |
+| MVP v1.0 | Next.js + Supabase | 26 | 26 | 0 | Marzo 2026 |
 
 ---
 

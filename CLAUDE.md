@@ -193,7 +193,7 @@ El diseño se apoya en "Tonal Layering" y espacio negativo, no en bordes duros. 
 | 10 | US-05 | Crear evento del mes | E02 Panel de evento | S (1-2d) | ✅ Completada |
 | 11 | US-06 | Notificar al grupo | E02 Panel de evento | M (3-4d) | ✅ Completada |
 | 12 | US-07 | Ver estado del evento en tiempo real | E02 Panel de evento | S (1-2d) | ✅ Completada |
-| 13 | US-07b | Estado vacío del dashboard sin eventos | E02 Panel de evento | S (1-2d) | ⏳ Pendiente |
+| 13 | US-07b | Estado vacío del dashboard sin eventos | E02 Panel de evento | S (1-2d) | ✅ Completada |
 | 14 | US-08 | Recibir notificación de convocatoria | E04 Confirmación | M (3-4d) | ✅ Completada |
 | 15 | US-09 | Confirmar asistencia | E04 Confirmación | S (1-2d) | ✅ Completada |
 | 16 | US-10 | Ver resumen de confirmaciones | E04 Confirmación | S (1-2d) | ✅ Completada |
@@ -203,10 +203,10 @@ El diseño se apoya en "Tonal Layering" y espacio negativo, no en bordes duros. 
 | 20 | US-16 | Consultar historial de restaurantes | E05 Historial | S (1-2d) | ✅ Completada |
 | 21 | US-13 | Próximo organizador tras el cierre | E03 Turno rotativo | M (3-4d) | ✅ Completada |
 | 22 | US-20 | Acceder al checklist del mes | E07 Checklist | M (3-4d) | ✅ Completada |
-| 23 | US-NAV-01 | Selector de grupo en el header | ENAV Navegación global | S (1-2d) | ⏳ Pendiente |
-| 24 | US-NAV-02 | Avatar con menú de sesión | ENAV Navegación global | XS (<1d) | ⏳ Pendiente |
-| 25 | US-NAV-03 | Layout dashboard grupo recién creado | ENAV Navegación global | S (1-2d) | ⏳ Pendiente |
-| 26 | US-SET-01 | Configuración del grupo | ESET Configuración | L (5-7d) | ⏳ Pendiente |
+| 23 | US-NAV-01 | Selector de grupo en el header | ENAV Navegación global | S (1-2d) | ✅ Completada |
+| 24 | US-NAV-02 | Avatar con menú de sesión | ENAV Navegación global | XS (<1d) | ✅ Completada |
+| 25 | US-NAV-03 | Layout dashboard grupo recién creado | ENAV Navegación global | S (1-2d) | ✅ Completada |
+| 26 | US-SET-01 | Configuración del grupo | ESET Configuración | L (5-7d) | ✅ Completada |
 
 ---
 
