@@ -86,11 +86,11 @@ export default async function GrupoPage({ params }: Props) {
   const countsResult = currentEvent ? await getAttendanceCounts(currentEvent.id) : null
   const attendanceCounts = countsResult?.success ? countsResult.data : undefined
 
-  // Confirmación del usuario actual (US-08) — solo si hay evento publicado
-  const attendanceResult =
-    currentEvent?.status === 'published'
-      ? await getUserAttendance(currentEvent.id)
-      : null
+  // Confirmación del usuario actual — para cualquier estado del evento:
+  // pending/published → botones activos; closed → mostrar respuesta final como read-only.
+  const attendanceResult = currentEvent
+    ? await getUserAttendance(currentEvent.id)
+    : null
   const userAttendance = attendanceResult?.success ? attendanceResult.data : null
 
   // Scenario: Notificación recibida con acción directa — mostrar solo si el evento
