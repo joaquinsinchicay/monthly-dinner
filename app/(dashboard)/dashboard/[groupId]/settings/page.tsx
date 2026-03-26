@@ -57,10 +57,10 @@ export default async function SettingsPage({ params }: Props) {
     }
   })
 
-  // Rotación ordenada por mes (proxy para order)
+  // Rotación ordenada por mes — incluye member_id y display_name para slots sin cuenta (US-11c)
   const { data: rotationRaw } = await supabase
     .from('rotation')
-    .select('id, user_id, month, profiles(full_name, avatar_url)')
+    .select('id, user_id, member_id, display_name, month, profiles(full_name, avatar_url)')
     .eq('group_id', groupId)
     .order('month', { ascending: true })
 
@@ -71,7 +71,9 @@ export default async function SettingsPage({ params }: Props) {
     } | null
     return {
       id: r.id,
-      user_id: r.user_id,
+      user_id: (r.user_id as string | null) ?? null,
+      member_id: (r.member_id as string | null) ?? null,
+      display_name: (r.display_name as string | null) ?? null,
       month: r.month,
       profile,
     }

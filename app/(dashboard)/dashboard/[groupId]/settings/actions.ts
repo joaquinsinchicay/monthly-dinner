@@ -228,9 +228,11 @@ export async function removeMember(
 }
 
 // ACTION 4 — reorderRotation
+// US-11c: uses ordered_rotation_ids (entry IDs) instead of ordered_user_ids
+// to support accountless rotation slots (user_id may be null).
 export async function reorderRotation(
-  input: { group_id: string; ordered_user_ids: string[] }
-): Promise<ActionResult<{ id: string; order_index: number; user_id: string }[]>> {
+  input: { group_id: string; ordered_rotation_ids: string[] }
+): Promise<ActionResult<{ id: string; order_index: number }[]>> {
   const supabase = createClient()
 
   const {
@@ -251,16 +253,12 @@ export async function reorderRotation(
     return { success: false, error: 'Solo los admins pueden reordenar la rotación' }
   }
 
-  // NOTE: rotation table does not have order_index column in schema.sql.
-  // The column `month` (date) defines the natural order.
-  // reorderRotation updates `month` to reflect the new order.
-  // We fetch existing rotation records first, then reassign months preserving
-  // relative spacing but applying the new user ordering.
-  // Since the schema uses `month` as the ordering key and has a unique(group_id, month),
-  // we use a temporary approach: update in order using the existing months sorted ascending.
+  // NOTE: `month` (date) is the ordering key — unique(group_id, month) enforced in DB.
+  // Strategy: fetch existing records sorted by month, extract those months as the
+  // canonical slot list, then reassign months to rotation entries in the new order.
   const { data: existing, error: fetchError } = await supabase
     .from('rotation')
-    .select('id, user_id, month')
+    .select('id, month')
     .eq('group_id', input.group_id)
     .order('month', { ascending: true })
 
@@ -272,39 +270,44 @@ export async function reorderRotation(
     return { success: true, data: [] }
   }
 
-  // Extract the sorted months from existing records
+  // The sorted months are the canonical slots — we preserve them, just reassign which
+  // rotation entry gets which slot based on the new order.
   const sortedMonths = existing.map((r) => r.month)
 
-  // Build update pairs: new_user_id → month (preserving month slots, reassigning users)
-  const updates: Array<{ id: string; user_id: string; month: string; order_index: number }> = []
+  const updates: Array<{ id: string; month: string; order_index: number }> = []
 
-  for (let i = 0; i < input.ordered_user_ids.length; i++) {
-    const userId = input.ordered_user_ids[i]
-    const record = existing.find((r) => r.user_id === userId)
-    if (!record) continue
-
+  for (let i = 0; i < input.ordered_rotation_ids.length; i++) {
+    const rotationId = input.ordered_rotation_ids[i]
     const assignedMonth = sortedMonths[i]
     if (!assignedMonth) continue
-
-    updates.push({ id: record.id, user_id: userId, month: assignedMonth, order_index: i })
+    updates.push({ id: rotationId, month: assignedMonth, order_index: i })
   }
 
-  // Perform updates sequentially to respect unique(group_id, month) constraint
-  const results: { id: string; order_index: number; user_id: string }[] = []
+  // Perform updates sequentially to respect unique(group_id, month) constraint.
+  // Use a temporary sentinel month first to free up months before reassigning.
+  const SENTINEL_PREFIX = '1900-0'
+  for (let i = 0; i < updates.length; i++) {
+    await supabase
+      .from('rotation')
+      .update({ month: `${SENTINEL_PREFIX}${i + 1}-01` })
+      .eq('id', updates[i].id)
+  }
+
+  const results: { id: string; order_index: number }[] = []
 
   for (const upd of updates) {
     const { data: updated, error: updateError } = await supabase
       .from('rotation')
-      .update({ user_id: upd.user_id })
+      .update({ month: upd.month })
       .eq('id', upd.id)
-      .select('id, user_id, month')
+      .select('id, month')
       .single()
 
     if (updateError || !updated) {
       return { success: false, error: 'No se pudo guardar el orden. Intentá de nuevo.' }
     }
 
-    results.push({ id: updated.id, order_index: upd.order_index, user_id: updated.user_id })
+    results.push({ id: updated.id, order_index: upd.order_index })
   }
 
   revalidatePath(`/dashboard/${input.group_id}/settings`)

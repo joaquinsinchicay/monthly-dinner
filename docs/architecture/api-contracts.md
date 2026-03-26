@@ -151,12 +151,15 @@ async function getOrganizerThisMonth(
 async function assignNextOrganizer(
   input: {
     group_id: string
-    user_id: string        // próximo organizador
-    month: string          // '2026-05-01'
+    member_id: string       // siempre requerido — references members.id
+    user_id?: string        // solo si el miembro tiene cuenta
+    display_name?: string   // requerido si user_id es null
+    month: string           // '2026-05-01'
   }
 ): Promise<ActionResult<Rotation>>
 ```
 - Valida que `auth.uid()` sea admin del grupo
+- Valida que `user_id` OR `display_name` estén presentes (no ambos null)
 - Inserta en `rotation` — falla si ya existe un registro para ese `group_id + month`
 - Actualiza `notified_at` al notificar al organizador
 
@@ -166,24 +169,64 @@ async function assignNextOrganizer(
 async function generateRandomRotation(
   input: {
     group_id: string
-    entries: { user_id: string; month: string }[]  // calculado en cliente
+    entries: {
+      member_id: string
+      user_id: string | null
+      display_name: string | null
+      month: string
+    }[]  // calculado en cliente
   }
 ): Promise<ActionResult<Rotation[]>>
 ```
 - Valida que `auth.uid()` sea admin del grupo
-- Inserta múltiples entradas en `rotation` — una por par `(user_id, month)` provisto
+- Valida que cada entry tenga `user_id` OR `display_name`
+- Inserta múltiples entradas en `rotation` — incluye miembros con y sin cuenta
 - Falla si ya existe un registro para algún `group_id + month` (restricción única en DB)
 - El shuffle y el cálculo de meses se realiza en el cliente (preview antes de confirmar)
 
 ### `updateRotationEntry`
 ```ts
 async function updateRotationEntry(
-  input: { rotation_id: string; user_id: string; group_id: string }
+  input: {
+    rotation_id: string
+    group_id: string
+    member_id: string
+    user_id: string | null
+    display_name: string | null
+  }
 ): Promise<ActionResult<Rotation>>
 ```
 - Valida que `auth.uid()` sea admin del grupo (verificado a través de `rotation.group_id`)
-- Actualiza el `user_id` de la entrada de rotación indicada
+- Valida que `user_id` OR `display_name` estén presentes
+- Actualiza `user_id`, `display_name` y `member_id` de la entrada indicada
 - Retorna la entrada actualizada
+
+### `linkAccountToRotationSlot`  ← US-11c NEW
+```ts
+// app/(dashboard)/rotation/actions.ts
+async function linkAccountToRotationSlot(
+  input: {
+    rotation_id: string
+    user_id: string    // auth.uid del miembro recién registrado
+  }
+): Promise<ActionResult<Rotation>>
+```
+- Valida que `auth.uid()` sea admin del grupo
+- Valida que `user_id` sea miembro del grupo (existe en `members`)
+- Valida que `user_id` no esté ya asignado a otro slot de rotación del mismo grupo
+- Actualiza `rotation SET user_id = input.user_id, display_name = null`
+- Retorna la entrada actualizada
+
+### `getUnlinkedMembers`  ← US-11c NEW
+```ts
+// app/(dashboard)/rotation/actions.ts
+async function getUnlinkedMembers(
+  input: { group_id: string }
+): Promise<ActionResult<{ member_id: string; user_id: string; full_name: string | null; avatar_url: string | null }[]>>
+```
+- Retorna miembros del grupo que tienen `user_id` (tienen cuenta)
+- Y cuyo `user_id` no aparece en ningún slot de rotación del mismo grupo
+- Son los candidatos disponibles para vincular a un slot sin cuenta
 
 ### `getFullRotation`
 ```ts

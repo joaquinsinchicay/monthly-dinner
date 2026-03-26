@@ -5,7 +5,7 @@ User Stories con Acceptance Criteria en formato Gherkin — ordenadas por priori
 
 | Versión | Stack | US totales | Completadas | Pendientes | Fecha |
 |---|---|---|---|---|---|
-| MVP v1.0 | Next.js + Supabase | 27 | 26 | 1 | Marzo 2026 |
+| MVP v1.0 | Next.js + Supabase | 28 | 26 | 2 | Marzo 2026 |
 
 ---
 
@@ -585,6 +585,59 @@ Feature: US-11b — Configurar y editar rotación
     Given soy miembro regular del grupo
     When accedo a settings
     Then veo la rotación como solo lectura, sin botones de editar ni generar
+```
+
+---
+
+### US-11c — Incluir miembros sin cuenta en la rotación y vincularlos al registrarse
+
+> *Como admin del grupo, quiero poder incluir en la rotación a personas que aún no tienen cuenta, y luego vincularlas a su perfil cuando se registren, para que la rotación refleje al grupo real desde el inicio.*
+
+| Prioridad | Esfuerzo | Descripción |
+|---|---|---|
+| Alta — P5c | M (3-4 días) | Requiere cambio de schema: rotation debe soportar member_id nullable con display_name de fallback. El admin vincula manualmente cuando el miembro crea su cuenta. Depende de US-11b. |
+
+**Acceptance Criteria — Gherkin**
+
+```gherkin
+Feature: US-11c — Rotación con miembros sin cuenta
+
+  Scenario: Incluir miembro sin cuenta en la rotación
+    Given soy admin y estoy configurando la rotación
+    When asigno un mes a un miembro con estado "SIN CUENTA"
+    Then ese miembro queda asignado a ese mes con su nombre visible
+    And el slot muestra el tag "SIN CUENTA" junto al nombre hasta que se vincule
+
+  Scenario: Rotación aleatoria incluye miembros sin cuenta
+    Given el grupo tiene miembros con y sin cuenta
+    When genero la rotación aleatoriamente
+    Then todos los miembros, con o sin cuenta, son incluidos en el sorteo
+    And los slots sin cuenta muestran el nombre y el tag "SIN CUENTA"
+
+  Scenario: Admin vincula miembro sin cuenta a su nueva cuenta
+    Given hay un slot de rotación asignado a "Germán" sin cuenta
+    And Germán se registró y se unió al grupo con su cuenta de Google
+    When accedo a settings y selecciono "Vincular cuenta" en ese slot
+    Then veo una lista de miembros del grupo con cuenta no vinculados aún
+    And selecciono el perfil de Germán y confirmo
+    Then el slot se actualiza con su user_id real y el tag "SIN CUENTA" desaparece
+
+  Scenario: El slot vinculado refleja el perfil real
+    Given vinculé a Germán a su slot de rotación
+    When accedo al panel del grupo
+    Then el mes asignado a Germán muestra su foto de perfil y nombre de Google
+    And el mes ya no muestra el tag "SIN CUENTA"
+
+  Scenario: No se puede vincular un perfil ya asignado a otro slot
+    Given el perfil de Gustavo ya está vinculado a otro mes en la rotación
+    When intento vincularlo a un segundo slot
+    Then el sistema lo excluye de la lista de perfiles disponibles para vincular
+
+  Scenario: Miembro sin cuenta no puede crear el evento aunque sea su mes
+    Given el slot de Abril le pertenece a "Huevo" que no tiene cuenta
+    When llega Abril
+    Then el panel muestra "Huevo" como organizador con tag "SIN CUENTA"
+    And no se habilita la creación de evento hasta que el slot esté vinculado a una cuenta real
 ```
 
 ---

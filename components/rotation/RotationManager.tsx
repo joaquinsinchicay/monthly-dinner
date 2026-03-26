@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { Shuffle, Pencil, RotateCcw } from 'lucide-react'
+import { Shuffle, Pencil, RotateCcw, Link2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { generateRandomRotation } from '@/app/(dashboard)/rotation/actions'
+import { generateRandomRotation, linkAccountToRotationSlot, getUnlinkedMembers } from '@/app/(dashboard)/rotation/actions'
 import { reorderRotation } from '@/app/(dashboard)/dashboard/[groupId]/settings/actions'
 
 // ── Utils ─────────────────────────────────────────────────────────────────────
@@ -45,23 +45,34 @@ interface LocalMember {
 
 interface RotationItem {
   id: string
-  user_id: string
+  user_id: string | null
+  member_id: string | null
+  display_name: string | null
   month: string
   profile: { full_name: string | null; avatar_url: string | null } | null
 }
 
 interface PreviewItem {
-  user_id: string
+  member_id: string
+  user_id: string | null
+  display_name: string | null
   month: string
   name: string
 }
 
 interface ManualItem {
   month: string
-  user_id: string | null
+  member_id: string | null
 }
 
 type Mode = 'view' | 'random-preview' | 'manual-config' | 'edit'
+
+interface UnlinkedMember {
+  member_id: string
+  user_id: string
+  full_name: string | null
+  avatar_url: string | null
+}
 
 interface Props {
   groupId: string
@@ -93,9 +104,27 @@ function MemberAvatar({ name, avatarUrl }: { name: string; avatarUrl: string | n
   )
 }
 
+function SinCuentaTag() {
+  return (
+    <span className="inline-flex items-center rounded-full bg-[#dce2f3] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.04em] text-[#585f6c]">
+      SIN CUENTA
+    </span>
+  )
+}
+
 function getMemberName(m: LocalMember): string {
   if (m.is_guest && m.display_name) return m.display_name
   return m.profile?.full_name ?? 'Miembro'
+}
+
+function getSlotName(item: RotationItem): string {
+  if (item.user_id && item.profile?.full_name) return item.profile.full_name
+  if (item.display_name) return item.display_name
+  return 'Miembro'
+}
+
+function isAccountless(item: RotationItem): boolean {
+  return !item.user_id
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
@@ -109,32 +138,44 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Members with a real account (user_id non-null) — eligible for rotation DB insert
-  // Guests are shown in selectors with a "(Sin cuenta)" label but can't be saved
-  // TODO: support guest rotation by adding member_id to the rotation table schema
-  const eligibleMembers = members.filter((m) => !m.is_guest && m.user_id)
+  // Link flow state
+  const [linkingSlot, setLinkingSlot] = useState<RotationItem | null>(null)
+  const [unlinkedCandidates, setUnlinkedCandidates] = useState<UnlinkedMember[]>([])
+  const [selectedUserId, setSelectedUserId] = useState<string>('')
+  const [linkLoading, setLinkLoading] = useState(false)
+  const [linkError, setLinkError] = useState<string | null>(null)
+
+  // All members are eligible for rotation — accountless members included (US-11c)
+  const allMembers = members
 
   // ── Random preview ────────────────────────────────────────────────────────
 
   const generatePreview = useCallback(() => {
-    const shuffled = shuffleArray(eligibleMembers)
+    const shuffled = shuffleArray(allMembers)
     const base = new Date()
     const items: PreviewItem[] = shuffled.map((m, i) => ({
-      user_id: m.user_id!,
+      member_id: m.id,
+      user_id: m.user_id ?? null,
+      display_name: m.user_id ? null : (m.display_name ?? getMemberName(m)),
       month: addMonths(base, i + 1),
       name: getMemberName(m),
     }))
     setPreview(items)
     setError(null)
     setMode('random-preview')
-  }, [eligibleMembers])
+  }, [allMembers])
 
   async function confirmRandomRotation() {
     setLoading(true)
     setError(null)
     const result = await generateRandomRotation({
       group_id: groupId,
-      entries: preview.map((p) => ({ user_id: p.user_id, month: p.month })),
+      entries: preview.map((p) => ({
+        member_id: p.member_id,
+        user_id: p.user_id,
+        display_name: p.display_name,
+        month: p.month,
+      })),
     })
     setLoading(false)
     if (!result.success) {
@@ -151,7 +192,7 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
     const base = new Date()
     const items: ManualItem[] = Array.from({ length: 6 }, (_, i) => ({
       month: addMonths(base, i + 1),
-      user_id: null,
+      member_id: null,
     }))
     setManualItems(items)
     setError(null)
@@ -159,17 +200,25 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
   }
 
   async function confirmManualRotation() {
-    const allAssigned = manualItems.every((i) => i.user_id !== null)
+    const allAssigned = manualItems.every((i) => i.member_id !== null)
     if (!allAssigned) {
       setError('Todos los meses deben tener un miembro asignado.')
       return
     }
     setLoading(true)
     setError(null)
-    const result = await generateRandomRotation({
-      group_id: groupId,
-      entries: manualItems.map((i) => ({ user_id: i.user_id!, month: i.month })),
+
+    const entries = manualItems.map((item) => {
+      const m = allMembers.find((mb) => mb.id === item.member_id)!
+      return {
+        member_id: item.member_id!,
+        user_id: m.user_id ?? null,
+        display_name: m.user_id ? null : (m.display_name ?? getMemberName(m)),
+        month: item.month,
+      }
     })
+
+    const result = await generateRandomRotation({ group_id: groupId, entries })
     setLoading(false)
     if (!result.success) {
       setError(result.error)
@@ -192,7 +241,7 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
     setError(null)
     const result = await reorderRotation({
       group_id: groupId,
-      ordered_user_ids: editItems.map((i) => i.user_id),
+      ordered_rotation_ids: editItems.map((i) => i.id),
     })
     setLoading(false)
     if (!result.success) {
@@ -206,6 +255,39 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
   function cancel() {
     setMode('view')
     setError(null)
+  }
+
+  // ── Link account to slot (US-11c) ──────────────────────────────────────────
+
+  async function openLinkFlow(slot: RotationItem) {
+    setLinkError(null)
+    setSelectedUserId('')
+    setLinkingSlot(slot)
+    setLinkLoading(true)
+    const result = await getUnlinkedMembers({ group_id: groupId })
+    setLinkLoading(false)
+    if (!result.success) {
+      setLinkError(result.error)
+      return
+    }
+    setUnlinkedCandidates(result.data)
+  }
+
+  async function confirmLink() {
+    if (!linkingSlot || !selectedUserId) return
+    setLinkLoading(true)
+    setLinkError(null)
+    const result = await linkAccountToRotationSlot({
+      rotation_id: linkingSlot.id,
+      user_id: selectedUserId,
+    })
+    setLinkLoading(false)
+    if (!result.success) {
+      setLinkError(result.error)
+      return
+    }
+    setLinkingSlot(null)
+    router.refresh()
   }
 
   const isEmpty = rotation.length === 0
@@ -274,7 +356,10 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
                 <span className="text-[13px] font-medium text-[#1c1b1b]">
                   {formatMonth(item.month)}
                 </span>
-                <span className="text-[13px] text-[#585f6c]">{item.name}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[13px] text-[#585f6c]">{item.name}</span>
+                  {!item.user_id && <SinCuentaTag />}
+                </div>
               </div>
             ))}
           </div>
@@ -315,23 +400,18 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
                   {formatMonth(item.month)}
                 </span>
                 <select
-                  value={item.user_id ?? ''}
+                  value={item.member_id ?? ''}
                   onChange={(e) => {
                     const updated = [...manualItems]
-                    updated[idx] = { ...item, user_id: e.target.value || null }
+                    updated[idx] = { ...item, member_id: e.target.value || null }
                     setManualItems(updated)
                   }}
                   className="flex-1 rounded-lg bg-[#f6f3f2] px-3 py-2 text-[13px] text-[#1c1b1b] focus:outline-none focus:ring-2 focus:ring-[#004ac6]"
                 >
                   <option value="">— Sin asignar —</option>
-                  {eligibleMembers.map((m) => (
-                    <option key={m.user_id} value={m.user_id!}>
-                      {getMemberName(m)}
-                    </option>
-                  ))}
-                  {members.filter((m) => m.is_guest).map((m) => (
-                    <option key={m.id} value="" disabled>
-                      {getMemberName(m)} (Sin cuenta)
+                  {allMembers.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {getMemberName(m)}{m.is_guest || !m.user_id ? ' (Sin cuenta)' : ''}
                     </option>
                   ))}
                 </select>
@@ -347,7 +427,7 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
             </button>
             <button
               onClick={confirmManualRotation}
-              disabled={loading || manualItems.some((i) => !i.user_id)}
+              disabled={loading || manualItems.some((i) => !i.member_id)}
               className="inline-flex items-center rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-60"
             >
               {loading ? 'Guardando...' : 'Guardar rotación'}
@@ -359,31 +439,42 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
       {/* ── POPULATED VIEW (read-only) ── */}
       {!isEmpty && mode === 'view' && (
         <div className="rounded-2xl bg-white shadow-[0px_4px_16px_-4px_rgba(28,27,27,0.08)] px-4 py-4 space-y-2">
-          {rotation.map((item) => (
-            <div key={item.id} className="flex items-center gap-3 py-1">
-              <MemberAvatar
-                name={item.profile?.full_name ?? 'Miembro'}
-                avatarUrl={item.profile?.avatar_url ?? null}
-              />
-              <div className="flex-1 min-w-0">
-                <span className="text-[13px] font-medium text-[#1c1b1b]">
-                  {item.profile?.full_name ?? 'Miembro'}
-                </span>
-                <span className="ml-2 text-[12px] text-[#585f6c]">
-                  {formatMonth(item.month)}
-                </span>
+          {rotation.map((item) => {
+            const name = getSlotName(item)
+            const accountless = isAccountless(item)
+            return (
+              <div key={item.id} className="flex items-center gap-3 py-1">
+                <MemberAvatar
+                  name={name}
+                  avatarUrl={accountless ? null : (item.profile?.avatar_url ?? null)}
+                />
+                <div className="flex-1 min-w-0 flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span className="text-[13px] font-medium text-[#1c1b1b]">{name}</span>
+                  {accountless && <SinCuentaTag />}
+                  <span className="text-[12px] text-[#585f6c]">{formatMonth(item.month)}</span>
+                </div>
+                {isAdmin && accountless && (
+                  <button
+                    onClick={() => openLinkFlow(item)}
+                    title="Vincular cuenta"
+                    className="inline-flex items-center gap-1 rounded-full border border-[#004ac6] px-3 py-1 text-[11px] font-semibold text-[#004ac6] bg-transparent flex-shrink-0"
+                  >
+                    <Link2 size={12} />
+                    Vincular
+                  </button>
+                )}
+                {isAdmin && !accountless && (
+                  <button
+                    onClick={openEdit}
+                    aria-label="Editar rotación"
+                    className="text-[#585f6c] hover:text-[#004ac6] transition-colors flex-shrink-0"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                )}
               </div>
-              {isAdmin && (
-                <button
-                  onClick={openEdit}
-                  aria-label="Editar rotación"
-                  className="text-[#585f6c] hover:text-[#004ac6] transition-colors"
-                >
-                  <Pencil size={14} />
-                </button>
-              )}
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
@@ -397,22 +488,29 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
                   {formatMonth(item.month)}
                 </span>
                 <select
-                  value={item.user_id}
+                  value={item.member_id ?? item.id}
                   onChange={(e) => {
+                    const selectedMember = allMembers.find((m) => m.id === e.target.value)
+                    if (!selectedMember) return
                     const updated = [...editItems]
-                    updated[idx] = { ...item, user_id: e.target.value }
+                    updated[idx] = {
+                      ...item,
+                      member_id: selectedMember.id,
+                      user_id: selectedMember.user_id ?? null,
+                      display_name: selectedMember.user_id
+                        ? null
+                        : (selectedMember.display_name ?? getMemberName(selectedMember)),
+                      profile: selectedMember.profile
+                        ? { full_name: selectedMember.profile.full_name, avatar_url: selectedMember.profile.avatar_url }
+                        : null,
+                    }
                     setEditItems(updated)
                   }}
                   className="flex-1 rounded-lg bg-[#f6f3f2] px-3 py-2 text-[13px] text-[#1c1b1b] focus:outline-none focus:ring-2 focus:ring-[#004ac6]"
                 >
-                  {eligibleMembers.map((m) => (
-                    <option key={m.user_id} value={m.user_id!}>
-                      {getMemberName(m)}
-                    </option>
-                  ))}
-                  {members.filter((m) => m.is_guest).map((m) => (
-                    <option key={m.id} value={item.user_id} disabled>
-                      {getMemberName(m)} (Sin cuenta)
+                  {allMembers.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {getMemberName(m)}{m.is_guest || !m.user_id ? ' (Sin cuenta)' : ''}
                     </option>
                   ))}
                 </select>
@@ -433,6 +531,77 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
             >
               {loading ? 'Guardando...' : 'Guardar'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── LINK ACCOUNT MODAL (US-11c) ── */}
+      {linkingSlot && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm px-4 pb-6">
+          <div className="w-full max-w-[420px] rounded-2xl bg-white px-6 py-6 shadow-xl">
+            <p className="text-[11px] font-medium tracking-[0.05em] uppercase text-[#585f6c] mb-1">
+              VINCULAR CUENTA
+            </p>
+            <h3 className="font-['DM_Serif_Display'] text-[22px] italic font-normal text-[#1c1b1b] mb-1">
+              {getSlotName(linkingSlot)}
+            </h3>
+            <p className="text-[13px] text-[#585f6c] mb-5">
+              Seleccioná el perfil registrado que corresponde a este miembro.
+            </p>
+
+            {linkLoading && !unlinkedCandidates.length ? (
+              <p className="text-[13px] text-[#585f6c] text-center py-4">Cargando miembros...</p>
+            ) : unlinkedCandidates.length === 0 ? (
+              <p className="text-[13px] text-[#585f6c] text-center py-4">
+                No hay miembros con cuenta disponibles para vincular.
+              </p>
+            ) : (
+              <div className="space-y-2 mb-5">
+                {unlinkedCandidates.map((c) => {
+                  const name = c.full_name ?? 'Sin nombre'
+                  const initials = name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)
+                  const selected = selectedUserId === c.user_id
+                  return (
+                    <button
+                      key={c.user_id}
+                      onClick={() => setSelectedUserId(c.user_id)}
+                      className={`w-full flex items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors ${
+                        selected
+                          ? 'bg-[#dce6ff] ring-2 ring-[#004ac6]'
+                          : 'bg-[#f6f3f2] hover:bg-[#eceaf8]'
+                      }`}
+                    >
+                      {c.avatar_url ? (
+                        <img src={c.avatar_url} alt={name} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-[#dce6ff] text-[#004ac6] flex items-center justify-center text-[12px] font-semibold flex-shrink-0">
+                          {initials}
+                        </div>
+                      )}
+                      <span className="text-[13px] font-medium text-[#1c1b1b]">{name}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+
+            {linkError && <p className="mb-3 text-[13px] text-[#ba1a1a]">{linkError}</p>}
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => { setLinkingSlot(null); setLinkError(null) }}
+                className="inline-flex items-center rounded-full border border-[#585f6c] px-4 py-2 text-[13px] font-semibold text-[#585f6c]"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmLink}
+                disabled={!selectedUserId || linkLoading}
+                className="inline-flex items-center rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-60"
+              >
+                {linkLoading ? 'Vinculando...' : 'Confirmar'}
+              </button>
+            </div>
           </div>
         </div>
       )}
