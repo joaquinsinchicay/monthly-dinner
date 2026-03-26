@@ -55,7 +55,7 @@ export default async function JoinPage({ params }: Props) {
       .maybeSingle()
 
     if (existing) {
-      redirect(`/grupo/${groupId}`)
+      redirect(`/dashboard/${groupId}`)
     }
   }
 

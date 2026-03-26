@@ -20,7 +20,7 @@ export default async function OnboardingPage() {
     .maybeSingle()
 
   if (membership?.group_id) {
-    redirect(`/grupo/${membership.group_id}`)
+    redirect(`/dashboard/${membership.group_id}`)
   }
 
   return <OnboardingView />

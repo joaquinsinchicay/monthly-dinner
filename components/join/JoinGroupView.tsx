@@ -25,7 +25,7 @@ export default function JoinGroupView({ token, groupName, isAuthenticated }: Pro
         setError(result.error)
         return
       }
-      router.push(`/grupo/${result.data.groupId}`)
+      router.push(`/dashboard/${result.data.groupId}`)
     })
   }
 

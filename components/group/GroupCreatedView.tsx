@@ -127,7 +127,7 @@ export default function GroupCreatedView({ group }: Props) {
 
         {/* Scenario: Navegación al dashboard */}
         <button
-          onClick={() => router.push(`/grupo/${group.id}`)}
+          onClick={() => router.push(`/dashboard/${group.id}`)}
           className="w-full rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(0,74,198,0.25)] transition-opacity"
         >
           Ir al Dashboard
