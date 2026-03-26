@@ -70,7 +70,7 @@ monthly-dinner es una app web mobile-first para grupos de amigos que se reúnen 
 
 | Tabla | US principal | Descripción |
 |---|---|---|
-| profiles | US-01, US-02 | Perfil del usuario autenticado. `id = auth.uid()` |
+| profiles | US-01, US-02 | Perfil del usuario autenticado. `id = auth.uid()`. Columnas: `full_name`, `avatar_url` (URL de foto de Google OAuth, puede ser NULL). El trigger `handle_new_user` rellena ambas columnas al registrarse. |
 | groups | US-00, US-00c | Grupos de cena. El admin crea. Incluye `frequency` ('mensual' / 'quincenal' / 'semanal'), `meeting_day_of_week` (siempre requerido) y `meeting_week` (requerido para mensual y quincenal, NULL para semanal). Para quincenal: `meeting_week = 1` → "1° y 3° semana", `meeting_week = 2` → "2° y 4° semana". Solo SELECT para miembros. |
 | members | US-00, US-01, US-04, US-NAV-01 | Membresía usuario-grupo. Roles: `member` / `admin`. US-NAV-01 requiere SELECT filtrado por `user_id = auth.uid()` para listar todos los grupos del usuario — la política RLS existente ("SELECT: mismo grupo") ya lo cubre porque el JOIN con `groups` devuelve todos los grupos donde el usuario tiene membresía. |
 | invitation_links | US-00b, US-04 | Links de invitación. Solo admins crean, editan y revocan. |
