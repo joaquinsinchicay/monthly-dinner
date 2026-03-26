@@ -96,35 +96,49 @@ Feature: US-00b — Link de invitación inicial
 ```gherkin
 Feature: US-00c — Configurar frecuencia y día al crear el grupo
 
-  Scenario: Selección de frecuencia mensual muestra días del mes
-    Given estoy completando el formulario de creación de grupo
-    When selecciono la frecuencia "Mensual"
-    Then el campo "Día" muestra un selector numérico con los días del mes (1 al 31)
-
-  Scenario: Selección de frecuencia semanal muestra días de la semana
+  Scenario: Frecuencia semanal muestra solo día de la semana
     Given estoy completando el formulario de creación de grupo
     When selecciono la frecuencia "Semanal"
-    Then el campo "Día" muestra los 7 días de la semana como opciones seleccionables
+    Then veo únicamente el selector de día de la semana
+    And no se muestra el campo de semana del mes
+    And la vista previa muestra "Todos los [día seleccionado]"
 
-  Scenario: Selección de frecuencia quincenal muestra días de la semana
+  Scenario: Frecuencia quincenal muestra semanas en par y día
     Given estoy completando el formulario de creación de grupo
     When selecciono la frecuencia "Quincenal"
-    Then el campo "Día" muestra los 7 días de la semana como opciones seleccionables
+    Then veo el selector de semanas del mes con dos opciones: "1° y 3°" y "2° y 4°"
+    And veo el selector de día de la semana
+    And la vista previa muestra "El 1° y 3° [día] de cada mes" o
+        "El 2° y 4° [día] de cada mes" según la selección
 
-  Scenario: Campos obligatorios — frecuencia y día
+  Scenario: Frecuencia mensual muestra semana del mes y día
+    Given estoy completando el formulario de creación de grupo
+    When selecciono la frecuencia "Mensual"
+    Then veo el selector de semana del mes con opciones: 1°, 2°, 3°, 4° y Última
+    And veo el selector de día de la semana
+    And la vista previa muestra "El [ordinal] [día] de cada mes"
+
+  Scenario: Vista previa en tiempo real
+    Given estoy completando el formulario con frecuencia mensual
+    When selecciono "1°" como semana y "Jueves" como día
+    Then veo la vista previa actualizada: "El primer jueves de cada mes"
+
+  Scenario: Cambio de frecuencia resetea campos dependientes
+    Given seleccioné frecuencia, semana y día
+    When cambio la frecuencia a otro valor
+    Then los campos de semana y día se resetean
+    And la vista previa desaparece hasta completar la nueva selección
+
+  Scenario: Campos obligatorios según frecuencia
     Given estoy en el formulario de creación de grupo
-    When intento confirmar sin seleccionar frecuencia o día
-    Then el sistema indica que ambos campos son obligatorios y no crea el grupo
+    When intento confirmar sin completar todos los campos visibles
+    Then el sistema indica qué campos son obligatorios y no crea el grupo
 
-  Scenario: Mensaje informativo visible al cargar el formulario
-    Given accedo al formulario de creación de grupo
-    When la pantalla carga
-    Then veo el mensaje: "Como creador, tendrás el rol de administrador para gestionar las invitaciones, proponer fechas y coordinar los lugares de encuentro"
-
-  Scenario: Datos de frecuencia y día guardados con el grupo
-    Given completé nombre, frecuencia y día correctamente
+  Scenario: Datos guardados correctamente con el grupo
+    Given completé nombre, frecuencia, semana (si aplica) y día
     When confirmo la creación del grupo
-    Then el grupo queda creado con los tres atributos guardados y accesibles desde la configuración del grupo
+    Then el grupo queda creado con frequency, meeting_week
+        y meeting_day_of_week guardados según la frecuencia seleccionada
 ```
 
 ---

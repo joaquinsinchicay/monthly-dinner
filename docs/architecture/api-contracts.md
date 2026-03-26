@@ -18,8 +18,12 @@ async function createGroup(
   input: {
     name: string
     frequency: 'mensual' | 'quincenal' | 'semanal'
-    meeting_day_of_week?: 'lunes' | 'martes' | 'miércoles' | 'jueves' | 'viernes' | 'sábado' | 'domingo'  // para frecuencia semanal y quincenal
-    meeting_day_of_month?: number  // 1-31, para frecuencia mensual
+    meeting_day_of_week: 'lunes' | 'martes' | 'miércoles' | 'jueves' |
+                         'viernes' | 'sábado' | 'domingo'
+    meeting_week?: number
+    // Mensual: 1-5 (5 = última semana del mes)
+    // Quincenal: 1 (representa "1° y 3°") o 2 (representa "2° y 4°")
+    // Semanal: omitir — debe ser undefined
   }
 ): Promise<ActionResult<Group>>
 ```
@@ -28,9 +32,11 @@ async function createGroup(
 - El trigger `on_group_created_invitation` genera el primer `invitation_link`
 - Retorna el grupo creado
 - **US-00d:** la respuesta `Group` de esta action alimenta directamente la pantalla de confirmación post-creación (`/grupo-creado`). El componente cliente recibe el objeto y lo renderiza sin fetch adicional.
-- **Validación:** exactamente uno de `meeting_day_of_week` o `meeting_day_of_month` debe estar presente según la frecuencia:
-  - `frequency = 'mensual'` → `meeting_day_of_month` requerido, `meeting_day_of_week` debe ser `undefined`
-  - `frequency = 'semanal' | 'quincenal'` → `meeting_day_of_week` requerido, `meeting_day_of_month` debe ser `undefined`
+- **Validación:**
+  - `meeting_day_of_week` siempre requerido
+  - `frequency = 'semanal'` → `meeting_week` debe ser `undefined`
+  - `frequency = 'mensual'` → `meeting_week` debe ser `1`, `2`, `3`, `4` o `5`
+  - `frequency = 'quincenal'` → `meeting_week` debe ser `1` o `2`
 
 ### `revokeInvitationLink`
 ```ts
