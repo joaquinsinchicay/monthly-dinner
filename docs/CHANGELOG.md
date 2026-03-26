@@ -13,9 +13,74 @@ Registro de implementación del MVP — ordenado por fecha de merge a `main`.
 
 | Total US | Done | In Progress | Pendiente |
 |---|---|---|---|
-| 22 | 22 | 0 | 0 |
+| 25 | 25 | 0 | 0 |
 
-> **MVP completo** — todas las US implementadas.
+> **MVP completo** — todas las US implementadas (incluye ENAV).
+
+---
+
+## [0.4.0] — 2026-03-25
+
+### Added — ENAV Navegación global
+
+- **US-NAV-01** Selector de grupo en el header — `components/layout/GroupSelector.tsx`
+
+  Implementación:
+  - Componente client-side con `useParams()` para leer `activeGroupId` desde la URL
+  - Estado cerrado: label "GRUPO ACTUAL" uppercase + nombre del grupo semibold
+  - Dropdown flotante: lista de grupos, grupo activo en `surface_low (#f6f3f2)` + texto `primary (#004ac6)`
+  - Con un solo grupo: sin chevron ni comportamiento dropdown
+  - Al seleccionar: `router.push('/dashboard/[groupId]')` y cierre del dropdown
+  - Click fuera cierra el dropdown sin acción
+
+  Escenarios Gherkin cubiertos:
+  - ✅ Header muestra el grupo activo — label + nombre + chevron condicional
+  - ✅ Dropdown lista los grupos del usuario — panel flotante sin bordes 1px
+  - ✅ Cambio de grupo activo — redirect a `/dashboard/[groupId]`
+  - ✅ Usuario con un solo grupo — sin chevron ni dropdown
+
+- **US-NAV-02** Avatar con menú de sesión — `components/layout/AvatarMenu.tsx`
+
+  Implementación:
+  - Componente client-side con `useParams()` para leer `activeGroupId` desde la URL
+  - Avatar: círculo 40px, ring-2 `primary (#004ac6)`, foto de Google o iniciales con fondo `surface_high (#ede9e8)`
+  - Menú: "Configuración del grupo" (ícono engranaje) + "Cerrar sesión" (ícono salida, color error)
+  - Diálogo de confirmación: bottom sheet glassmorphism (`rgba(252,249,248,0.88)`, `backdrop-blur: 16px`)
+  - Cierre de sesión: usa `signOut` de `@/lib/actions/auth`
+  - Click fuera cierra el menú sin acción
+
+  Escenarios Gherkin cubiertos:
+  - ✅ Avatar visible en el header — foto de Google o iniciales
+  - ✅ Menú del avatar muestra dos opciones
+  - ✅ Acceso a configuración del grupo — redirect a `/dashboard/[groupId]/settings`
+  - ✅ Cierre de sesión desde el avatar — diálogo de confirmación + signOut
+  - ✅ Cierre del menú sin acción — click fuera
+
+- **US-NAV-03** Layout dashboard grupo recién creado — `app/(dashboard)/[groupId]/page.tsx`
+
+  Implementación:
+  - Nueva ruta `/dashboard/[groupId]` dentro del route group `(dashboard)`
+  - Verifica membresía del usuario con RLS como respaldo
+  - Si `hasEvents=true`: redirect a `/grupo/[id]` (panel completo existente)
+  - Si `hasEvents=false`: muestra card centrada de "Completar configuración"
+  - Card: `rounded-2xl`, gradiente `from-white to-gray-50`, `p-10`, `max-w-[480px]`
+  - Título: "Configurá el grupo" — DM Serif Display italic 38px, "grupo" en `primary (#004ac6)`
+  - Botón: gradiente `#004ac6 → #2563eb`, `rounded-full`, redirect a `/settings`
+  - Sin navegación inferior visible
+
+  Escenarios Gherkin cubiertos:
+  - ✅ Dashboard muestra solo la sección de configuración pendiente
+  - ✅ Card de configuración centrada en pantalla con degradado sutil
+  - ✅ Navegación inferior ausente en estado inicial
+
+- **DashboardHeader integrado** — `app/(dashboard)/layout.tsx`, `components/layout/DashboardHeader.tsx`
+
+  Implementación:
+  - `DashboardHeader`: header fijo 56px (h-14), fondo `surface (#fcf9f8)`, `px-6`, `z-30`
+  - `layout.tsx`: Server Component que fetchea `userGroups` (members JOIN groups) y `profile`
+  - Queries explícitas: `members(group_id, groups(id, name))` + `profiles(full_name, avatar_url)`
+  - `pt-14` en el wrapper de `children` para compensar el header fijo
+  - `dashboard/page.tsx`: redirect smart actualizado a `/dashboard/[id]`
 
 ---
 
