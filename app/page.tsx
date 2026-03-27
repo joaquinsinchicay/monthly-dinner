@@ -34,12 +34,10 @@ export default async function HomePage() {
             monthly-dinner
           </p>
           <h1
-            className="mt-3 font-serif text-[32px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
+            className="mt-3 font-serif text-[32px] leading-tight tracking-[-0.02em] text-[#1c1b1b] whitespace-nowrap"
             style={{ fontFamily: 'DM Serif Display, serif' }}
           >
-            Las cenas
-            <br />
-            del grupo
+            Las cenas del grupo
           </h1>
           <p className="mt-3 text-sm text-[#585f6c]">
             Coordiná sin perder mensajes en WhatsApp.
