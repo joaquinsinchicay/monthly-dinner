@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import { Shuffle, Pencil, RotateCcw, Link2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { generateRandomRotation, linkAccountToRotationSlot, getUnlinkedMembers, updateRotationEntry } from '@/app/(dashboard)/rotation/actions'
+import { t } from '@/lib/t'
 
 // ── Utils ─────────────────────────────────────────────────────────────────────
 
@@ -201,7 +202,7 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
   async function confirmManualRotation() {
     const allAssigned = manualItems.every((i) => i.member_id !== null)
     if (!allAssigned) {
-      setError('Todos los meses deben tener un miembro asignado.')
+      setError(t('group.rotation.errors.allMonthsRequired'))
       return
     }
     setLoading(true)
@@ -311,7 +312,7 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
     <section>
       {/* Header */}
       <div className="mb-1 text-[11px] font-medium tracking-[0.05em] uppercase text-[#585f6c]">
-        PRÓXIMOS ENCUENTROS
+        {t('settings.rotationEyebrow')}
       </div>
       <div className="mb-4 flex items-end justify-between">
         <h2 className="font-['DM_Serif_Display'] text-[28px] italic font-normal leading-tight text-[#1c1b1b]">
@@ -325,7 +326,7 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
             className="inline-flex items-center gap-1.5 rounded-full border border-[#004ac6] px-4 py-2 text-[13px] font-semibold text-[#004ac6] bg-transparent"
           >
             <Pencil size={14} />
-            Editar rotación
+            {t('group.rotation.editButton')}
           </button>
         )}
       </div>
@@ -334,7 +335,7 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
       {isEmpty && mode === 'view' && (
         <div className="rounded-2xl bg-white shadow-[0px_4px_16px_-4px_rgba(28,27,27,0.08)] px-6 py-6">
           <p className="text-[14px] text-[#585f6c] text-center mb-5">
-            No hay rotación configurada aún.
+            {t('settings.noRotation')}
           </p>
           {isAdmin && (
             <div className="flex justify-center gap-3 flex-wrap">
@@ -343,14 +344,14 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
                 className="inline-flex items-center gap-2 rounded-full border border-[#004ac6] px-4 py-2 text-[13px] font-semibold text-[#004ac6] bg-transparent"
               >
                 <Shuffle size={14} />
-                Generar aleatoriamente
+                {t('group.rotation.generateRandom')}
               </button>
               <button
                 onClick={openManualConfig}
                 className="inline-flex items-center gap-2 rounded-full border border-[#585f6c] px-4 py-2 text-[13px] font-semibold text-[#585f6c] bg-transparent"
               >
                 <Pencil size={14} />
-                Configurar manualmente
+                {t('group.rotation.configureManual')}
               </button>
             </div>
           )}
@@ -361,7 +362,7 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
       {mode === 'random-preview' && (
         <div className="rounded-2xl bg-white shadow-[0px_4px_16px_-4px_rgba(28,27,27,0.08)] px-4 py-4">
           <p className="text-[11px] font-medium tracking-[0.05em] uppercase text-[#585f6c] mb-3">
-            VISTA PREVIA — AÚN NO GUARDADO
+            {t('group.rotation.previewLabel')}
           </p>
           <div className="space-y-2 mb-4">
             {preview.map((item) => (
@@ -382,21 +383,21 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
               className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#585f6c]"
             >
               <RotateCcw size={14} />
-              Regenerar
+              {t('group.rotation.regenerate')}
             </button>
             <div className="flex gap-2">
               <button
                 onClick={cancel}
                 className="inline-flex items-center rounded-full border border-[#585f6c] px-4 py-2 text-[13px] font-semibold text-[#585f6c]"
               >
-                Cancelar
+                {t('common.cancel')}
               </button>
               <button
                 onClick={confirmRandomRotation}
                 disabled={loading}
                 className="inline-flex items-center rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-60"
               >
-                {loading ? 'Guardando...' : 'Confirmar rotación'}
+                {loading ? t('common.saving') : t('group.rotation.confirmRotation')}
               </button>
             </div>
           </div>
@@ -421,10 +422,10 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
                   }}
                   className="flex-1 rounded-lg bg-[#f6f3f2] px-3 py-2 text-[13px] text-[#1c1b1b] focus:outline-none focus:ring-2 focus:ring-[#004ac6]"
                 >
-                  <option value="">— Sin asignar —</option>
+                  <option value="">{t('group.rotation.unassigned')}</option>
                   {allMembers.map((m) => (
                     <option key={m.id} value={m.id}>
-                      {getMemberName(m)}{m.is_guest || !m.user_id ? ' (Sin cuenta)' : ''}
+                      {getMemberName(m)}{m.is_guest || !m.user_id ? ` ${t('group.rotation.withoutAccount')}` : ''}
                     </option>
                   ))}
                 </select>
@@ -436,14 +437,14 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
               onClick={cancel}
               className="inline-flex items-center rounded-full border border-[#585f6c] px-4 py-2 text-[13px] font-semibold text-[#585f6c]"
             >
-              Cancelar
+              {t('common.cancel')}
             </button>
             <button
               onClick={confirmManualRotation}
               disabled={loading || manualItems.some((i) => !i.member_id)}
               className="inline-flex items-center rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-60"
             >
-              {loading ? 'Guardando...' : 'Guardar rotación'}
+              {loading ? t('common.saving') : t('group.rotation.saveRotation')}
             </button>
           </div>
         </div>
@@ -473,7 +474,7 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
                     className="inline-flex items-center gap-1 rounded-full border border-[#004ac6] px-3 py-1 text-[11px] font-semibold text-[#004ac6] bg-transparent flex-shrink-0"
                   >
                     <Link2 size={12} />
-                    Vincular
+                    {t('group.rotation.linkAccount.linkButton')}
                   </button>
                 )}
                 {isAdmin && !accountless && (
@@ -523,7 +524,7 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
                 >
                   {allMembers.map((m) => (
                     <option key={m.id} value={m.id}>
-                      {getMemberName(m)}{m.is_guest || !m.user_id ? ' (Sin cuenta)' : ''}
+                      {getMemberName(m)}{m.is_guest || !m.user_id ? ` ${t('group.rotation.withoutAccount')}` : ''}
                     </option>
                   ))}
                 </select>
@@ -535,14 +536,14 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
               onClick={cancel}
               className="inline-flex items-center rounded-full border border-[#585f6c] px-4 py-2 text-[13px] font-semibold text-[#585f6c]"
             >
-              Cancelar
+              {t('common.cancel')}
             </button>
             <button
               onClick={saveEdit}
               disabled={loading}
               className="inline-flex items-center rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-60"
             >
-              {loading ? 'Guardando...' : 'Guardar'}
+              {loading ? t('common.saving') : t('common.save')}
             </button>
           </div>
         </div>
@@ -553,25 +554,25 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm px-4 pb-6">
           <div className="w-full max-w-[420px] rounded-2xl bg-white px-6 py-6 shadow-xl">
             <p className="text-[11px] font-medium tracking-[0.05em] uppercase text-[#585f6c] mb-1">
-              VINCULAR CUENTA
+              {t('group.rotation.linkAccount.eyebrow')}
             </p>
             <h3 className="font-['DM_Serif_Display'] text-[22px] italic font-normal text-[#1c1b1b] mb-1">
               {getSlotName(linkingSlot)}
             </h3>
             <p className="text-[13px] text-[#585f6c] mb-5">
-              Seleccioná el perfil registrado que corresponde a este miembro.
+              {t('group.rotation.linkAccount.subtitle')}
             </p>
 
             {linkLoading && !unlinkedCandidates.length ? (
-              <p className="text-[13px] text-[#585f6c] text-center py-4">Cargando miembros...</p>
+              <p className="text-[13px] text-[#585f6c] text-center py-4">{t('group.rotation.linkAccount.loading')}</p>
             ) : unlinkedCandidates.length === 0 ? (
               <p className="text-[13px] text-[#585f6c] text-center py-4">
-                No hay miembros con cuenta disponibles para vincular.
+                {t('group.rotation.linkAccount.noMembers')}
               </p>
             ) : (
               <div className="space-y-2 mb-5">
                 {unlinkedCandidates.map((c) => {
-                  const name = c.full_name ?? 'Sin nombre'
+                  const name = c.full_name ?? t('group.rotation.linkAccount.noName')
                   const initials = name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)
                   const selected = selectedUserId === c.user_id
                   return (
@@ -605,14 +606,14 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
                 onClick={() => { setLinkingSlot(null); setLinkError(null) }}
                 className="inline-flex items-center rounded-full border border-[#585f6c] px-4 py-2 text-[13px] font-semibold text-[#585f6c]"
               >
-                Cancelar
+                {t('common.cancel')}
               </button>
               <button
                 onClick={confirmLink}
                 disabled={!selectedUserId || linkLoading}
                 className="inline-flex items-center rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-60"
               >
-                {linkLoading ? 'Vinculando...' : 'Confirmar'}
+                {linkLoading ? t('group.rotation.linkAccount.confirmPending') : t('common.confirm')}
               </button>
             </div>
           </div>

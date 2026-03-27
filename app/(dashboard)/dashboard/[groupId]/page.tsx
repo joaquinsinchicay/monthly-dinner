@@ -131,7 +131,7 @@ export default async function GroupDashboardPage({ params }: Props) {
                 <span className="text-[#004ac6]">grupo</span>
               </h1>
               <p className="mt-4 text-[15px] leading-relaxed text-[#585f6c]">
-                Tu clan está listo, finalizá la configuración para dar comienzo
+                Tu grupo está listo, finalizá la configuración para dar comienzo
                 a la experiencia culinaria.
               </p>
               <div className="mt-8 flex justify-center">

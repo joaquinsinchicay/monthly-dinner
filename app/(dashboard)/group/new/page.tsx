@@ -15,12 +15,10 @@ export default function NuevoGrupoPage() {
             className="mt-1 font-serif text-[28px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
             style={{ fontFamily: 'DM Serif Display, serif' }}
           >
-            Creá un espacio
-            <br />
-            para el grupo
+            ¿Cómo se llama el grupo?
           </h1>
           <p className="mt-2 text-sm text-[#585f6c]">
-            Configurá el nombre y la frecuencia de encuentro.
+            Este nombre verán todos los miembros cuando los invites.
           </p>
         </div>
 

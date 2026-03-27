@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createGroup } from '@/lib/actions/groups'
+import { t } from '@/lib/t'
 
 type Frequency = 'mensual' | 'quincenal' | 'semanal'
 type DayOfWeek = 'lunes' | 'martes' | 'miércoles' | 'jueves' | 'viernes' | 'sábado' | 'domingo'
@@ -86,15 +87,15 @@ export default function CreateGroupForm() {
 
     const newErrors: typeof errors = {}
 
-    if (!name) newErrors.name = 'El nombre del grupo es obligatorio'
-    if (!frequency) newErrors.frequency = 'Seleccioná una frecuencia'
+    if (!name) newErrors.name = t('group.createGroup.errors.nameRequired')
+    if (!frequency) newErrors.frequency = t('group.createGroup.errors.frequencyRequired')
     if (frequency && frequency !== 'semanal' && !meetingWeek) {
       newErrors.week =
         frequency === 'quincenal'
-          ? 'Seleccioná las semanas del mes'
-          : 'Seleccioná la semana del mes'
+          ? t('group.createGroup.errors.weeksRequired')
+          : t('group.createGroup.errors.weekRequired')
     }
-    if (frequency && !meetingDay) newErrors.day = 'Seleccioná el día de la semana'
+    if (frequency && !meetingDay) newErrors.day = t('group.createGroup.errors.dayRequired')
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
@@ -130,13 +131,13 @@ export default function CreateGroupForm() {
             htmlFor="name"
             className="block text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]"
           >
-            Nombre del grupo
+            {t('group.createGroup.nameLabel')}
           </label>
           <input
             id="name"
             name="name"
             type="text"
-            placeholder="Ej: Cenas del Jueves"
+            placeholder={t('group.createGroup.namePlaceholder')}
             autoComplete="off"
             disabled={isPending}
             className="w-full rounded-xl bg-[#f6f3f2] px-4 py-3 text-sm text-[#1c1b1b] placeholder:text-[#c3c6d7] outline-none focus:ring-2 focus:ring-[#004ac6] disabled:opacity-50 transition-shadow"
@@ -149,7 +150,7 @@ export default function CreateGroupForm() {
         {/* Frecuencia — pills */}
         <div className="space-y-2">
           <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-            Frecuencia
+            {t('group.createGroup.frequencyLabel')}
           </p>
           <div className="flex gap-2">
             {(['mensual', 'quincenal', 'semanal'] as Frequency[]).map(f => (
@@ -177,7 +178,7 @@ export default function CreateGroupForm() {
         {(frequency === 'mensual' || frequency === 'quincenal') && (
           <div className="space-y-2">
             <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-              {frequency === 'quincenal' ? 'Semanas del mes' : 'Semana del mes'}
+              {frequency === 'quincenal' ? t('group.createGroup.weeksLabel') : t('group.createGroup.weekLabel')}
             </p>
             <div className="flex gap-2 flex-wrap">
               {(frequency === 'quincenal' ? BIWEEKLY_WEEKS : MONTHLY_WEEKS).map(w => (
@@ -209,7 +210,7 @@ export default function CreateGroupForm() {
         {frequency && (
           <div className="space-y-2">
             <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-              Día
+              {t('group.createGroup.dayLabel')}
             </p>
             <div className="flex gap-1.5 flex-wrap">
               {DAYS.map(d => (
@@ -254,12 +255,11 @@ export default function CreateGroupForm() {
         disabled={isPending}
         className="mt-6 w-full rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(0,74,198,0.25)] disabled:opacity-60 transition-opacity"
       >
-        {isPending ? 'Creando...' : 'Crear grupo'}
+        {isPending ? t('group.createGroup.submitPending') : t('group.createGroup.submitIdle')}
       </button>
 
       <p className="mt-4 text-xs leading-relaxed text-[#585f6c]">
-        Como creador, tendrás el rol de administrador para gestionar las invitaciones,
-        proponer fechas y coordinar los lugares de encuentro.
+        {t('group.createGroup.creatorNote')}
       </p>
     </form>
   )

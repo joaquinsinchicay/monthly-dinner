@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { getAttendanceDetails, upsertAttendance } from '@/lib/actions/attendances'
 import type { AttendanceDetails, AttendanceMember, AttendanceStatus } from '@/lib/actions/attendances'
+import { t } from '@/lib/t'
 
 interface Props {
   eventId: string
@@ -80,9 +81,9 @@ function GuestStatusSelector({
   }
 
   const options: { status: AttendanceStatus; label: string; bg: string; text: string }[] = [
-    { status: 'va',      label: 'Va',       bg: 'bg-[#f0ede9]', text: 'text-[#1c1b1b]' },
-    { status: 'tal_vez', label: 'Tal vez',  bg: 'bg-[#f0ede9]', text: 'text-[#1c1b1b]' },
-    { status: 'no_va',   label: 'No va',    bg: 'bg-[#f0ede9]', text: 'text-[#1c1b1b]' },
+    { status: 'va',      label: t('group.attendanceSummary.labels.va'),      bg: 'bg-[#f0ede9]', text: 'text-[#1c1b1b]' },
+    { status: 'tal_vez', label: t('group.attendanceSummary.labels.tal_vez'), bg: 'bg-[#f0ede9]', text: 'text-[#1c1b1b]' },
+    { status: 'no_va',   label: t('group.attendanceSummary.labels.no_va'),   bg: 'bg-[#f0ede9]', text: 'text-[#1c1b1b]' },
   ]
 
   return (
@@ -90,7 +91,7 @@ function GuestStatusSelector({
       <div className="flex items-center justify-between">
         <span className="text-[13px] text-[#1c1b1b]">{member.name}</span>
         <span className="text-[11px] font-semibold uppercase tracking-[0.04em] text-[#585f6c] bg-[#ede9e8] rounded-full px-2 py-0.5">
-          Sin cuenta
+          {t('group.attendanceSummary.guestBadge')}
         </span>
       </div>
       <div className="flex gap-1.5 mt-0.5">
@@ -166,7 +167,7 @@ export default function AttendanceSummaryDetailed({ eventId, groupId, isAdmin = 
   if (!details) {
     return (
       <div className="mt-4">
-        <p className="text-sm text-[#585f6c]">Cargando confirmaciones…</p>
+        <p className="text-sm text-[#585f6c]">{t('group.attendanceSummary.loading')}</p>
       </div>
     )
   }
@@ -186,12 +187,12 @@ export default function AttendanceSummaryDetailed({ eventId, groupId, isAdmin = 
 
       <div className="flex items-center justify-between">
         <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-          Confirmaciones
+          {t('group.attendanceSummary.title')}
         </p>
         {/* Scenario: Todos confirmaron — badge indicativo */}
         {allResponded && totalConfirmed > 0 ? (
           <span className="rounded-full bg-[#6ffbbe] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.05em] text-[#006242]">
-            Todos respondieron
+            {t('group.attendanceSummary.allResponded')}
           </span>
         ) : (
           totalConfirmed > 0 && (
@@ -203,21 +204,21 @@ export default function AttendanceSummaryDetailed({ eventId, groupId, isAdmin = 
       </div>
 
       {totalConfirmed === 0 && details.sin_responder.length === 0 ? (
-        <p className="text-sm text-[#585f6c]">Nadie en el grupo todavía.</p>
+        <p className="text-sm text-[#585f6c]">{t('group.attendanceSummary.noMembers')}</p>
       ) : totalConfirmed === 0 ? (
-        <p className="text-sm text-[#585f6c]">Nadie confirmó todavía.</p>
+        <p className="text-sm text-[#585f6c]">{t('group.attendanceSummary.nooneYet')}</p>
       ) : null}
 
       {/* Scenario: Resumen completo visible — Van, No van, Tal vez con nombres */}
-      <MemberList members={details.va}      label="Van"     colorClass="bg-[#6ffbbe] text-[#006242]" />
-      <MemberList members={details.tal_vez} label="Tal vez" colorClass="bg-[#dce2f3] text-[#004ac6]" />
-      <MemberList members={details.no_va}   label="No van"  colorClass="bg-[#ffdad6] text-[#ba1a1a]" />
+      <MemberList members={details.va}      label={t('group.attendanceSummary.labels.van')}     colorClass="bg-[#6ffbbe] text-[#006242]" />
+      <MemberList members={details.tal_vez} label={t('group.attendanceSummary.labels.tal_vez')} colorClass="bg-[#dce2f3] text-[#004ac6]" />
+      <MemberList members={details.no_va}   label={t('group.attendanceSummary.labels.no_van')}  colorClass="bg-[#ffdad6] text-[#ba1a1a]" />
 
       {/* Scenario: Sin responder — miembros reales (solo lectura) */}
       {!allResponded && realSinResponder.length > 0 && (
         <MemberList
           members={realSinResponder}
-          label="Sin responder"
+          label={t('group.attendanceSummary.labels.sinResponder')}
           colorClass="bg-[#f0ede9] text-[#585f6c]"
         />
       )}
@@ -226,7 +227,7 @@ export default function AttendanceSummaryDetailed({ eventId, groupId, isAdmin = 
       {guestsSinResponder.length > 0 && (
         <div>
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-            Confirmar por invitados ({guestsSinResponder.length})
+            {t('group.attendanceSummary.guestConfirmTitle')} ({guestsSinResponder.length})
           </p>
           <div className="space-y-3 rounded-xl bg-[#f6f3f2] px-4 py-3">
             {guestsSinResponder.map((m) => (
@@ -247,7 +248,7 @@ export default function AttendanceSummaryDetailed({ eventId, groupId, isAdmin = 
           onClick={handleShare}
           className="mt-1 w-full rounded-full bg-[#f0ede9] py-2 text-sm font-semibold text-[#1c1b1b] transition-colors hover:bg-[#ebe7e3]"
         >
-          {copied ? '¡Copiado!' : 'Compartir resumen'}
+          {copied ? t('common.copied') : t('group.attendanceSummary.shareButton')}
         </button>
       )}
 
@@ -257,7 +258,7 @@ export default function AttendanceSummaryDetailed({ eventId, groupId, isAdmin = 
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#004ac6] opacity-40" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-[#004ac6]" />
         </span>
-        <span className="text-[10px] text-[#585f6c]">En vivo</span>
+        <span className="text-[10px] text-[#585f6c]">{t('group.attendanceSummary.liveBadge')}</span>
       </div>
     </div>
   )

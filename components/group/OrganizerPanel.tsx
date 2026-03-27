@@ -1,3 +1,4 @@
+import { t } from '@/lib/t'
 import type { OrganizerInfo } from '@/lib/actions/rotation'
 
 interface Props {
@@ -32,10 +33,10 @@ function NextOrganizerBadge({
     return (
       <div className="mt-4 rounded-xl border border-[#004ac6]/20 bg-[#eef3fd] px-4 py-3">
         <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-[#004ac6]">
-          {monthLabel} · Próximo turno
+          {monthLabel} {t('group.organizer.nextTurnSuffix')}
         </p>
         <p className="mt-0.5 text-sm font-medium text-[#1c1b1b]">
-          Te toca organizar el próximo mes
+          {t('group.organizer.myNextTurn')}
         </p>
       </div>
     )
@@ -44,10 +45,10 @@ function NextOrganizerBadge({
   return (
     <div className="mt-4 rounded-xl bg-[#f6f3f2] px-4 py-3">
       <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-        {monthLabel} · Próximo turno
+        {monthLabel} {t('group.organizer.nextTurnSuffix')}
       </p>
       <p className="mt-0.5 text-sm text-[#1c1b1b]">
-        Organiza <span className="font-medium">{name}</span>
+        {t('group.organizer.othersNextTurnPrefix')} <span className="font-medium">{name}</span>
       </p>
     </div>
   )
@@ -59,16 +60,16 @@ export default function OrganizerPanel({ organizer, currentUserId, nextOrganizer
     return (
       <div className="rounded-2xl bg-white p-6 shadow-[0px_10px_30px_-5px_rgba(28,27,27,0.07)]">
         <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-          Turno rotativo
+          {t('group.organizer.eyebrow')}
         </p>
         <p
           className="mt-1 font-serif text-[20px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
           style={{ fontFamily: 'DM Serif Display, serif' }}
         >
-          Sin organizador asignado
+          {t('group.organizer.noOrganizerTitle')}
         </p>
         <p className="mt-2 text-sm text-[#585f6c]">
-          El turno de este mes aún no fue asignado. El admin del grupo puede configurarlo.
+          {t('group.organizer.noOrganizerBody')}
         </p>
         {nextOrganizer && (
           <NextOrganizerBadge next={nextOrganizer} currentUserId={currentUserId} />
@@ -88,16 +89,16 @@ export default function OrganizerPanel({ organizer, currentUserId, nextOrganizer
         <div className="flex items-start justify-between">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#004ac6]">
-              {monthLabel} · Turno rotativo
+              {monthLabel} · {t('group.organizer.eyebrow')}
             </p>
             <p
               className="mt-1 font-serif text-[22px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
               style={{ fontFamily: 'DM Serif Display, serif' }}
             >
-              Te toca organizar
+              {t('group.organizer.iAmOrganizerTitle')}
             </p>
             <p className="mt-1 text-sm text-[#585f6c]">
-              Sos el organizador de este mes.
+              {t('group.organizer.iAmOrganizerBody')}
             </p>
           </div>
 
@@ -118,10 +119,10 @@ export default function OrganizerPanel({ organizer, currentUserId, nextOrganizer
         {/* Acceso al checklist — disponible cuando US-20 esté implementada */}
         <div className="mt-4 rounded-xl bg-[#f0ede9] px-4 py-3">
           <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-            Próximo paso
+            {t('group.organizer.nextStepEyebrow')}
           </p>
           <p className="mt-0.5 text-sm text-[#1c1b1b]">
-            Creá el evento del mes para convocar al grupo.
+            {t('group.organizer.nextStepBody')}
           </p>
         </div>
         {nextOrganizer && (
@@ -135,7 +136,7 @@ export default function OrganizerPanel({ organizer, currentUserId, nextOrganizer
   return (
     <div className="rounded-2xl bg-white p-6 shadow-[0px_10px_30px_-5px_rgba(28,27,27,0.07)]">
       <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-        {monthLabel} · Turno rotativo
+        {monthLabel} · {t('group.organizer.eyebrow')}
       </p>
       <p
         className="mt-1 font-serif text-[22px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
@@ -143,7 +144,7 @@ export default function OrganizerPanel({ organizer, currentUserId, nextOrganizer
       >
         {displayName}
       </p>
-      <p className="mt-1 text-sm text-[#585f6c]">Organiza este mes.</p>
+      <p className="mt-1 text-sm text-[#585f6c]">{t('group.organizer.organizesThisMonth')}</p>
       {nextOrganizer && (
         <NextOrganizerBadge next={nextOrganizer} currentUserId={currentUserId} />
       )}

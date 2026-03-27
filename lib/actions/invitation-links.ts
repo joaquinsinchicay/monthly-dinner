@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { t } from '@/lib/t'
 import { getInvitationLinkStatus } from '@/types'
 import type { ActionResult, InvitationLink } from '@/types'
 
@@ -15,7 +16,7 @@ export async function getActiveInvitationLink(
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   const { data: links, error } = await supabase
     .from('invitation_links')
@@ -23,7 +24,7 @@ export async function getActiveInvitationLink(
     .eq('group_id', groupId)
     .order('created_at', { ascending: false })
 
-  if (error) return { success: false, error: 'No se pudieron obtener los links' }
+  if (error) return { success: false, error: t('errors.invitationLinks.getLinksError') }
 
   const active = (links ?? []).find(
     (l) => getInvitationLinkStatus(l) === 'active'
@@ -42,7 +43,7 @@ export async function generateInvitationLink(
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   const { data: link, error } = await supabase
     .from('invitation_links')
@@ -51,7 +52,7 @@ export async function generateInvitationLink(
     .single()
 
   if (error || !link) {
-    return { success: false, error: 'No se pudo generar el link. Intentá de nuevo.' }
+    return { success: false, error: t('errors.invitationLinks.generateFailed') }
   }
 
   revalidatePath('/dashboard')
@@ -69,7 +70,7 @@ export async function revokeInvitationLink(
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   const { error } = await supabase
     .from('invitation_links')
@@ -77,7 +78,7 @@ export async function revokeInvitationLink(
     .eq('id', linkId)
 
   if (error) {
-    return { success: false, error: 'No se pudo revocar el link. Intentá de nuevo.' }
+    return { success: false, error: t('errors.invitationLinks.revokeFailed') }
   }
 
   revalidatePath('/dashboard')

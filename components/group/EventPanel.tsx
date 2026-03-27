@@ -1,4 +1,5 @@
 import EventForm from '@/components/group/EventForm'
+import { t } from '@/lib/t'
 import NotifyButton from '@/components/group/NotifyButton'
 import AttendanceSummary from '@/components/group/AttendanceSummary'
 import AttendanceSummaryDetailed from '@/components/group/AttendanceSummaryDetailed'
@@ -29,9 +30,9 @@ function formatDate(dateStr: string): string {
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  pending: 'Pendiente',
-  published: 'Publicado',
-  closed: 'Cerrado',
+  pending: t('group.eventPanel.status.pending'),
+  published: t('group.eventPanel.status.published'),
+  closed: t('group.eventPanel.status.closed'),
 }
 
 export default function EventPanel({ groupId, event, currentUserId, isOrganizer, isAdmin = false, attendanceCounts, userAttendance }: Props) {
@@ -41,16 +42,16 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
     return (
       <div className="rounded-2xl bg-white p-6 shadow-[0px_10px_30px_-5px_rgba(28,27,27,0.07)]">
         <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-          Evento del mes
+          {t('group.eventPanel.eyebrow')}
         </p>
         <p
           className="mt-1 font-serif text-[20px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
           style={{ fontFamily: 'DM Serif Display, serif' }}
         >
-          Sin evento este mes
+          {t('group.eventPanel.noEventTitle')}
         </p>
         <p className="mt-2 text-sm text-[#585f6c]">
-          La cena de este mes aún no fue convocada.
+          {t('group.eventPanel.noEventBody')}
         </p>
       </div>
     )
@@ -61,16 +62,16 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
     return (
       <div className="rounded-2xl bg-white p-6 shadow-[0px_10px_30px_-5px_rgba(28,27,27,0.07)]">
         <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-          Evento del mes
+          {t('group.eventPanel.eyebrow')}
         </p>
         <p
           className="mt-1 font-serif text-[22px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
           style={{ fontFamily: 'DM Serif Display, serif' }}
         >
-          Crear el evento
+          {t('group.eventPanel.createTitle')}
         </p>
         <p className="mb-5 mt-2 text-sm text-[#585f6c]">
-          Completá los datos para convocar al grupo.
+          {t('group.eventPanel.createBody')}
         </p>
         {/* Scenario: Creación exitosa + Campos obligatorios vacíos */}
         <EventForm groupId={groupId} />
@@ -100,20 +101,20 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
       <div className="flex items-start justify-between">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-            Evento del mes
+            {t('group.eventPanel.eyebrow')}
           </p>
           <p
             className="mt-1 font-serif text-[22px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
             style={{ fontFamily: 'DM Serif Display, serif' }}
           >
-            {event!.event_date ? formatDate(event!.event_date) : 'Fecha por confirmar'}
+            {event!.event_date ? formatDate(event!.event_date) : t('group.eventPanel.dateUnconfirmed')}
           </p>
         </div>
 
         {/* Badge de estado — ADJ-01: "closed" tiene estilo destacado */}
         {event!.status === 'closed' ? (
           <span className="mt-1 shrink-0 rounded-full bg-[#1c1b1b] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.05em] text-white">
-            Cerrado
+            {t('group.eventPanel.status.closed')}
           </span>
         ) : (
           <span className="mt-1 shrink-0 rounded-full bg-[#f0ede9] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
@@ -124,7 +125,7 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
 
       {event!.place && (
         <p className="mt-3 text-sm text-[#585f6c]">
-          <span className="font-medium text-[#1c1b1b]">Lugar:</span> {event!.place}
+          <span className="font-medium text-[#1c1b1b]">{t('group.eventPanel.placeLabel')}</span> {event!.place}
         </p>
       )}
 
@@ -165,7 +166,7 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
       {canEdit && (
         <details className="mt-5">
           <summary className="cursor-pointer text-[11px] font-semibold uppercase tracking-[0.05em] text-[#004ac6]">
-            Editar evento
+            {t('group.eventPanel.editSummary')}
           </summary>
           <div className="mt-4">
             <EventForm groupId={groupId} existing={event!} />
@@ -177,7 +178,7 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
       {canClose && (
         <details className="mt-3">
           <summary className="cursor-pointer text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-            Cerrar evento
+            {t('group.eventPanel.closeSummary')}
           </summary>
           <div className="mt-4">
             <CloseEventForm eventId={event!.id} />

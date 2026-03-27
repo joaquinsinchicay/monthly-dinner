@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { t } from '@/lib/t'
 import type { ActionResult } from '@/types'
 
 interface InvitationLinkRow {
@@ -31,7 +32,7 @@ export async function joinGroup(token: string): Promise<ActionResult<JoinResult>
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { success: false, error: 'Debés iniciar sesión para unirte al grupo.' }
+    return { success: false, error: t('errors.join.mustBeSignedIn') }
   }
 
   // Validar el token con RPC security definer (bypasea RLS — el invitado no es miembro aún)
@@ -42,7 +43,7 @@ export async function joinGroup(token: string): Promise<ActionResult<JoinResult>
     // Scenario: Link expirado o inválido — token no existe
     return {
       success: false,
-      error: 'El link de invitación no es válido. Pedile uno nuevo al administrador del grupo.',
+      error: t('errors.join.expiredOrInvalid'),
     }
   }
 
@@ -55,8 +56,8 @@ export async function joinGroup(token: string): Promise<ActionResult<JoinResult>
       success: false,
       error:
         status === 'expired'
-          ? 'El link de invitación expiró. Pedile uno nuevo al administrador del grupo.'
-          : 'El link de invitación fue revocado. Pedile uno nuevo al administrador del grupo.',
+          ? t('errors.join.expired')
+          : t('errors.join.revoked'),
     }
   }
 
@@ -81,7 +82,7 @@ export async function joinGroup(token: string): Promise<ActionResult<JoinResult>
   if (insertError) {
     return {
       success: false,
-      error: 'No se pudo unirte al grupo. Intentá de nuevo.',
+      error: t('errors.join.joinFailed'),
     }
   }
 
@@ -99,7 +100,7 @@ export async function getGroupByToken(
     .rpc('get_invitation_link_by_token', { p_token: token })
 
   if (error) {
-    return { success: false, error: 'No se pudo verificar el link.' }
+    return { success: false, error: t('errors.join.verifyFailed') }
   }
 
   if (!rows || rows.length === 0) {

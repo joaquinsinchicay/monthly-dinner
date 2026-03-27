@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { t } from '@/lib/t'
 import type { ActionResult } from '@/types'
 
 export interface RestaurantHistoryEntry {
@@ -41,7 +42,7 @@ export async function closeEvent(
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   // Obtener el evento y validar organizador + estado
   const { data: event } = await supabase
@@ -50,12 +51,12 @@ export async function closeEvent(
     .eq('id', eventId)
     .maybeSingle()
 
-  if (!event) return { success: false, error: 'Evento no encontrado.' }
+  if (!event) return { success: false, error: t('errors.restaurant.eventNotFound') }
   if (event.organizer_id !== user.id) {
-    return { success: false, error: 'Solo el organizador puede cerrar el evento.' }
+    return { success: false, error: t('errors.restaurant.notOrganizer') }
   }
   if (event.status === 'closed') {
-    return { success: false, error: 'El evento ya está cerrado.' }
+    return { success: false, error: t('errors.restaurant.alreadyClosed') }
   }
 
   // Scenario: Restaurante ya en el historial — check duplicado (case-insensitive)
@@ -102,7 +103,7 @@ export async function closeEvent(
   })
 
   if (historyError) {
-    return { success: false, error: 'No se pudo guardar el historial. Intentá de nuevo.' }
+    return { success: false, error: t('errors.restaurant.historyFailed') }
   }
 
   // UPDATE events.status = 'closed'
@@ -114,7 +115,7 @@ export async function closeEvent(
     .neq('status', 'closed')
 
   if (closeError) {
-    return { success: false, error: 'No se pudo cerrar el evento. Intentá de nuevo.' }
+    return { success: false, error: t('errors.restaurant.closeFailed') }
   }
 
   // US-13: auto-asignar organizador del próximo mes (security definer bypasea RLS)
@@ -135,7 +136,7 @@ export async function getRestaurantHistory(
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   const { data: rows, error } = await supabase
     .from('restaurant_history')
@@ -143,7 +144,7 @@ export async function getRestaurantHistory(
     .eq('group_id', groupId)
     .order('visited_at', { ascending: false })
 
-  if (error) return { success: false, error: 'No se pudo obtener el historial.' }
+  if (error) return { success: false, error: t('errors.restaurant.getHistoryFailed') }
 
   const entries = rows ?? []
   if (entries.length === 0) return { success: true, data: [] }

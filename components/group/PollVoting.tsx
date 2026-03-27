@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { getPollVotes, castVote } from '@/lib/actions/polls'
 import type { PollWithOptions, PollVotesResult } from '@/lib/actions/polls'
+import { t } from '@/lib/t'
 
 interface Props {
   poll: PollWithOptions
@@ -126,7 +127,7 @@ export default function PollVoting({ poll }: Props) {
                 <span>{opt.label}</span>
                 {(userVoted || !open) && (
                   <span className="text-[11px] font-semibold text-[#585f6c]">
-                    {count} {count === 1 ? 'voto' : 'votos'}
+                    {count} {count === 1 ? t('group.pollVoting.voteSingular') : t('group.pollVoting.votePlural')}
                   </span>
                 )}
               </div>
@@ -146,7 +147,7 @@ export default function PollVoting({ poll }: Props) {
       {/* Scenario: Miembro que no votó antes del cierre */}
       {didNotParticipate && (
         <p className="rounded-xl bg-[#f0ede9] px-4 py-2.5 text-sm text-[#585f6c]">
-          No participaste en esta votación.
+          {t('group.pollVoting.didNotParticipate')}
         </p>
       )}
 
@@ -157,13 +158,13 @@ export default function PollVoting({ poll }: Props) {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#004ac6] opacity-40" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-[#004ac6]" />
           </span>
-          <span className="text-[10px] text-[#585f6c]">En vivo</span>
+          <span className="text-[10px] text-[#585f6c]">{t('group.pollVoting.liveBadge')}</span>
         </div>
       )}
 
       {/* Prompt de acción cuando la votación está abierta y el usuario no votó */}
       {open && !userVoted && (
-        <p className="text-xs text-[#585f6c]">Seleccioná tu opción preferida.</p>
+        <p className="text-xs text-[#585f6c]">{t('group.pollVoting.selectPrompt')}</p>
       )}
     </div>
   )

@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { Settings, LogOut, Plus } from 'lucide-react'
 import { signOut } from '@/lib/actions/auth'
 import AvatarUser from '@/components/ui/avatar-user'
+import { t } from '@/lib/t'
 
 interface Props {
   profile: { full_name: string | null; avatar_url: string | null } | null
@@ -91,7 +92,7 @@ export default function AvatarMenu({ profile }: Props) {
               className="flex w-full items-center gap-3 rounded-t-lg px-4 py-3 text-left text-[15px] text-[#1c1b1b] transition-colors hover:bg-[#f6f3f2]"
             >
               <Settings size={16} className="shrink-0 text-[#585f6c]" />
-              Configuración del grupo
+              {t('group.avatarMenu.settings')}
             </button>
 
             {/* Ítem 2: Crear nuevo grupo */}
@@ -101,7 +102,7 @@ export default function AvatarMenu({ profile }: Props) {
               className="flex w-full items-center gap-3 px-4 py-3 text-left text-[15px] text-[#1c1b1b] transition-colors hover:bg-[#f6f3f2]"
             >
               <Plus size={16} className="shrink-0 text-[#585f6c]" />
-              Crear nuevo grupo
+              {t('group.avatarMenu.createGroup')}
             </button>
 
             {/* Separador: espacio en blanco, sin hr */}
@@ -114,7 +115,7 @@ export default function AvatarMenu({ profile }: Props) {
               className="flex w-full items-center gap-3 rounded-b-lg px-4 py-3 text-left text-[15px] text-[#ba1a1a] transition-colors hover:bg-[#f6f3f2]"
             >
               <LogOut size={16} className="shrink-0" />
-              Cerrar sesión
+              {t('auth.signOut.trigger')}
             </button>
           </div>
         )}
@@ -144,17 +145,17 @@ export default function AvatarMenu({ profile }: Props) {
             <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-[#c8cdd6]" />
 
             <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-              Sesión
+              {t('auth.signOut.eyebrow')}
             </p>
             <h2
               id="avatar-signout-title"
               className="mt-1 font-serif text-[22px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
               style={{ fontFamily: 'DM Serif Display, serif' }}
             >
-              ¿Cerrar sesión?
+              {t('auth.signOut.title')}
             </h2>
             <p className="mt-2 text-sm text-[#585f6c]">
-              Tendrás que volver a iniciar sesión con Google la próxima vez.
+              {t('auth.signOut.body')}
             </p>
 
             <div className="mt-6 space-y-3">
@@ -164,7 +165,7 @@ export default function AvatarMenu({ profile }: Props) {
                 disabled={isPending}
                 className="flex w-full items-center justify-center rounded-full bg-[#ba1a1a] px-6 py-3 text-sm font-semibold text-white transition-opacity disabled:opacity-60"
               >
-                {isPending ? 'Cerrando sesión...' : 'Cerrar sesión'}
+                {isPending ? t('auth.signOut.confirmPending') : t('auth.signOut.trigger')}
               </button>
 
               {/* Cancelar */}
@@ -173,7 +174,7 @@ export default function AvatarMenu({ profile }: Props) {
                 disabled={isPending}
                 className="flex w-full items-center justify-center rounded-full bg-[#f0ede9] px-6 py-3 text-sm font-semibold text-[#1c1b1b] transition-opacity disabled:opacity-60"
               >
-                Cancelar
+                {t('common.cancel')}
               </button>
             </div>
           </div>

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { ChevronDown } from 'lucide-react'
+import { t } from '@/lib/t'
 
 interface Group {
   id: string
@@ -58,7 +59,7 @@ export default function GroupSelector({ groups }: Props) {
         aria-expanded={hasMultiple ? open : undefined}
       >
         <span className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-          Grupo actual
+          {t('group.groupSelector.label')}
         </span>
         <div className="mt-0.5 flex items-center gap-1">
           <span className="text-[15px] font-semibold leading-tight text-[#1c1b1b]">
