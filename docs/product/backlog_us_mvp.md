@@ -5,7 +5,7 @@ User Stories con Acceptance Criteria en formato Gherkin — ordenadas por priori
 
 | Versión | Stack | US totales | Completadas | Pendientes | Fecha |
 |---|---|---|---|---|---|
-| MVP v1.0 | Next.js + Supabase | 27 | 26 | 1 | Marzo 2026 |
+| MVP v1.0 | Next.js + Supabase | 28 | 26 | 2 | Marzo 2026 |
 
 ---
 
@@ -589,6 +589,59 @@ Feature: US-11b — Configurar y editar rotación
 
 ---
 
+### US-11c — Incluir miembros sin cuenta en la rotación y vincularlos al registrarse
+
+> *Como admin del grupo, quiero poder incluir en la rotación a personas que aún no tienen cuenta, y luego vincularlas a su perfil cuando se registren, para que la rotación refleje al grupo real desde el inicio.*
+
+| Prioridad | Esfuerzo | Descripción |
+|---|---|---|
+| Alta — P5c | M (3-4 días) | Requiere cambio de schema: rotation debe soportar member_id nullable con display_name de fallback. El admin vincula manualmente cuando el miembro crea su cuenta. Depende de US-11b. |
+
+**Acceptance Criteria — Gherkin**
+
+```gherkin
+Feature: US-11c — Rotación con miembros sin cuenta
+
+  Scenario: Incluir miembro sin cuenta en la rotación
+    Given soy admin y estoy configurando la rotación
+    When asigno un mes a un miembro con estado "SIN CUENTA"
+    Then ese miembro queda asignado a ese mes con su nombre visible
+    And el slot muestra el tag "SIN CUENTA" junto al nombre hasta que se vincule
+
+  Scenario: Rotación aleatoria incluye miembros sin cuenta
+    Given el grupo tiene miembros con y sin cuenta
+    When genero la rotación aleatoriamente
+    Then todos los miembros, con o sin cuenta, son incluidos en el sorteo
+    And los slots sin cuenta muestran el nombre y el tag "SIN CUENTA"
+
+  Scenario: Admin vincula miembro sin cuenta a su nueva cuenta
+    Given hay un slot de rotación asignado a "Germán" sin cuenta
+    And Germán se registró y se unió al grupo con su cuenta de Google
+    When accedo a settings y selecciono "Vincular cuenta" en ese slot
+    Then veo una lista de miembros del grupo con cuenta no vinculados aún
+    And selecciono el perfil de Germán y confirmo
+    Then el slot se actualiza con su user_id real y el tag "SIN CUENTA" desaparece
+
+  Scenario: El slot vinculado refleja el perfil real
+    Given vinculé a Germán a su slot de rotación
+    When accedo al panel del grupo
+    Then el mes asignado a Germán muestra su foto de perfil y nombre de Google
+    And el mes ya no muestra el tag "SIN CUENTA"
+
+  Scenario: No se puede vincular un perfil ya asignado a otro slot
+    Given el perfil de Gustavo ya está vinculado a otro mes en la rotación
+    When intento vincularlo a un segundo slot
+    Then el sistema lo excluye de la lista de perfiles disponibles para vincular
+
+  Scenario: Miembro sin cuenta no puede crear el evento aunque sea su mes
+    Given el slot de Abril le pertenece a "Huevo" que no tiene cuenta
+    When llega Abril
+    Then el panel muestra "Huevo" como organizador con tag "SIN CUENTA"
+    And no se habilita la creación de evento hasta que el slot esté vinculado a una cuenta real
+```
+
+---
+
 ## E04 ✅ Confirmación de asistencia
 
 ### US-08 — Recibir notificación de convocatoria
@@ -1085,6 +1138,167 @@ Feature: US-SET-01 — Configuración del grupo
     Given estoy en la pantalla de configuración /dashboard/[groupId]/settings
     When toco el botón "Dashboard" con flecha hacia atrás
     Then soy redirigido a /dashboard/[groupId]
+```
+
+---
+
+## ADJ 🔧 Ajustes de implementación
+
+> Ajustes detectados al comparar el estado del dashboard en producción contra el diseño objetivo. Todos aplican a la ruta `/dashboard/` — no requieren nuevas rutas ni tablas.
+
+---
+
+### ADJ-01 — Estados del card de evento según status ✅
+
+> *Como miembro, quiero que el cuadrante del evento muestre solo información relevante según el status del evento, para no ver datos contradictorios ni acciones que no aplican.*
+
+| Prioridad | Esfuerzo | Descripción | Estado |
+|---|---|---|---|
+| Alta — P1 | S (1-2 días) | El card cambia su render completo según el campo `status` de la tabla `events`. Ruta: `/dashboard/`. | ✅ Completada |
+
+**Acceptance Criteria — Gherkin**
+
+```gherkin
+Feature: ADJ-01 — Estados del card de evento según status
+
+  Scenario: Evento con status "pending" o "published"
+    Given el evento del mes existe y no fue cerrado
+    When accedo al dashboard
+    Then veo fecha, lugar, confirmaciones en tiempo real y los botones VOY / NO VOY / CAPAZ activos
+
+  Scenario: Evento con status "closed"
+    Given el evento fue cerrado por el organizador
+    When accedo al dashboard
+    Then veo el card con badge "CERRADO", el resumen final de asistentes y sin botones de confirmación activos
+
+  Scenario: No hay evento del mes
+    Given no existe ningún evento para el mes actual
+    When accedo al dashboard
+    Then veo el estado vacío con el mensaje "La cena de este mes aún no fue convocada"
+```
+
+---
+
+### ADJ-02 — Estados vacíos en todos los cuadrantes del dashboard
+
+> *Como miembro, quiero que el dashboard sea funcional desde el primer acceso aunque no haya datos en Supabase, para no ver una pantalla rota o en blanco.*
+
+| Prioridad | Esfuerzo | Descripción |
+|---|---|---|
+| Alta — P1 | S (1-2 días) | Cada cuadrante debe tener un empty state explícito. Bug detectado: el historial y el panel de evento no se mostraban hasta tener datos reales en Supabase. Ruta: `/dashboard/`. |
+
+**Acceptance Criteria — Gherkin**
+
+```gherkin
+Feature: ADJ-02 — Estados vacíos en todos los cuadrantes del dashboard
+
+  Scenario: Dashboard sin ningún dato previo
+    Given el grupo fue creado recientemente y no tiene eventos, rotación ni historial
+    When accedo al dashboard por primera vez
+    Then veo todos los cuadrantes con sus estados vacíos descriptivos, sin errores ni espacios en blanco
+
+  Scenario: Historial vacío
+    Given el grupo no tiene cenas cerradas registradas
+    When el cuadrante de historial se renderiza
+    Then veo "Todavía no hay cenas registradas" en lugar de lista vacía o error
+
+  Scenario: Rotación sin asignar
+    Given el admin no asignó organizador para el mes
+    When el cuadrante de turno rotativo se renderiza
+    Then veo "Sin organizador asignado" con indicación de que el admin puede configurarlo
+```
+
+---
+
+### ADJ-03 — Ocultar checklist para no-organizadores
+
+> *Como miembro que no es organizador, quiero que el cuadrante de checklist no sea visible en mi dashboard, para no confundirme con información que no me corresponde.*
+
+| Prioridad | Esfuerzo | Descripción |
+|---|---|---|
+| Media — P2 | XS (< 1 día) | El card no debe renderizarse para no-organizadores. Condicional en Server Component según `rotation.user_id = auth.uid()` para el mes actual. Ruta: `/dashboard/`. |
+
+**Acceptance Criteria — Gherkin**
+
+```gherkin
+Feature: ADJ-03 — Ocultar checklist para no-organizadores
+
+  Scenario: Soy miembro y no soy el organizador del mes
+    Given no tengo el rol de organizador este mes
+    When accedo al dashboard
+    Then el cuadrante de checklist no se renderiza — no aparece ni vacío ni con mensaje de restricción
+
+  Scenario: Soy el organizador del mes
+    Given soy el organizador asignado para este mes
+    When accedo al dashboard
+    Then veo el cuadrante de checklist con las tareas del mes y el porcentaje de progreso
+
+  Scenario: No hay organizador asignado
+    Given la rotación del mes no fue configurada
+    When cualquier miembro accede al dashboard
+    Then el cuadrante de checklist no se renderiza para ningún usuario
+```
+
+---
+
+### ADJ-04 — Header persistente con avatar y selector de grupo
+
+> *Como usuario autenticado, quiero ver mi avatar y el nombre del grupo activo en el header del dashboard, para confirmar en qué grupo estoy y acceder a mi perfil desde cualquier pantalla.*
+
+| Prioridad | Esfuerzo | Descripción |
+|---|---|---|
+| Alta — P1 | S (1-2 días) | El upper bar no está implementado. El header va en `app/(dashboard)/layout.tsx` — no en cada page individual. Muestra: nombre del grupo con chevron selector (izquierda) + avatar del usuario (derecha). |
+
+**Acceptance Criteria — Gherkin**
+
+```gherkin
+Feature: ADJ-04 — Header persistente con avatar y selector de grupo
+
+  Scenario: Header visible con datos del usuario
+    Given estoy autenticado y pertenezco a un grupo
+    When accedo a cualquier pantalla del dashboard
+    Then veo el nombre del grupo activo con ícono de selector y mi avatar en la esquina superior derecha
+
+  Scenario: Selector de grupo con múltiples grupos
+    Given pertenezco a más de un grupo
+    When toco el nombre del grupo en el header
+    Then se despliega un selector con todos mis grupos y puedo cambiar al grupo deseado
+
+  Scenario: Avatar con acceso al menú de perfil
+    Given estoy en cualquier pantalla del dashboard
+    When toco mi avatar
+    Then se abre el menú de perfil con la opción "Cerrar sesión" y datos de mi cuenta
+```
+
+---
+
+### ADJ-05 — Aplicación del design system al dashboard
+
+> *Como usuario de la app, quiero que la interfaz aplique el design system definido en `design-system.md`, para que la experiencia visual sea consistente con el producto diseñado.*
+
+| Prioridad | Esfuerzo | Descripción |
+|---|---|---|
+| Media — P2 | M (3-4 días) | El dashboard actual no tiene diseño aplicado. Cubrir: tipografía DM Serif Display + DM Sans, superficies tonales (#fcf9f8 / #f6f3f2 / #ffffff), botones con gradiente #004ac6 → #2563eb con border-radius 9999px, sin bordes de 1px sólidos. Aplica en `/dashboard/` y todas sus rutas hijas. |
+
+**Acceptance Criteria — Gherkin**
+
+```gherkin
+Feature: ADJ-05 — Aplicación del design system al dashboard
+
+  Scenario: Tipografía aplicada correctamente
+    Given accedo al dashboard
+    When observo títulos y textos
+    Then los títulos usan DM Serif Display con letter-spacing -0.02em y el body usa DM Sans 400/500
+
+  Scenario: Superficies tonales sin bordes duros
+    Given el dashboard renderiza sus cuadrantes
+    When inspecciono la separación entre secciones
+    Then no hay borders de 1px sólidos — la jerarquía usa surface #fcf9f8, surface_low #f6f3f2 y cards #ffffff
+
+  Scenario: Botones primarios con gradiente
+    Given hay un CTA primario en pantalla
+    When el componente lo renderiza
+    Then el botón tiene gradiente de #004ac6 a #2563eb, border-radius 9999px y box-shadow 0 4px 16px rgba(0,74,198,0.25)
 ```
 
 ---

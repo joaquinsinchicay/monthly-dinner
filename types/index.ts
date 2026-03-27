@@ -104,15 +104,17 @@ export function getInvitationLinkStatus(link: InvitationLink): InvitationLinkSta
 export interface Rotation {
   id: string
   group_id: string
-  user_id: string          // organizador del mes
-  month: string            // date — primer día del mes: '2026-04-01'
+  user_id: string | null       // null para miembros sin cuenta
+  member_id: string | null     // references members.id — siempre presente tras US-11c
+  display_name: string | null  // nombre visible cuando user_id es null
+  month: string                // date — primer día del mes: '2026-04-01'
   notified_at: string | null
   created_at: string
 }
 
 // Rotación con perfil del organizador expandido
 export interface RotationWithProfile extends Rotation {
-  profile: Profile
+  profile: Profile | null      // null cuando el slot no tiene cuenta vinculada
 }
 
 // -----------------------------------------------------------------------------

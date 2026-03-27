@@ -209,6 +209,16 @@ El diseño se apoya en "Tonal Layering" y espacio negativo, no en bordes duros. 
 | 26 | US-SET-01 | Configuración del grupo | ESET Configuración | L (5-7d) | ✅ Completada |
 | 27 | US-21 | Agregar miembro sin cuenta (guest) | E00 Creación de grupo | S (1-2d) | ✅ Completada |
 
+## ADJ 🔧 Ajustes de implementación
+
+| # | ID | User Story | Épica | Esfuerzo | Estado |
+|---|---|---|---|---|---|
+| 28 | ADJ-01 | Estados del card de evento según status | E02 Panel de evento | S (1-2d) | ✅ Completada |
+| 29 | ADJ-02 | Estados vacíos en todos los cuadrantes del dashboard | E02 Panel de evento | S (1-2d) | Pendiente |
+| 30 | ADJ-03 | Ocultar checklist para no-organizadores | E03 Turno rotativo | XS (<1d) | Pendiente |
+| 31 | ADJ-04 | Header persistente con avatar y selector de grupo | E01 Acceso & Auth | S (1-2d) | Pendiente |
+| 32 | ADJ-05 | Aplicación del design system al dashboard | E00 Creación de grupo | M (3-4d) | Pendiente |
+
 ---
 
 ## 07 — Convenciones de desarrollo

@@ -86,13 +86,13 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
   // Scenario: Cerrar evento — solo para el organizador, solo si está published
   const canClose = isEventOrganizer && event!.status === 'published'
 
-  // Scenario: Cambio de estado — visible cuando el usuario ya confirmó (tiene userAttendance)
-  // y el evento no está pending (pending = aún no convocado).
-  // Scenario: Confirmación después del evento — ConfirmAttendanceButtons muestra read-only cuando closed.
+  // ADJ-01:
+  // pending / published → botones activos (independiente de si el usuario ya confirmó)
+  // closed             → read-only via ConfirmAttendanceButtons con eventClosed=true
   const showAttendanceButtons =
-    (event!.status === 'published' || event!.status === 'closed') &&
-    userAttendance !== undefined &&
-    userAttendance !== null
+    event!.status === 'pending' ||
+    event!.status === 'published' ||
+    event!.status === 'closed'
 
   return (
     <div className="rounded-2xl bg-white p-6 shadow-[0px_10px_30px_-5px_rgba(28,27,27,0.07)]">
@@ -110,10 +110,16 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
           </p>
         </div>
 
-        {/* Badge de estado */}
-        <span className="mt-1 shrink-0 rounded-full bg-[#f0ede9] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-          {STATUS_LABEL[event!.status] ?? event!.status}
-        </span>
+        {/* Badge de estado — ADJ-01: "closed" tiene estilo destacado */}
+        {event!.status === 'closed' ? (
+          <span className="mt-1 shrink-0 rounded-full bg-[#1c1b1b] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.05em] text-white">
+            Cerrado
+          </span>
+        ) : (
+          <span className="mt-1 shrink-0 rounded-full bg-[#f0ede9] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
+            {STATUS_LABEL[event!.status] ?? event!.status}
+          </span>
+        )}
       </div>
 
       {event!.place && (
@@ -131,25 +137,26 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
 
       {/* US-10: Organizador ve resumen detallado con nombres + compartir (en tiempo real).
           US-07: Miembros ven solo conteos (AttendanceSummary — ya implementado). */}
-      {event!.status !== 'pending' && isOrganizer && (
+      {/* ADJ-01: Confirmaciones visibles para pending y published también */}
+      {isOrganizer && (
         <AttendanceSummaryDetailed
           eventId={event!.id}
           groupId={groupId}
           isAdmin={isAdmin}
         />
       )}
-      {event!.status !== 'pending' && !isOrganizer && attendanceCounts && (
+      {!isOrganizer && attendanceCounts && (
         <AttendanceSummary
           eventId={event!.id}
           initialCounts={attendanceCounts}
         />
       )}
 
-      {/* Scenario: Cambio de estado / Confirmación después del evento — "Tu respuesta" */}
+      {/* ADJ-01: Botones activos para pending/published; read-only para closed */}
       {showAttendanceButtons && (
         <ConfirmAttendanceButtons
           eventId={event!.id}
-          currentStatus={userAttendance!.status as AttendanceStatus}
+          currentStatus={(userAttendance?.status as AttendanceStatus) ?? null}
           eventClosed={event!.status === 'closed'}
         />
       )}

@@ -147,7 +147,7 @@ export default function SettingsRotationSection({ groupId, rotation }: Props) {
 
     const result = await reorderRotation({
       group_id: groupId,
-      ordered_user_ids: items.map((i) => i.user_id),
+      ordered_rotation_ids: items.map((i) => i.id),
     })
 
     setLoading(false)
