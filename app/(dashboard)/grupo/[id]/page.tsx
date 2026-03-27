@@ -7,7 +7,6 @@ import EventPanel from '@/components/group/EventPanel'
 import ConvocatoriaNotification from '@/components/group/ConvocatoriaNotification'
 import PollPanel from '@/components/group/PollPanel'
 import RestaurantHistory from '@/components/group/RestaurantHistory'
-import SignOutButton from '@/components/auth/SignOutButton'
 import { getCurrentOrganizer, getNextOrganizer } from '@/lib/actions/rotation'
 import { getCurrentEvent, getAttendanceCounts } from '@/lib/actions/events'
 import { getUserAttendance } from '@/lib/actions/attendances'
@@ -61,7 +60,6 @@ export default async function GrupoPage({ params }: Props) {
     (links ?? []).find((l) => getInvitationLinkStatus(l) === 'active') ?? null
 
   // US-07b — ¿El grupo tiene algún evento en su historial?
-  // COUNT sobre events (sin filtro de mes) para determinar si el grupo es nuevo.
   const { count: eventsCount } = await supabase
     .from('events')
     .select('id', { count: 'exact', head: true })
@@ -86,18 +84,12 @@ export default async function GrupoPage({ params }: Props) {
   const countsResult = currentEvent ? await getAttendanceCounts(currentEvent.id) : null
   const attendanceCounts = countsResult?.success ? countsResult.data : undefined
 
-  // Confirmación del usuario actual — para cualquier estado del evento:
-  // pending/published → botones activos; closed → mostrar respuesta final como read-only.
+  // Confirmación del usuario actual
   const attendanceResult = currentEvent
     ? await getUserAttendance(currentEvent.id)
     : null
   const userAttendance = attendanceResult?.success ? attendanceResult.data : null
 
-  // Scenario: Notificación recibida con acción directa — mostrar solo si el evento
-  // está publicado y el miembro NO ha confirmado todavía.
-  // Scenario: Recordatorio por falta de respuesta — isReminder se evalúa dentro del componente.
-  // Scenario: Acceso desde notificación — el routing /dashboard → /grupo/[id] ya garantiza
-  // que el usuario llega al panel del evento, no a la pantalla de inicio.
   const showNotification = currentEvent?.status === 'published' && !userAttendance && !isOrganizer
 
   // Historial de restaurantes del grupo (US-16)
@@ -125,21 +117,8 @@ export default async function GrupoPage({ params }: Props) {
   const baseUrl = `${protocol}://${host}`
 
   return (
-    <main className="min-h-screen bg-[#fcf9f8] px-4 py-10">
+    <main className="min-h-screen bg-[#fcf9f8] px-4 pb-10 pt-6">
       <div className="mx-auto w-full max-w-sm space-y-8">
-
-        {/* Header editorial */}
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-            Tu grupo
-          </p>
-          <h1
-            className="mt-1 font-serif text-[28px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
-            style={{ fontFamily: 'DM Serif Display, serif' }}
-          >
-            {group.name}
-          </h1>
-        </div>
 
         {/* US-11: Organizador del mes / US-13: Próximo organizador */}
         <OrganizerPanel organizer={organizer ?? null} currentUserId={user.id} nextOrganizer={nextOrganizer} />
@@ -152,8 +131,7 @@ export default async function GrupoPage({ params }: Props) {
           />
         )}
 
-        {/* US-20: Checklist del mes — visible para el organizador cuando hay evento activo;
-            para no organizadores muestra mensaje explicativo */}
+        {/* US-20: Checklist del mes */}
         {currentEvent && (
           <ChecklistPanel
             eventId={currentEvent.id}
@@ -162,13 +140,12 @@ export default async function GrupoPage({ params }: Props) {
           />
         )}
 
-        {/* US-08: Notificación de convocatoria — visible cuando hay evento publicado y el
-            miembro no confirmó. Muestra variante "recordatorio" si pasaron ≥48h. */}
+        {/* US-08: Notificación de convocatoria */}
         {showNotification && currentEvent && (
           <ConvocatoriaNotification event={currentEvent} groupId={params.id} />
         )}
 
-        {/* US-05 / US-07 / US-09: Evento del mes + confirmaciones en tiempo real + Tu respuesta */}
+        {/* US-05 / US-07 / US-09: Evento del mes + confirmaciones + Tu respuesta */}
         <EventPanel
           groupId={params.id}
           event={currentEvent ?? null}
@@ -179,7 +156,7 @@ export default async function GrupoPage({ params }: Props) {
           userAttendance={userAttendance}
         />
 
-        {/* US-17: Votación de restaurantes — visible para organizador (crear) y todos (ver) */}
+        {/* US-17: Votación de restaurantes */}
         {currentEvent && currentEvent.status !== 'pending' && (
           <PollPanel
             eventId={currentEvent.id}
@@ -192,7 +169,7 @@ export default async function GrupoPage({ params }: Props) {
         {/* US-16: Historial de restaurantes */}
         <RestaurantHistory entries={restaurantHistory} />
 
-        {/* Scenario: Link generado automáticamente al crear el grupo */}
+        {/* Link de invitación */}
         <div className="rounded-2xl bg-white p-6 shadow-[0px_10px_30px_-5px_rgba(28,27,27,0.07)]">
           <InvitationLinkPanel
             groupId={group.id}
@@ -202,11 +179,6 @@ export default async function GrupoPage({ params }: Props) {
           />
         </div>
 
-      </div>
-
-      {/* Scenario: Cerrar sesión desde cualquier pantalla (US-03) */}
-      <div className="mx-auto mt-8 w-full max-w-sm text-center">
-        <SignOutButton />
       </div>
     </main>
   )
