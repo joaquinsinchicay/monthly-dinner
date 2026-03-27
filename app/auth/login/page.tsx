@@ -31,13 +31,18 @@ export default async function LoginPage() {
         {/* Bloque texto + CTA */}
         <div className="mt-8">
 
-          {/* Título Display Large */}
+          {/* Título Display — nombre del producto */}
           <h1
-            className="text-center font-serif text-[36px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
+            className="font-serif text-[42px] leading-[1.1] tracking-[-0.02em] text-[#1b1c1b]"
             style={{ fontFamily: 'DM Serif Display, serif' }}
           >
-            Registra las cenas con amigos
+            Monthly <em>dinner</em>
           </h1>
+
+          {/* Subtítulo Label Signature */}
+          <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.05em] text-[#585f6c]">
+            Registra las cenas con amigos
+          </p>
 
           {/* Botón Google + texto legal */}
           <div className="mt-8">

@@ -24,7 +24,8 @@ export default function GoogleSignInButton() {
       <button
         onClick={handleClick}
         disabled={isPending}
-        className="flex w-full items-center justify-center gap-3 rounded-full bg-[#2563eb] px-6 py-4 text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+        className="flex w-full items-center justify-center gap-3 rounded-full px-6 py-4 text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+        style={{ background: 'linear-gradient(135deg, #003594, #2563eb)' }}
       >
         {isPending ? (
           <span>Redirigiendo...</span>
