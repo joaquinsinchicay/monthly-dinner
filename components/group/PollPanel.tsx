@@ -30,9 +30,27 @@ function isPollOpen(poll: PollWithOptions): boolean {
 // el estado de la votación con mensaje de edición en lugar del formulario.
 export default function PollPanel({ eventId, groupId, poll, isOrganizer }: Props) {
 
-  // Sin votación — solo el organizador ve la opción de crear
+  // Sin votación
   if (!poll) {
-    if (!isOrganizer) return null
+    // Scenario: Sin votación activa — miembro no organizador ve empty state informativo
+    if (!isOrganizer) {
+      return (
+        <div className="rounded-2xl bg-white p-6 shadow-[0px_10px_30px_-5px_rgba(28,27,27,0.07)]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
+            Votación de restaurantes
+          </p>
+          <p
+            className="mt-1 font-serif text-[22px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
+            style={{ fontFamily: 'DM Serif Display, serif' }}
+          >
+            Sin votación activa
+          </p>
+          <p className="mt-2 text-sm text-[#585f6c]">
+            El organizador aún no abrió la votación de restaurantes.
+          </p>
+        </div>
+      )
+    }
 
     return (
       <div className="rounded-2xl bg-white p-6 shadow-[0px_10px_30px_-5px_rgba(28,27,27,0.07)]">
