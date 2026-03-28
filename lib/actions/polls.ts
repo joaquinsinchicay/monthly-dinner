@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { t } from '@/lib/t'
 import type { ActionResult } from '@/types'
 
 export interface PollOption {
@@ -44,14 +45,14 @@ export async function getPollVotes(
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   const { data: votes, error } = await supabase
     .from('poll_votes')
     .select('option_id, user_id')
     .eq('poll_id', pollId)
 
-  if (error) return { success: false, error: 'No se pudo obtener los votos.' }
+  if (error) return { success: false, error: t('errors.polls.voteFetchFailed') }
 
   const rows = votes ?? []
   const counts: Record<string, number> = {}
@@ -84,7 +85,7 @@ export async function castVote(
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   // Validar que la votación existe y está abierta
   const { data: poll } = await supabase
@@ -93,12 +94,12 @@ export async function castVote(
     .eq('id', pollId)
     .maybeSingle()
 
-  if (!poll) return { success: false, error: 'Votación no encontrada.' }
+  if (!poll) return { success: false, error: t('errors.polls.pollNotFound') }
 
   // Scenario: Intento de votar fuera del plazo
   const isClosed = poll.status === 'closed' || new Date(poll.closes_at) <= new Date()
   if (isClosed) {
-    return { success: false, error: 'La votación ya cerró. No se puede emitir o cambiar el voto.' }
+    return { success: false, error: t('errors.polls.pollClosed') }
   }
 
   // UPSERT — INSERT o UPDATE según constraint unique (poll_id, user_id)
@@ -114,7 +115,7 @@ export async function castVote(
       { onConflict: 'poll_id,user_id' }
     )
 
-  if (error) return { success: false, error: 'No se pudo registrar el voto. Intentá de nuevo.' }
+  if (error) return { success: false, error: t('errors.polls.voteFailed') }
 
   return { success: true, data: undefined }
 }
@@ -129,7 +130,7 @@ export async function getPollWithOptions(
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   const { data: poll, error } = await supabase
     .from('polls')
@@ -137,7 +138,7 @@ export async function getPollWithOptions(
     .eq('event_id', eventId)
     .maybeSingle()
 
-  if (error) return { success: false, error: 'No se pudo obtener la votación.' }
+  if (error) return { success: false, error: t('errors.polls.getPollFailed') }
   if (!poll) return { success: true, data: null }
 
   const { data: options } = await supabase
@@ -165,7 +166,7 @@ export async function createPoll(
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   // Validar que el usuario es el organizador del evento
   const { data: event } = await supabase
@@ -174,21 +175,21 @@ export async function createPoll(
     .eq('id', eventId)
     .maybeSingle()
 
-  if (!event) return { success: false, error: 'Evento no encontrado.' }
+  if (!event) return { success: false, error: t('errors.events.notFound') }
   if (event.organizer_id !== user.id) {
-    return { success: false, error: 'Solo el organizador puede abrir la votación.' }
+    return { success: false, error: t('errors.polls.notOrganizerPoll') }
   }
 
   // Scenario: Menos de 2 opciones
   const validOptions = options.map((o) => o.trim()).filter(Boolean)
   if (validOptions.length < 2) {
-    return { success: false, error: 'Se necesitan al menos 2 opciones para abrir la votación.' }
+    return { success: false, error: t('errors.polls.minOptions') }
   }
 
   // Scenario: Fecha de cierre en el pasado
   const closesAtDate = new Date(closesAt)
   if (isNaN(closesAtDate.getTime()) || closesAtDate <= new Date()) {
-    return { success: false, error: 'La fecha de cierre debe ser en el futuro.' }
+    return { success: false, error: t('errors.polls.pastCloseDate') }
   }
 
   // Scenario: Solo una votación activa por evento
@@ -201,7 +202,7 @@ export async function createPoll(
   if (existing) {
     return {
       success: false,
-      error: 'Ya existe una votación para este evento. Podés editarla desde el panel.',
+      error: t('errors.polls.pollAlreadyExists'),
     }
   }
 
@@ -213,7 +214,7 @@ export async function createPoll(
     closes_at: closesAtDate.toISOString(),
   })
 
-  if (pollError) return { success: false, error: 'No se pudo crear la votación. Intentá de nuevo.' }
+  if (pollError) return { success: false, error: t('errors.polls.createPollFailed') }
 
   // SELECT poll recién creado
   const { data: poll, error: selectError } = await supabase
@@ -223,7 +224,7 @@ export async function createPoll(
     .single()
 
   if (selectError || !poll) {
-    return { success: false, error: 'Votación creada pero no se pudo obtener los datos.' }
+    return { success: false, error: t('errors.polls.pollCreatedButFetchFailed') }
   }
 
   // INSERT opciones
@@ -231,7 +232,7 @@ export async function createPoll(
     .from('poll_options')
     .insert(validOptions.map((label) => ({ poll_id: poll.id, label })))
 
-  if (optError) return { success: false, error: 'No se pudieron guardar las opciones.' }
+  if (optError) return { success: false, error: t('errors.polls.saveOptionsFailed') }
 
   // SELECT opciones
   const { data: pollOptions } = await supabase

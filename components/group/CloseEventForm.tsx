@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { closeEvent } from '@/lib/actions/restaurant'
+import { t } from '@/lib/t'
 
 interface Props {
   eventId: string
@@ -58,15 +59,15 @@ export default function CloseEventForm({ eventId }: Props) {
       <div className="space-y-4">
         <div className="rounded-xl bg-[#ffdad6] px-4 py-3">
           <p className="text-sm font-semibold text-[#ba1a1a]">
-            Este restaurante ya fue visitado
+            {t('group.closeEventForm.alreadyVisitedTitle')}
           </p>
           <p className="mt-1 text-sm text-[#ba1a1a]">
-            <span className="font-medium">{alreadyVisited.name}</span> — visitado el{' '}
+            <span className="font-medium">{alreadyVisited.name}</span> — {t('group.closeEventForm.alreadyVisitedDate')}{' '}
             {formatDate(alreadyVisited.visited_at)}
           </p>
         </div>
         <p className="text-sm text-[#585f6c]">
-          ¿Querés registrarlo igual?
+          {t('group.closeEventForm.alreadyVisitedQuestion')}
         </p>
         <div className="flex gap-2">
           <button
@@ -74,7 +75,7 @@ export default function CloseEventForm({ eventId }: Props) {
             disabled={isPending}
             className="flex-1 rounded-full bg-[#f0ede9] py-2.5 text-sm font-semibold text-[#1c1b1b] disabled:opacity-60"
           >
-            Volver
+            {t('group.closeEventForm.backButton')}
           </button>
           {/* Scenario: permite confirmarlo igual */}
           <button
@@ -82,7 +83,7 @@ export default function CloseEventForm({ eventId }: Props) {
             disabled={isPending}
             className="flex-1 rounded-full bg-[#1c1b1b] py-2.5 text-sm font-semibold text-white disabled:opacity-60"
           >
-            {isPending ? 'Cerrando…' : 'Confirmar igual'}
+            {isPending ? t('group.closeEventForm.confirmAnywayPending') : t('group.closeEventForm.confirmAnywayIdle')}
           </button>
         </div>
       </div>
@@ -95,20 +96,20 @@ export default function CloseEventForm({ eventId }: Props) {
       {/* Scenario: Cierre sin restaurante — campo opcional */}
       <div>
         <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-          Restaurante visitado{' '}
-          <span className="normal-case font-normal text-[#585f6c]">(opcional)</span>
+          {t('group.closeEventForm.restaurantLabel')}{' '}
+          <span className="normal-case font-normal text-[#585f6c]">{t('group.closeEventForm.restaurantLabelOptional')}</span>
         </label>
         <input
           type="text"
           value={restaurantName}
           onChange={(e) => setRestaurantName(e.target.value)}
-          placeholder="Ej: La Cabrera"
+          placeholder={t('group.closeEventForm.restaurantPlaceholder')}
           disabled={isPending}
           className="w-full rounded-xl bg-[#f6f3f2] px-4 py-2.5 text-sm text-[#1c1b1b] placeholder:text-[#585f6c] focus:outline-none focus:ring-2 focus:ring-[#004ac6] disabled:opacity-60"
         />
         {!restaurantName.trim() && (
           <p className="mt-1 text-xs text-[#585f6c]">
-            Si no lo completás, el evento se cierra como &ldquo;Sin restaurante registrado&rdquo;.
+            {t('group.closeEventForm.noRestaurantHint')}
           </p>
         )}
       </div>
@@ -122,7 +123,7 @@ export default function CloseEventForm({ eventId }: Props) {
         disabled={isPending}
         className="w-full rounded-full bg-[#1c1b1b] py-3 text-sm font-semibold text-white transition-opacity hover:opacity-80 disabled:opacity-60"
       >
-        {isPending ? 'Cerrando evento…' : 'Cerrar evento'}
+        {isPending ? t('group.closeEventForm.submitPending') : t('group.closeEventForm.submitIdle')}
       </button>
     </div>
   )

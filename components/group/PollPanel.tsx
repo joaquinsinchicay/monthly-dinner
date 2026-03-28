@@ -1,6 +1,7 @@
 import PollForm from '@/components/group/PollForm'
 import PollVoting from '@/components/group/PollVoting'
 import type { PollWithOptions } from '@/lib/actions/polls'
+import { t } from '@/lib/t'
 
 interface Props {
   eventId: string
@@ -30,23 +31,41 @@ function isPollOpen(poll: PollWithOptions): boolean {
 // el estado de la votación con mensaje de edición en lugar del formulario.
 export default function PollPanel({ eventId, groupId, poll, isOrganizer }: Props) {
 
-  // Sin votación — solo el organizador ve la opción de crear
+  // Sin votación
   if (!poll) {
-    if (!isOrganizer) return null
+    // Scenario: Sin votación activa — miembro no organizador ve empty state informativo
+    if (!isOrganizer) {
+      return (
+        <div className="rounded-2xl bg-white p-6 shadow-[0px_10px_30px_-5px_rgba(28,27,27,0.07)]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
+            {t('group.pollPanel.eyebrow')}
+          </p>
+          <p
+            className="mt-1 font-serif text-[22px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
+            style={{ fontFamily: 'DM Serif Display, serif' }}
+          >
+            {t('group.pollPanel.noVotingTitle')}
+          </p>
+          <p className="mt-2 text-sm text-[#585f6c]">
+            {t('group.pollPanel.noVotingBody')}
+          </p>
+        </div>
+      )
+    }
 
     return (
       <div className="rounded-2xl bg-white p-6 shadow-[0px_10px_30px_-5px_rgba(28,27,27,0.07)]">
         <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-          Votación de restaurantes
+          {t('group.pollPanel.eyebrow')}
         </p>
         <p
           className="mt-1 font-serif text-[22px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
           style={{ fontFamily: 'DM Serif Display, serif' }}
         >
-          Abrir votación
+          {t('group.pollPanel.openTitle')}
         </p>
         <p className="mb-5 mt-2 text-sm text-[#585f6c]">
-          Propone restaurantes y dejá que el grupo decida.
+          {t('group.pollPanel.openBody')}
         </p>
         {/* Scenario: Votación creada exitosamente — PollForm maneja la creación */}
         <PollForm eventId={eventId} groupId={groupId} />
@@ -63,13 +82,13 @@ export default function PollPanel({ eventId, groupId, poll, isOrganizer }: Props
       <div className="flex items-start justify-between">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-            Votación de restaurantes
+            {t('group.pollPanel.eyebrow')}
           </p>
           <p
             className="mt-1 font-serif text-[22px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
             style={{ fontFamily: 'DM Serif Display, serif' }}
           >
-            {open ? '¿A dónde vamos?' : 'Votación cerrada'}
+            {open ? t('group.pollPanel.titleOpen') : t('group.pollPanel.titleClosed')}
           </p>
         </div>
 
@@ -82,14 +101,14 @@ export default function PollPanel({ eventId, groupId, poll, isOrganizer }: Props
               : 'bg-[#f0ede9] text-[#585f6c]',
           ].join(' ')}
         >
-          {open ? 'Abierta' : 'Cerrada'}
+          {open ? t('group.pollPanel.statusOpen') : t('group.pollPanel.statusClosed')}
         </span>
       </div>
 
       <p className="mt-2 text-sm text-[#585f6c]">
         {open
-          ? `Cierra el ${formatDateTime(poll.closes_at)}`
-          : `Cerró el ${formatDateTime(poll.closes_at)}`}
+          ? `${t('group.pollPanel.closesPrefix')} ${formatDateTime(poll.closes_at)}`
+          : `${t('group.pollPanel.closedPrefix')} ${formatDateTime(poll.closes_at)}`}
       </p>
 
       {/* US-18: Opciones con mecanismo de voto, porcentajes en tiempo real y estado final */}
@@ -98,7 +117,7 @@ export default function PollPanel({ eventId, groupId, poll, isOrganizer }: Props
       {/* Scenario: Solo una votación activa por evento — organizador ve aviso en lugar del form */}
       {isOrganizer && open && (
         <p className="mt-4 text-xs text-[#585f6c]">
-          Ya hay una votación activa para este evento.
+          {t('group.pollPanel.alreadyActive')}
         </p>
       )}
     </div>

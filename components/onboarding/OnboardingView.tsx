@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { t } from '@/lib/t'
 
 export default function OnboardingView() {
   const router = useRouter()
@@ -15,7 +16,7 @@ export default function OnboardingView() {
     setError(null)
     const trimmed = linkInput.trim()
     if (!trimmed) {
-      setError('Pegá el link de invitación.')
+      setError(t('onboarding.errors.emptyLink'))
       return
     }
 
@@ -33,7 +34,7 @@ export default function OnboardingView() {
     }
 
     if (!token) {
-      setError('El link no parece válido. Pedile uno nuevo al admin del grupo.')
+      setError(t('onboarding.errors.invalidLink'))
       return
     }
 
@@ -49,16 +50,16 @@ export default function OnboardingView() {
         {/* Header editorial */}
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-            Bienvenido
+            {t('onboarding.welcome')}
           </p>
           <h1
             className="mt-1 font-serif text-[28px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
             style={{ fontFamily: 'DM Serif Display, serif' }}
           >
-            ¿Cómo querés empezar?
+            {t('onboarding.howToStart')}
           </h1>
           <p className="mt-2 text-sm text-[#585f6c]">
-            Creá un grupo nuevo o unite a uno existente con un link de invitación.
+            {t('onboarding.subtitle')}
           </p>
         </div>
 
@@ -71,13 +72,13 @@ export default function OnboardingView() {
           >
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-                Opción 1
+                {t('onboarding.option1Label')}
               </p>
               <p className="mt-0.5 text-[15px] font-semibold text-[#1c1b1b]">
-                Crear un grupo
+                {t('onboarding.option1Title')}
               </p>
               <p className="mt-0.5 text-sm text-[#585f6c]">
-                Soy el organizador y quiero empezar.
+                {t('onboarding.option1Subtitle')}
               </p>
             </div>
             <svg
@@ -109,13 +110,13 @@ export default function OnboardingView() {
             >
               <div className="text-left">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-                  Opción 2
+                  {t('onboarding.option2Label')}
                 </p>
                 <p className="mt-0.5 text-[15px] font-semibold text-[#1c1b1b]">
-                  Tengo un link de invitación
+                  {t('onboarding.option2Title')}
                 </p>
                 <p className="mt-0.5 text-sm text-[#585f6c]">
-                  Me invitaron a unirme a un grupo existente.
+                  {t('onboarding.option2Subtitle')}
                 </p>
               </div>
               <svg
@@ -143,7 +144,7 @@ export default function OnboardingView() {
                     htmlFor="invite-link"
                     className="block text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]"
                   >
-                    Link de invitación
+                    {t('onboarding.inviteLinkLabel')}
                   </label>
                   <input
                     id="invite-link"
@@ -153,7 +154,7 @@ export default function OnboardingView() {
                       setLinkInput(e.target.value)
                       setError(null)
                     }}
-                    placeholder="Pegá el link aquí"
+                    placeholder={t('onboarding.inviteLinkPlaceholder')}
                     className="mt-2 w-full rounded-xl bg-[#f0ede9] px-4 py-3 text-sm text-[#1c1b1b] placeholder:text-[#9ba3b0] focus:outline-none focus:ring-2 focus:ring-[#004ac6]"
                   />
                 </div>
@@ -167,7 +168,7 @@ export default function OnboardingView() {
                   disabled={isPending}
                   className="flex w-full items-center justify-center rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(0,74,198,0.25)] transition-opacity disabled:opacity-60"
                 >
-                  {isPending ? 'Redirigiendo...' : 'Ir al link'}
+                  {isPending ? t('onboarding.goingToLink') : t('onboarding.goToLink')}
                 </button>
               </div>
             )}

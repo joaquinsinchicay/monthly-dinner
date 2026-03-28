@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { t } from '@/lib/t'
 import type { ActionResult, Group } from '@/types'
 
 const VALID_FREQUENCIES = ['mensual', 'quincenal', 'semanal'] as const
@@ -20,44 +21,44 @@ export async function createGroup(input: {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { success: false, error: 'No autenticado' }
+    return { success: false, error: t('common.notAuthenticated') }
   }
 
   const name = input.name?.trim()
 
   if (!name) {
-    return { success: false, error: 'El nombre del grupo es obligatorio' }
+    return { success: false, error: t('errors.groups.nameRequired') }
   }
 
   if (!VALID_FREQUENCIES.includes(input.frequency)) {
-    return { success: false, error: 'La frecuencia seleccionada no es válida' }
+    return { success: false, error: t('errors.groups.invalidFrequency') }
   }
 
   if (
     !input.meeting_day_of_week ||
     !(VALID_DAYS_OF_WEEK as readonly string[]).includes(input.meeting_day_of_week)
   ) {
-    return { success: false, error: 'El día de la semana es obligatorio' }
+    return { success: false, error: t('errors.groups.dayRequired') }
   }
 
   // Validar meeting_week según frecuencia (US-00c cascada)
   if (input.frequency === 'semanal') {
     if (input.meeting_week !== undefined) {
-      return { success: false, error: 'La frecuencia semanal no requiere semana del mes' }
+      return { success: false, error: t('errors.groups.weekNotRequiredForSemanal') }
     }
   } else if (input.frequency === 'mensual') {
     if (
       input.meeting_week === undefined ||
       ![1, 2, 3, 4, 5].includes(input.meeting_week)
     ) {
-      return { success: false, error: 'La frecuencia mensual requiere seleccionar la semana del mes (1° a Última)' }
+      return { success: false, error: t('errors.groups.weekRequiredForMensual') }
     }
   } else if (input.frequency === 'quincenal') {
     if (
       input.meeting_week === undefined ||
       ![1, 2].includes(input.meeting_week)
     ) {
-      return { success: false, error: 'La frecuencia quincenal requiere seleccionar "1° y 3°" o "2° y 4°"' }
+      return { success: false, error: t('errors.groups.weekRequiredForQuincenal') }
     }
   }
 
@@ -72,7 +73,7 @@ export async function createGroup(input: {
   if (existing) {
     return {
       success: false,
-      error: `Ya tenés un grupo llamado "${existing.name}". Probá con un nombre diferente.`,
+      error: t('errors.groups.duplicateName', { name: existing.name }),
     }
   }
 
@@ -90,7 +91,7 @@ export async function createGroup(input: {
 
   if (insertError) {
     console.error('[createGroup] Supabase insert error:', JSON.stringify(insertError, null, 2))
-    return { success: false, error: 'No se pudo crear el grupo. Intentá de nuevo.' }
+    return { success: false, error: t('errors.groups.createFailed') }
   }
 
   const { data: group, error: selectError } = await supabase
@@ -103,7 +104,7 @@ export async function createGroup(input: {
 
   if (selectError || !group) {
     console.error('[createGroup] Supabase select after insert error:', JSON.stringify(selectError, null, 2))
-    return { success: false, error: 'No se pudo crear el grupo. Intentá de nuevo.' }
+    return { success: false, error: t('errors.groups.createFailed') }
   }
 
   revalidatePath('/dashboard')

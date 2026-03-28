@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { RestaurantHistoryEntryWithNames } from '@/lib/actions/restaurant'
+import { t } from '@/lib/t'
 
 interface Props {
   entries: RestaurantHistoryEntryWithNames[]
@@ -28,16 +29,16 @@ export default function RestaurantHistory({ entries }: Props) {
     return (
       <div className="rounded-2xl bg-white p-6 shadow-[0px_10px_30px_-5px_rgba(28,27,27,0.07)]">
         <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-          Historial de cenas
+          {t('group.restaurantHistory.eyebrow')}
         </p>
         <p
           className="mt-1 font-serif text-[22px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
           style={{ fontFamily: 'DM Serif Display, serif' }}
         >
-          Sin cenas registradas
+          {t('group.restaurantHistory.emptyTitle')}
         </p>
         <p className="mt-2 text-sm text-[#585f6c]">
-          Todavía no hay cenas registradas.
+          {t('group.restaurantHistory.emptyBody')}
         </p>
       </div>
     )
@@ -56,17 +57,17 @@ export default function RestaurantHistory({ entries }: Props) {
       <div className="mb-4 flex items-center justify-between">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-            Historial de cenas
+            {t('group.restaurantHistory.eyebrow')}
           </p>
           <p
             className="mt-1 font-serif text-[22px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
             style={{ fontFamily: 'DM Serif Display, serif' }}
           >
-            Restaurantes visitados
+            {t('group.restaurantHistory.title')}
           </p>
         </div>
         <span className="shrink-0 rounded-full bg-[#f0ede9] px-3 py-1 text-[11px] font-semibold text-[#585f6c]">
-          {entries.length} {entries.length === 1 ? 'cena' : 'cenas'}
+          {entries.length} {entries.length === 1 ? t('group.restaurantHistory.dinnerSingular') : t('group.restaurantHistory.dinnerPlural')}
         </span>
       </div>
 
@@ -75,14 +76,14 @@ export default function RestaurantHistory({ entries }: Props) {
         type="text"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        placeholder="Buscar restaurante…"
+        placeholder={t('group.restaurantHistory.searchPlaceholder')}
         className="mb-4 w-full rounded-xl bg-[#f6f3f2] px-4 py-2.5 text-sm text-[#1c1b1b] placeholder:text-[#585f6c] focus:outline-none focus:ring-2 focus:ring-[#004ac6]"
       />
 
       {/* Sin resultados de búsqueda */}
       {filtered.length === 0 && searchTerm.trim() && (
         <p className="text-sm text-[#585f6c]">
-          No hay resultados para &ldquo;{searchTerm.trim()}&rdquo;.
+          {t('group.restaurantHistory.noResults', { query: searchTerm.trim() })}
         </p>
       )}
 
@@ -94,7 +95,7 @@ export default function RestaurantHistory({ entries }: Props) {
             {/* Nombre del restaurante */}
             <p className="font-medium text-[#1c1b1b]">
               {entry.name ?? (
-                <span className="italic text-[#585f6c]">Sin restaurante registrado</span>
+                <span className="italic text-[#585f6c]">{t('group.restaurantHistory.noRestaurant')}</span>
               )}
             </p>
 
@@ -107,7 +108,7 @@ export default function RestaurantHistory({ entries }: Props) {
             {entry.attendees.length > 0 && (
               <div className="mt-2">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-                  Fueron ({entry.attendees.length})
+                  {t('group.restaurantHistory.attendeesLabel')} ({entry.attendees.length})
                 </p>
                 <div className="mt-1 flex flex-wrap gap-1">
                   {entry.attendees.map((a) => (
@@ -123,7 +124,7 @@ export default function RestaurantHistory({ entries }: Props) {
             )}
 
             {entry.attendees.length === 0 && (
-              <p className="mt-1.5 text-xs text-[#585f6c]">Sin asistentes registrados.</p>
+              <p className="mt-1.5 text-xs text-[#585f6c]">{t('group.restaurantHistory.noAttendees')}</p>
             )}
           </div>
         ))}

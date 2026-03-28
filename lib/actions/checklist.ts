@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { t } from '@/lib/t'
 import type { ActionResult } from '@/types'
 
 export interface ChecklistItem {
@@ -26,7 +27,7 @@ export async function getOrCreateChecklist(
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   // Verificar que el usuario es el organizador del evento
   const { data: event } = await supabase
@@ -35,9 +36,9 @@ export async function getOrCreateChecklist(
     .eq('id', eventId)
     .maybeSingle()
 
-  if (!event) return { success: false, error: 'Evento no encontrado.' }
+  if (!event) return { success: false, error: t('errors.checklist.eventNotFound') }
   if (event.organizer_id !== user.id) {
-    return { success: false, error: 'Solo el organizador puede ver el checklist.' }
+    return { success: false, error: t('errors.checklist.notOrganizer') }
   }
 
   // Scenario: Retomar checklist incompleto — devolver items existentes
@@ -47,7 +48,7 @@ export async function getOrCreateChecklist(
     .eq('event_id', eventId)
     .order('order_index')
 
-  if (fetchError) return { success: false, error: 'No se pudo obtener el checklist.' }
+  if (fetchError) return { success: false, error: t('errors.checklist.fetchFailed') }
 
   if (existing && existing.length > 0) {
     return { success: true, data: existing as ChecklistItem[] }
@@ -61,7 +62,7 @@ export async function getOrCreateChecklist(
     .order('order_index')
 
   if (templatesError || !templates || templates.length === 0) {
-    return { success: false, error: 'No se encontraron templates para el checklist.' }
+    return { success: false, error: t('errors.checklist.noTemplates') }
   }
 
   const toInsert = templates.map((t) => ({
@@ -75,7 +76,7 @@ export async function getOrCreateChecklist(
 
   const { error: insertError } = await supabase.from('checklist_items').insert(toInsert)
 
-  if (insertError) return { success: false, error: 'No se pudo crear el checklist.' }
+  if (insertError) return { success: false, error: t('errors.checklist.createFailed') }
 
   // SELECT separado del INSERT para evitar race con RLS
   const { data: created, error: createdError } = await supabase
@@ -84,7 +85,7 @@ export async function getOrCreateChecklist(
     .eq('event_id', eventId)
     .order('order_index')
 
-  if (createdError) return { success: false, error: 'No se pudo obtener el checklist creado.' }
+  if (createdError) return { success: false, error: t('errors.checklist.fetchCreatedFailed') }
 
   return { success: true, data: (created ?? []) as ChecklistItem[] }
 }
@@ -100,7 +101,7 @@ export async function toggleChecklistItem(
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   const { error } = await supabase
     .from('checklist_items')
@@ -111,7 +112,7 @@ export async function toggleChecklistItem(
     })
     .eq('id', itemId)
 
-  if (error) return { success: false, error: 'No se pudo actualizar la tarea.' }
+  if (error) return { success: false, error: t('errors.checklist.toggleFailed') }
 
   return { success: true, data: undefined }
 }

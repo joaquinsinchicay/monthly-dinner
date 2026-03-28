@@ -17,6 +17,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { reorderRotation } from '@/app/(dashboard)/dashboard/[groupId]/settings/actions'
+import { t } from '@/lib/t'
 import { useRouter } from 'next/navigation'
 
 interface RotationItem {
@@ -165,14 +166,14 @@ export default function SettingsRotationSection({ groupId, rotation }: Props) {
     return (
       <section>
         <div className="mb-1 text-[11px] font-medium tracking-[0.05em] uppercase text-[#585f6c]">
-          PRÓXIMOS ENCUENTROS
+          {t('settings.rotationEyebrow')}
         </div>
         <div className="mb-4">
           <h2 className="font-['DM_Serif_Display'] text-[28px] italic font-normal leading-tight text-[#1c1b1b]">
-            Rotación de <em className="text-[#004ac6] not-italic">Responsables</em>
+            {t('settings.rotationTitle')} <em className="text-[#004ac6] not-italic">{t('settings.rotationTitleHighlight')}</em>
           </h2>
         </div>
-        <p className="text-[14px] text-[#585f6c]">No hay rotación configurada aún.</p>
+        <p className="text-[14px] text-[#585f6c]">{t('settings.noRotation')}</p>
       </section>
     )
   }
@@ -180,11 +181,11 @@ export default function SettingsRotationSection({ groupId, rotation }: Props) {
   return (
     <section>
       <div className="mb-1 text-[11px] font-medium tracking-[0.05em] uppercase text-[#585f6c]">
-        PRÓXIMOS ENCUENTROS
+        {t('settings.rotationEyebrow')}
       </div>
       <div className="mb-4 flex items-end justify-between">
         <h2 className="font-['DM_Serif_Display'] text-[28px] italic font-normal leading-tight text-[#1c1b1b]">
-          Rotación de <em className="text-[#004ac6] not-italic">Responsables</em>
+          {t('settings.rotationTitle')} <em className="text-[#004ac6] not-italic">{t('settings.rotationTitleHighlight')}</em>
         </h2>
         {isReordering ? (
           <div className="flex items-center gap-2">
@@ -196,14 +197,14 @@ export default function SettingsRotationSection({ groupId, rotation }: Props) {
               }}
               className="inline-flex items-center gap-1.5 rounded-full border border-[#004ac6] px-4 py-2 text-[13px] font-semibold text-[#004ac6] bg-transparent"
             >
-              Cancelar
+              {t('common.cancel')}
             </button>
             <button
               onClick={handleSave}
               disabled={loading}
               className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-60"
             >
-              {loading ? 'Guardando...' : 'Guardar orden'}
+              {loading ? t('settings.saveOrderPending') : t('settings.saveOrderIdle')}
             </button>
           </div>
         ) : (
@@ -211,7 +212,7 @@ export default function SettingsRotationSection({ groupId, rotation }: Props) {
             onClick={() => setIsReordering(true)}
             className="inline-flex items-center gap-1.5 rounded-full border border-[#004ac6] px-4 py-2 text-[13px] font-semibold text-[#004ac6] bg-transparent"
           >
-            Reordenar
+            {t('settings.reorderButton')}
           </button>
         )}
       </div>
@@ -264,7 +265,7 @@ export default function SettingsRotationSection({ groupId, rotation }: Props) {
 
         {isReordering && (
           <p className="mt-3 text-[12px] text-[#585f6c]">
-            Arrastrá los avatares para cambiar el orden.
+            {t('settings.reorderHint')}
           </p>
         )}
       </div>

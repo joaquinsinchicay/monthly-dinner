@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { joinGroup } from '@/lib/actions/join'
 import { signInWithGoogle } from '@/lib/actions/auth'
+import { t } from '@/lib/t'
 
 interface Props {
   token: string
@@ -46,7 +47,7 @@ export default function JoinGroupView({ token, groupName, isAuthenticated }: Pro
       {/* Nombre del grupo — display editorial */}
       <div>
         <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-          Invitación al grupo
+          {t('join.invitationLabel')}
         </p>
         <h1
           className="mt-1 font-serif text-[28px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
@@ -56,8 +57,8 @@ export default function JoinGroupView({ token, groupName, isAuthenticated }: Pro
         </h1>
         <p className="mt-2 text-sm text-[#585f6c]">
           {isAuthenticated
-            ? 'Tocá el botón para unirte al grupo.'
-            : 'Iniciá sesión con Google para unirte al grupo.'}
+            ? t('join.authenticatedSubtitle')
+            : t('auth.signInToJoin')}
         </p>
       </div>
 
@@ -70,7 +71,7 @@ export default function JoinGroupView({ token, groupName, isAuthenticated }: Pro
             disabled={isPending}
             className="flex w-full items-center justify-center rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(0,74,198,0.25)] transition-opacity disabled:opacity-60"
           >
-            {isPending ? 'Uniéndote...' : `Unirme a ${groupName}`}
+            {isPending ? t('join.joining') : t('join.joinButton', { groupName })}
           </button>
         ) : (
           // Scenario: Join con cuenta nueva
@@ -80,7 +81,7 @@ export default function JoinGroupView({ token, groupName, isAuthenticated }: Pro
             className="flex w-full items-center justify-center gap-3 rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(0,74,198,0.25)] transition-opacity disabled:opacity-60"
           >
             {isPending ? (
-              <span>Redirigiendo...</span>
+              <span>{t('auth.redirecting')}</span>
             ) : (
               <>
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
@@ -89,7 +90,7 @@ export default function JoinGroupView({ token, groupName, isAuthenticated }: Pro
                   <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z" fill="#fff" fillOpacity=".7"/>
                   <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z" fill="#fff" fillOpacity=".6"/>
                 </svg>
-                <span>Ingresar con Google para unirme</span>
+                <span>{t('auth.signInWithGoogleToJoin')}</span>
               </>
             )}
           </button>

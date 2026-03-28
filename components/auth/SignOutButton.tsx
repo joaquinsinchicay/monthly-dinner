@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { signOut } from '@/lib/actions/auth'
+import { t } from '@/lib/t'
 
 export default function SignOutButton() {
   const [open, setOpen] = useState(false)
@@ -21,7 +22,7 @@ export default function SignOutButton() {
         onClick={() => setOpen(true)}
         className="text-sm font-medium text-[#585f6c] underline-offset-2 hover:underline"
       >
-        Cerrar sesión
+        {t('auth.signOut.trigger')}
       </button>
 
       {/* Scenario: Confirmación antes de cerrar — bottom sheet */}
@@ -54,16 +55,16 @@ export default function SignOutButton() {
               id="signout-title"
               className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]"
             >
-              Sesión
+              {t('auth.signOut.eyebrow')}
             </p>
             <h2
               className="mt-1 font-serif text-[22px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
               style={{ fontFamily: 'DM Serif Display, serif' }}
             >
-              ¿Cerrar sesión?
+              {t('auth.signOut.title')}
             </h2>
             <p className="mt-2 text-sm text-[#585f6c]">
-              Tendrás que volver a iniciar sesión con Google la próxima vez.
+              {t('auth.signOut.body')}
             </p>
 
             <div className="mt-6 space-y-3">
@@ -73,7 +74,7 @@ export default function SignOutButton() {
                 disabled={isPending}
                 className="flex w-full items-center justify-center rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(0,74,198,0.25)] transition-opacity disabled:opacity-60"
               >
-                {isPending ? 'Cerrando sesión...' : 'Sí, cerrar sesión'}
+                {isPending ? t('auth.signOut.confirmPending') : t('auth.signOut.confirmIdle')}
               </button>
 
               {/* Cancelar */}
@@ -82,7 +83,7 @@ export default function SignOutButton() {
                 disabled={isPending}
                 className="flex w-full items-center justify-center rounded-full bg-[#f0ede9] px-6 py-3 text-sm font-semibold text-[#1c1b1b] transition-opacity disabled:opacity-60"
               >
-                Cancelar
+                {t('common.cancel')}
               </button>
             </div>
           </div>

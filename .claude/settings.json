@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la \"/Users/joaquin/Documents/monthly-dinner/app/\\(dashboard\\)/dashboard/[groupId]/settings/\")",
+      "Bash(git add:*)",
+      "Bash(grep -r \"claim\\\\|link.*guest\\\\|convert.*guest\" /Users/joaquin/Documents/monthly-dinner --include=*.ts --include=*.tsx --include=*.sql)",
+      "mcp__supabase__get_logs",
+      "Bash(grep -A 5 \"rotation\" /Users/joaquin/Documents/monthly-dinner/app/\\\\\\(auth\\\\\\)/grupo/[id]/page.tsx)"
+    ]
+  }
+}

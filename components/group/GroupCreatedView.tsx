@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { t } from '@/lib/t'
 
 interface Group {
   id: string
@@ -12,13 +13,15 @@ interface Group {
 
 function formatDay(group: Group): string {
   if (group.frequency === 'mensual' && group.meeting_day_of_month) {
-    return `Día ${group.meeting_day_of_month} de cada mes`
+    return t('group.groupCreated.formatDayMonthly', { day: String(group.meeting_day_of_month) })
   }
   if (group.meeting_day_of_week) {
     const day =
       group.meeting_day_of_week.charAt(0).toUpperCase() +
       group.meeting_day_of_week.slice(1)
-    return group.frequency === 'semanal' ? `Todos los ${day}` : `Cada dos ${day}`
+    return group.frequency === 'semanal'
+      ? t('group.groupCreated.formatDaySemanal', { day })
+      : t('group.groupCreated.formatDayQuincenal', { day })
   }
   return '—'
 }
@@ -27,15 +30,13 @@ function formatDay(group: Group): string {
 const NEXT_STEPS = [
   {
     id: 'invitar',
-    title: 'Invitar miembros',
-    description:
-      'Compartí el link de invitación con tu grupo para que se sumen.',
+    title: t('group.groupCreated.step1Title'),
+    description: t('group.groupCreated.step1Description'),
   },
   {
     id: 'rotacion',
-    title: 'Configurar rotación',
-    description:
-      'Asigná quién organiza cada mes para distribuir la carga entre todos.',
+    title: t('group.groupCreated.step2Title'),
+    description: t('group.groupCreated.step2Description'),
   },
 ]
 
@@ -53,13 +54,13 @@ export default function GroupCreatedView({ group }: Props) {
         {/* Header editorial */}
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-            Grupo creado
+            {t('group.groupCreated.eyebrow')}
           </p>
           <h1
             className="mt-1 font-serif text-[28px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
             style={{ fontFamily: 'DM Serif Display, serif' }}
           >
-            ¡Listo,
+            {t('group.groupCreated.titlePrefix')}
             <br />
             {group.name}!
           </h1>
@@ -68,23 +69,23 @@ export default function GroupCreatedView({ group }: Props) {
         {/* Scenario: Resumen del grupo visible */}
         <div className="rounded-2xl bg-white p-6 shadow-[0px_10px_30px_-5px_rgba(28,27,27,0.07)]">
           <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-            Resumen
+            {t('group.groupCreated.summaryTitle')}
           </p>
           <div className="mt-4 space-y-3">
             <div className="flex items-baseline justify-between gap-4">
-              <span className="text-sm text-[#585f6c]">Nombre</span>
+              <span className="text-sm text-[#585f6c]">{t('group.groupCreated.nameLabel')}</span>
               <span className="text-sm font-semibold text-[#1c1b1b] text-right">
                 {group.name}
               </span>
             </div>
             <div className="flex items-baseline justify-between gap-4">
-              <span className="text-sm text-[#585f6c]">Frecuencia</span>
+              <span className="text-sm text-[#585f6c]">{t('group.groupCreated.frequencyLabel')}</span>
               <span className="text-sm font-semibold text-[#1c1b1b]">
                 {group.frequency.charAt(0).toUpperCase() + group.frequency.slice(1)}
               </span>
             </div>
             <div className="flex items-baseline justify-between gap-4">
-              <span className="text-sm text-[#585f6c]">Día</span>
+              <span className="text-sm text-[#585f6c]">{t('group.groupCreated.dayLabel')}</span>
               <span className="text-sm font-semibold text-[#1c1b1b] text-right">
                 {formatDay(group)}
               </span>
@@ -95,18 +96,17 @@ export default function GroupCreatedView({ group }: Props) {
         {/* Scenario: Mensaje de bienvenida al rol de admin */}
         <div className="rounded-2xl bg-[#f6f3f2] px-6 py-5">
           <span className="inline-flex items-center rounded-full bg-[#dce2f3] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.05em] text-[#004ac6]">
-            Administrador
+            {t('group.groupCreated.adminBadge')}
           </span>
           <p className="mt-3 text-sm leading-relaxed text-[#585f6c]">
-            Podés gestionar las invitaciones, proponer fechas y coordinar los
-            lugares de encuentro.
+            {t('group.groupCreated.adminBody')}
           </p>
         </div>
 
         {/* Scenario: Próximos pasos visibles */}
         <div>
           <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-            Próximos pasos
+            {t('group.groupCreated.nextStepsTitle')}
           </p>
           <div className="space-y-3">
             {NEXT_STEPS.map((step) => (
@@ -130,7 +130,7 @@ export default function GroupCreatedView({ group }: Props) {
           onClick={() => router.push(`/dashboard/${group.id}`)}
           className="w-full rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(0,74,198,0.25)] transition-opacity"
         >
-          Ir al Dashboard
+          {t('group.groupCreated.ctaButton')}
         </button>
 
       </div>

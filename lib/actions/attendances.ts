@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { t } from '@/lib/t'
 import type { ActionResult } from '@/types'
 
 export type AttendanceStatus = 'va' | 'no_va' | 'tal_vez'
@@ -27,7 +28,7 @@ export async function upsertAttendance(
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   // Validar que el evento existe y no está cerrado
   const { data: event } = await supabase
@@ -36,9 +37,9 @@ export async function upsertAttendance(
     .eq('id', eventId)
     .maybeSingle()
 
-  if (!event) return { success: false, error: 'Evento no encontrado.' }
+  if (!event) return { success: false, error: t('errors.attendances.eventNotFound') }
   if (event.status === 'closed') {
-    return { success: false, error: 'No se puede modificar la asistencia de un evento cerrado.' }
+    return { success: false, error: t('errors.attendances.closedEvent') }
   }
 
   let targetMemberId: string
@@ -54,7 +55,7 @@ export async function upsertAttendance(
       .maybeSingle()
 
     if (!adminCheck) {
-      return { success: false, error: 'Solo un admin puede confirmar por otro miembro' }
+      return { success: false, error: t('errors.attendances.notAdminForGuest') }
     }
 
     // Validar que el member_id es guest y pertenece al grupo del evento
@@ -67,7 +68,7 @@ export async function upsertAttendance(
       .maybeSingle()
 
     if (!guestMember) {
-      return { success: false, error: 'Miembro guest no encontrado en este grupo' }
+      return { success: false, error: t('errors.attendances.guestNotFound') }
     }
 
     targetMemberId = guestMember.id
@@ -81,7 +82,7 @@ export async function upsertAttendance(
       .maybeSingle()
 
     if (!selfMember) {
-      return { success: false, error: 'No sos miembro de este grupo' }
+      return { success: false, error: t('errors.attendances.notMember') }
     }
 
     targetMemberId = selfMember.id
@@ -100,7 +101,7 @@ export async function upsertAttendance(
     )
 
   if (error) {
-    return { success: false, error: 'No se pudo guardar tu confirmación. Intentá de nuevo.' }
+    return { success: false, error: t('errors.attendances.saveFailed') }
   }
 
   return { success: true, data: undefined }
@@ -133,7 +134,7 @@ export async function getAttendanceDetails(
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   // Confirmaciones del evento — join a través de members para soportar guests
   const { data: attendances, error: aError } = await supabase
@@ -152,7 +153,7 @@ export async function getAttendanceDetails(
     `)
     .eq('event_id', eventId)
 
-  if (aError) return { success: false, error: 'No se pudo obtener las confirmaciones.' }
+  if (aError) return { success: false, error: t('errors.attendances.confirmationsFetchFailed') }
 
   // Todos los miembros del grupo (para calcular sin_responder)
   const { data: members, error: mError } = await supabase
@@ -160,7 +161,7 @@ export async function getAttendanceDetails(
     .select('id, is_guest, display_name, profiles(full_name)')
     .eq('group_id', groupId)
 
-  if (mError) return { success: false, error: 'No se pudo obtener los miembros del grupo.' }
+  if (mError) return { success: false, error: t('errors.attendances.membersFetchFailed') }
 
   function toMember(memberId: string, memberData: unknown): AttendanceMember {
     const m = memberData as {
@@ -221,7 +222,7 @@ export async function getUserAttendance(
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   // Obtener el members.id del usuario para buscar su attendance
   // Primero necesitamos el group_id del evento
@@ -231,7 +232,7 @@ export async function getUserAttendance(
     .eq('id', eventId)
     .maybeSingle()
 
-  if (!event) return { success: false, error: 'Evento no encontrado.' }
+  if (!event) return { success: false, error: t('errors.attendances.eventNotFound') }
 
   const { data: memberRow } = await supabase
     .from('members')
@@ -249,7 +250,7 @@ export async function getUserAttendance(
     .eq('member_id', memberRow.id)
     .maybeSingle()
 
-  if (error) return { success: false, error: 'No se pudo obtener la confirmación.' }
+  if (error) return { success: false, error: t('errors.attendances.fetchFailed') }
 
   return { success: true, data: data ?? null }
 }

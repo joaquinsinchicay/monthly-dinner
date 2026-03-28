@@ -3,34 +3,41 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createGroup } from '@/lib/actions/groups'
+import { t, type TextKey } from '@/lib/t'
 
 type Frequency = 'mensual' | 'quincenal' | 'semanal'
 type DayOfWeek = 'lunes' | 'martes' | 'miércoles' | 'jueves' | 'viernes' | 'sábado' | 'domingo'
 
-const DAYS: { label: string; value: DayOfWeek }[] = [
-  { label: 'Lun', value: 'lunes' },
-  { label: 'Mar', value: 'martes' },
-  { label: 'Mié', value: 'miércoles' },
-  { label: 'Jue', value: 'jueves' },
-  { label: 'Vie', value: 'viernes' },
-  { label: 'Sáb', value: 'sábado' },
-  { label: 'Dom', value: 'domingo' },
+const DAYS: { labelKey: TextKey; value: DayOfWeek }[] = [
+  { labelKey: 'group.createGroup.days.lunes', value: 'lunes' },
+  { labelKey: 'group.createGroup.days.martes', value: 'martes' },
+  { labelKey: 'group.createGroup.days.miercoles', value: 'miércoles' },
+  { labelKey: 'group.createGroup.days.jueves', value: 'jueves' },
+  { labelKey: 'group.createGroup.days.viernes', value: 'viernes' },
+  { labelKey: 'group.createGroup.days.sabado', value: 'sábado' },
+  { labelKey: 'group.createGroup.days.domingo', value: 'domingo' },
 ]
 
-const MONTHLY_WEEKS: { label: string; value: number }[] = [
-  { label: '1°', value: 1 },
-  { label: '2°', value: 2 },
-  { label: '3°', value: 3 },
-  { label: '4°', value: 4 },
-  { label: 'Última', value: 5 },
+const MONTHLY_WEEKS: { labelKey: TextKey; value: number }[] = [
+  { labelKey: 'group.createGroup.weeks.w1', value: 1 },
+  { labelKey: 'group.createGroup.weeks.w2', value: 2 },
+  { labelKey: 'group.createGroup.weeks.w3', value: 3 },
+  { labelKey: 'group.createGroup.weeks.w4', value: 4 },
+  { labelKey: 'group.createGroup.weeks.w5', value: 5 },
 ]
 
-const BIWEEKLY_WEEKS: { label: string; value: number }[] = [
-  { label: '1° y 3°', value: 1 },
-  { label: '2° y 4°', value: 2 },
+const BIWEEKLY_WEEKS: { labelKey: TextKey; value: number }[] = [
+  { labelKey: 'group.createGroup.biweeklyWeeks.odd', value: 1 },
+  { labelKey: 'group.createGroup.biweeklyWeeks.even', value: 2 },
 ]
 
-const ORDINALS = ['primer', 'segundo', 'tercer', 'cuarto', 'último']
+const ORDINAL_KEYS: TextKey[] = [
+  'group.createGroup.ordinals.w1',
+  'group.createGroup.ordinals.w2',
+  'group.createGroup.ordinals.w3',
+  'group.createGroup.ordinals.w4',
+  'group.createGroup.ordinals.w5',
+]
 
 function buildPreview(
   frequency: Frequency | '',
@@ -40,19 +47,21 @@ function buildPreview(
   if (!frequency || !meetingDay) return ''
 
   if (frequency === 'semanal') {
-    return `Todos los ${meetingDay}`
+    return t('group.createGroup.previewSemanal', { day: meetingDay })
   }
 
   if (!meetingWeek) return ''
 
   if (frequency === 'quincenal') {
-    const label = meetingWeek === 1 ? '1° y 3°' : '2° y 4°'
-    return `El ${label} ${meetingDay} de cada mes`
+    const weeksLabel = meetingWeek === 1
+      ? t('group.createGroup.biweeklyWeeks.odd')
+      : t('group.createGroup.biweeklyWeeks.even')
+    return t('group.createGroup.previewQuincenal', { weeks: weeksLabel, day: meetingDay })
   }
 
   // mensual
-  const ordinal = ORDINALS[(meetingWeek === 5 ? 4 : meetingWeek - 1)]
-  return `El ${ordinal} ${meetingDay} de cada mes`
+  const ordinal = t(ORDINAL_KEYS[(meetingWeek === 5 ? 4 : meetingWeek - 1)])
+  return t('group.createGroup.previewMensual', { ordinal, day: meetingDay })
 }
 
 export default function CreateGroupForm() {
@@ -86,15 +95,15 @@ export default function CreateGroupForm() {
 
     const newErrors: typeof errors = {}
 
-    if (!name) newErrors.name = 'El nombre del grupo es obligatorio'
-    if (!frequency) newErrors.frequency = 'Seleccioná una frecuencia'
+    if (!name) newErrors.name = t('group.createGroup.errors.nameRequired')
+    if (!frequency) newErrors.frequency = t('group.createGroup.errors.frequencyRequired')
     if (frequency && frequency !== 'semanal' && !meetingWeek) {
       newErrors.week =
         frequency === 'quincenal'
-          ? 'Seleccioná las semanas del mes'
-          : 'Seleccioná la semana del mes'
+          ? t('group.createGroup.errors.weeksRequired')
+          : t('group.createGroup.errors.weekRequired')
     }
-    if (frequency && !meetingDay) newErrors.day = 'Seleccioná el día de la semana'
+    if (frequency && !meetingDay) newErrors.day = t('group.createGroup.errors.dayRequired')
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
@@ -130,13 +139,13 @@ export default function CreateGroupForm() {
             htmlFor="name"
             className="block text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]"
           >
-            Nombre del grupo
+            {t('group.createGroup.nameLabel')}
           </label>
           <input
             id="name"
             name="name"
             type="text"
-            placeholder="Ej: Cenas del Jueves"
+            placeholder={t('group.createGroup.namePlaceholder')}
             autoComplete="off"
             disabled={isPending}
             className="w-full rounded-xl bg-[#f6f3f2] px-4 py-3 text-sm text-[#1c1b1b] placeholder:text-[#c3c6d7] outline-none focus:ring-2 focus:ring-[#004ac6] disabled:opacity-50 transition-shadow"
@@ -149,7 +158,7 @@ export default function CreateGroupForm() {
         {/* Frecuencia — pills */}
         <div className="space-y-2">
           <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-            Frecuencia
+            {t('group.createGroup.frequencyLabel')}
           </p>
           <div className="flex gap-2">
             {(['mensual', 'quincenal', 'semanal'] as Frequency[]).map(f => (
@@ -177,7 +186,7 @@ export default function CreateGroupForm() {
         {(frequency === 'mensual' || frequency === 'quincenal') && (
           <div className="space-y-2">
             <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-              {frequency === 'quincenal' ? 'Semanas del mes' : 'Semana del mes'}
+              {frequency === 'quincenal' ? t('group.createGroup.weeksLabel') : t('group.createGroup.weekLabel')}
             </p>
             <div className="flex gap-2 flex-wrap">
               {(frequency === 'quincenal' ? BIWEEKLY_WEEKS : MONTHLY_WEEKS).map(w => (
@@ -195,7 +204,7 @@ export default function CreateGroupForm() {
                       : 'bg-[#f6f3f2] text-[#1c1b1b] hover:bg-[#eceae9]'
                   } disabled:opacity-50`}
                 >
-                  {w.label}
+                  {t(w.labelKey)}
                 </button>
               ))}
             </div>
@@ -209,7 +218,7 @@ export default function CreateGroupForm() {
         {frequency && (
           <div className="space-y-2">
             <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-              Día
+              {t('group.createGroup.dayLabel')}
             </p>
             <div className="flex gap-1.5 flex-wrap">
               {DAYS.map(d => (
@@ -227,7 +236,7 @@ export default function CreateGroupForm() {
                       : 'bg-[#f6f3f2] text-[#1c1b1b] hover:bg-[#eceae9]'
                   } disabled:opacity-50`}
                 >
-                  {d.label}
+                  {t(d.labelKey)}
                 </button>
               ))}
             </div>
@@ -254,12 +263,11 @@ export default function CreateGroupForm() {
         disabled={isPending}
         className="mt-6 w-full rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(0,74,198,0.25)] disabled:opacity-60 transition-opacity"
       >
-        {isPending ? 'Creando...' : 'Crear grupo'}
+        {isPending ? t('group.createGroup.submitPending') : t('group.createGroup.submitIdle')}
       </button>
 
       <p className="mt-4 text-xs leading-relaxed text-[#585f6c]">
-        Como creador, tendrás el rol de administrador para gestionar las invitaciones,
-        proponer fechas y coordinar los lugares de encuentro.
+        {t('group.createGroup.creatorNote')}
       </p>
     </form>
   )

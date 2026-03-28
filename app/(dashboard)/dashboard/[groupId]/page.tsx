@@ -16,6 +16,7 @@ import { getOrCreateChecklist } from '@/lib/actions/checklist'
 import ChecklistPanel from '@/components/group/ChecklistPanel'
 import { getInvitationLinkStatus } from '@/types'
 import type { MemberRole } from '@/types'
+import { t } from '@/lib/t'
 
 interface Props {
   params: { groupId: string }
@@ -127,19 +128,18 @@ export default async function GroupDashboardPage({ params }: Props) {
                 className="text-[38px] font-normal italic leading-tight tracking-[-0.02em] text-[#1c1b1b]"
                 style={{ fontFamily: 'DM Serif Display, serif' }}
               >
-                Configurá el{' '}
-                <span className="text-[#004ac6]">grupo</span>
+                {t('dashboard.emptyAdmin.eyebrow')}{' '}
+                <span className="text-[#004ac6]">{t('dashboard.emptyAdmin.heading')}</span>
               </h1>
               <p className="mt-4 text-[15px] leading-relaxed text-[#585f6c]">
-                Tu clan está listo, finalizá la configuración para dar comienzo
-                a la experiencia culinaria.
+                {t('dashboard.emptyAdmin.body')}
               </p>
               <div className="mt-8 flex justify-center">
                 <a
                   href={`/dashboard/${params.groupId}/settings`}
                   className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-8 py-4 text-[15px] font-semibold text-white transition-opacity hover:opacity-90"
                 >
-                  Completar configuración →
+                  {t('dashboard.emptyAdmin.cta')}
                 </a>
               </div>
             </>
@@ -149,11 +149,11 @@ export default async function GroupDashboardPage({ params }: Props) {
                 className="text-[38px] font-normal italic leading-tight tracking-[-0.02em] text-[#1c1b1b]"
                 style={{ fontFamily: 'DM Serif Display, serif' }}
               >
-                Pronto hay{' '}
-                <span className="text-[#004ac6]">novedades</span>
+                {t('dashboard.emptyMemberCardEyebrow')}{' '}
+                <span className="text-[#004ac6]">{t('dashboard.emptyMemberCardHeading')}</span>
               </h1>
               <p className="mt-4 text-[15px] leading-relaxed text-[#585f6c]">
-                Aún no hay eventos. El organizador del mes está preparando la primera cita.
+                {t('dashboard.emptyMember')}
               </p>
             </>
           )}

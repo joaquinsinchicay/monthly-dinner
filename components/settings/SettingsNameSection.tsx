@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Pencil } from 'lucide-react'
 import { updateGroupName } from '@/app/(dashboard)/dashboard/[groupId]/settings/actions'
+import { t } from '@/lib/t'
 import { useRouter } from 'next/navigation'
 
 interface Props {
@@ -39,11 +40,11 @@ export default function SettingsNameSection({ groupId, initialName }: Props) {
   return (
     <section>
       <div className="mb-1 text-[11px] font-medium tracking-[0.05em] uppercase text-[#585f6c]">
-        CONTROL &amp; IDENTIDAD
+        {t('settings.identityEyebrow')}
       </div>
       <div className="mb-4">
         <h2 className="font-['DM_Serif_Display'] text-[28px] italic font-normal leading-tight text-[#1c1b1b]">
-          Ajustes del <em className="text-[#004ac6] not-italic">Clan</em>
+          {t('settings.sectionTitle')} <em className="text-[#004ac6] not-italic">{t('settings.sectionTitleHighlight')}</em>
         </h2>
       </div>
 
@@ -58,7 +59,7 @@ export default function SettingsNameSection({ groupId, initialName }: Props) {
           className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[#faf8f7] transition-colors"
         >
           <Pencil size={16} className="text-[#585f6c] shrink-0" />
-          <span className="flex-1 text-[15px] text-[#1c1b1b]">Nombre del Clan</span>
+          <span className="flex-1 text-[15px] text-[#1c1b1b]">{t('settings.clanNameRow')}</span>
           <span className="text-[14px] text-[#585f6c] truncate max-w-[140px]">{name}</span>
         </button>
 
@@ -68,7 +69,7 @@ export default function SettingsNameSection({ groupId, initialName }: Props) {
               type="text"
               value={draftName}
               onChange={(e) => setDraftName(e.target.value)}
-              placeholder="Nombre del grupo"
+              placeholder={t('settings.clanNamePlaceholder')}
               autoFocus
               className="w-full rounded-xl border-0 bg-[#f4f0eb] px-4 py-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-[#004ac6]"
             />
@@ -81,14 +82,14 @@ export default function SettingsNameSection({ groupId, initialName }: Props) {
                 }}
                 className="flex-1 inline-flex items-center justify-center rounded-full border border-[#004ac6] px-4 py-2 text-[13px] font-semibold text-[#004ac6] bg-transparent"
               >
-                Cancelar
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleSaveName}
                 disabled={loading}
                 className="flex-1 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-60"
               >
-                {loading ? 'Guardando...' : 'Guardar'}
+                {loading ? t('common.saving') : t('common.save')}
               </button>
             </div>
           </div>

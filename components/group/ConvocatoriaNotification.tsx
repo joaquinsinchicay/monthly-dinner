@@ -11,6 +11,7 @@
 
 import type { Event } from '@/types'
 import ConfirmAttendanceButtons from '@/components/group/ConfirmAttendanceButtons'
+import { t } from '@/lib/t'
 
 interface Props {
   event: Event
@@ -49,7 +50,7 @@ export default function ConvocatoriaNotification({ event }: Props) {
               : 'rounded-full bg-[#dce2f3] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.05em] text-[#004ac6]'
           }
         >
-          {reminder ? 'Recordatorio' : 'Convocatoria'}
+          {reminder ? t('group.convocatoria.reminderBadge') : t('group.convocatoria.badge')}
         </span>
       </div>
 
@@ -58,14 +59,14 @@ export default function ConvocatoriaNotification({ event }: Props) {
         className="font-serif text-[22px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
         style={{ fontFamily: 'DM Serif Display, serif' }}
       >
-        {reminder ? '¿Vas a la cena de este mes?' : '¡Hay cena este mes!'}
+        {reminder ? t('group.convocatoria.reminderTitle') : t('group.convocatoria.title')}
       </p>
 
       {/* Mensaje contextual */}
       <p className="mt-1 text-sm text-[#585f6c]">
         {reminder
-          ? 'Todavía no confirmaste tu asistencia. El organizador necesita saber si vas.'
-          : 'El organizador convocó al grupo. Confirmá tu asistencia para que pueda organizar.'}
+          ? t('group.convocatoria.reminderBody')
+          : t('group.convocatoria.body')}
       </p>
 
       {/* Datos del evento */}

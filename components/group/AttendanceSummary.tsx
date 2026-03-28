@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { AttendanceCounts } from '@/lib/actions/events'
+import { t } from '@/lib/t'
 
 interface Props {
   eventId: string
@@ -62,7 +63,7 @@ export default function AttendanceSummary({ eventId, initialCounts }: Props) {
     <div className="mt-4 space-y-2">
       <div className="flex items-center justify-between">
         <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-          Confirmaciones
+          {t('group.attendanceSummary.title')}
         </p>
         {total > 0 && (
           <span className="text-[11px] text-[#585f6c]">{total} respuesta{total !== 1 ? 's' : ''}</span>
@@ -70,25 +71,25 @@ export default function AttendanceSummary({ eventId, initialCounts }: Props) {
       </div>
 
       {total === 0 ? (
-        <p className="text-sm text-[#585f6c]">Nadie confirmó todavía.</p>
+        <p className="text-sm text-[#585f6c]">{t('group.attendanceSummary.nooneYet')}</p>
       ) : (
         <div className="grid grid-cols-3 gap-2">
           {/* Va */}
           <div className="rounded-xl bg-[#f0ede9] px-3 py-2 text-center">
             <p className="text-[18px] font-semibold text-[#1c1b1b]">{counts.va}</p>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">Va</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">{t('group.attendanceSummary.labels.va')}</p>
           </div>
 
           {/* Tal vez */}
           <div className="rounded-xl bg-[#f0ede9] px-3 py-2 text-center">
             <p className="text-[18px] font-semibold text-[#1c1b1b]">{counts.tal_vez}</p>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">Tal vez</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">{t('group.attendanceSummary.labels.tal_vez')}</p>
           </div>
 
           {/* No va */}
           <div className="rounded-xl bg-[#f0ede9] px-3 py-2 text-center">
             <p className="text-[18px] font-semibold text-[#1c1b1b]">{counts.no_va}</p>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">No va</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">{t('group.attendanceSummary.labels.no_va')}</p>
           </div>
         </div>
       )}
@@ -99,7 +100,7 @@ export default function AttendanceSummary({ eventId, initialCounts }: Props) {
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#004ac6] opacity-40" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-[#004ac6]" />
         </span>
-        <span className="text-[10px] text-[#585f6c]">En vivo</span>
+        <span className="text-[10px] text-[#585f6c]">{t('group.attendanceSummary.liveBadge')}</span>
       </div>
     </div>
   )
