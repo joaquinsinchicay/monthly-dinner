@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 import SettingsMembersSection from '@/components/settings/SettingsMembersSection'
 import RotationManager from '@/components/rotation/RotationManager'
 import SettingsNameSection from '@/components/settings/SettingsNameSection'
+import { t } from '@/lib/t'
 
 interface Props {
   params: { groupId: string }
@@ -109,7 +110,7 @@ export default async function SettingsPage({ params }: Props) {
           className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#004ac6]"
         >
           <ArrowLeft size={16} />
-          Dashboard
+          {t('settings.backToDashboard')}
         </Link>
 
         {/* Sección 1 — Miembros */}
@@ -137,7 +138,7 @@ export default async function SettingsPage({ params }: Props) {
         {/* Footer */}
         <footer className="mt-8 text-center">
           <p className="text-[11px] font-medium tracking-[0.05em] uppercase text-[#585f6c]">
-            POWERED BY THE DIGITAL MAÎTRE D&apos;
+            {t('dashboard.footer')}
           </p>
         </footer>
 

@@ -10,7 +10,8 @@
     "remove": "Eliminar",
     "copy": "Copiar",
     "copied": "¡Copiado!",
-    "notAuthenticated": "No autenticado"
+    "notAuthenticated": "No autenticado",
+    "altHero": "Amigos cenando juntos"
   },
   "auth": {
     "continueWithGoogle": "Continuar con Google",
@@ -25,6 +26,14 @@
       "body": "Tendrás que volver a iniciar sesión con Google la próxima vez.",
       "confirmIdle": "Sí, cerrar sesión",
       "confirmPending": "Cerrando sesión..."
+    },
+    "login": {
+      "eyebrow": "monthly-dinner",
+      "heading": "Las cenas del grupo",
+      "body": "Coordiná sin perder mensajes en WhatsApp.",
+      "brandName": "Monthly",
+      "brandNameItalic": "dinner",
+      "tagline": "Registra las cenas con amigos"
     },
     "errors": {
       "authFlowFailed": "No se pudo iniciar el flujo de autenticación.",
@@ -56,6 +65,8 @@
     "joinButton": "Unirme a {groupName}",
     "joining": "Uniéndote...",
     "verifyLink": "No se pudo verificar el link.",
+    "invalidTitle": "Link no válido",
+    "invalidBody": "Este link expiró o fue revocado. Pedile uno nuevo al administrador del grupo.",
     "errors": {
       "expiredOrInvalid": "El link de invitación no es válido. Pedile uno nuevo al administrador del grupo.",
       "expired": "El link de invitación expiró. Pedile uno nuevo al administrador del grupo.",
@@ -72,10 +83,45 @@
       "cta": "Completar configuración →"
     },
     "emptyMember": "Aún no hay eventos. El organizador del mes está preparando la primera cita.",
+    "emptyMemberCardEyebrow": "Pronto hay",
+    "emptyMemberCardHeading": "novedades",
     "footer": "Powered by The Digital Maître D'"
   },
   "group": {
     "createGroup": {
+      "pageEyebrow": "Nuevo grupo",
+      "pageHeading": "¿Cómo se llama el grupo?",
+      "pageBody": "Este nombre verán todos los miembros cuando los invites.",
+      "days": {
+        "lunes": "Lun",
+        "martes": "Mar",
+        "miercoles": "Mié",
+        "jueves": "Jue",
+        "viernes": "Vie",
+        "sabado": "Sáb",
+        "domingo": "Dom"
+      },
+      "weeks": {
+        "w1": "1°",
+        "w2": "2°",
+        "w3": "3°",
+        "w4": "4°",
+        "w5": "Última"
+      },
+      "biweeklyWeeks": {
+        "odd": "1° y 3°",
+        "even": "2° y 4°"
+      },
+      "ordinals": {
+        "w1": "primer",
+        "w2": "segundo",
+        "w3": "tercer",
+        "w4": "cuarto",
+        "w5": "último"
+      },
+      "previewSemanal": "Todos los {day}",
+      "previewMensual": "El {ordinal} {day} de cada mes",
+      "previewQuincenal": "El {weeks} {day} de cada mes",
       "nameLabel": "Nombre del grupo",
       "namePlaceholder": "Ej: Cenas del Jueves",
       "frequencyLabel": "Frecuencia",
@@ -155,7 +201,9 @@
       "organizesThisMonth": "Organiza este mes.",
       "nextTurnSuffix": "· Próximo turno",
       "myNextTurn": "Te toca organizar el próximo mes",
-      "othersNextTurnPrefix": "Organiza"
+      "othersNextTurnPrefix": "Organiza",
+      "fallbackName": "Próximo organizador",
+      "fallbackOrganizer": "Organizador"
     },
     "notifyButton": {
       "idle": "Notificar al grupo",
@@ -217,7 +265,9 @@
         "noName": "Sin nombre",
         "linkButton": "Vincular",
         "confirmPending": "Vinculando..."
-      }
+      },
+      "sinCuentaBadge": "SIN CUENTA",
+      "fallbackMember": "Miembro"
     },
     "pollPanel": {
       "eyebrow": "Votación de restaurantes",
@@ -270,7 +320,10 @@
       "step1Description": "Compartí el link de invitación con tu grupo para que se sumen.",
       "step2Title": "Configurar rotación",
       "step2Description": "Asigná quién organiza cada mes para distribuir la carga entre todos.",
-      "ctaButton": "Ir al Dashboard"
+      "ctaButton": "Ir al Dashboard",
+      "formatDayMonthly": "Día {day} de cada mes",
+      "formatDaySemanal": "Todos los {day}",
+      "formatDayQuincenal": "Cada dos {day}"
     },
     "attendanceSummary": {
       "title": "Confirmaciones",
@@ -360,7 +413,10 @@
       "questionSuffix": "del grupo? Esta acción no se puede deshacer.",
       "deleteIdle": "Eliminar",
       "deletePending": "Eliminando..."
-    }
+    },
+    "backToDashboard": "Dashboard",
+    "fallbackGuest": "Guest",
+    "fallbackUser": "Usuario"
   },
   "errors": {
     "events": {

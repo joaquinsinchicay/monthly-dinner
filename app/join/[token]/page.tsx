@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { getGroupByToken } from '@/lib/actions/join'
 import JoinGroupView from '@/components/join/JoinGroupView'
+import { t } from '@/lib/t'
 
 interface Props {
   params: { token: string }
@@ -24,18 +25,18 @@ export default async function JoinPage({ params }: Props) {
         <div className="w-full max-w-sm space-y-4">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-              Link de invitación
+              {t('join.invitationLabel')}
             </p>
             <h1
               className="mt-1 font-serif text-[28px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
               style={{ fontFamily: 'DM Serif Display, serif' }}
             >
-              Link no válido
+              {t('join.invalidTitle')}
             </h1>
           </div>
           <div className="rounded-2xl bg-[#ffdad6] p-6">
             <p className="text-sm text-[#ba1a1a]">
-              Este link expiró o fue revocado. Pedile uno nuevo al administrador del grupo.
+              {t('join.invalidBody')}
             </p>
           </div>
         </div>

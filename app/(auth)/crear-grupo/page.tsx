@@ -2,6 +2,7 @@ import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import CreateGroupForm from '@/components/group/CreateGroupForm'
+import { t } from '@/lib/t'
 
 export default async function CrearGrupoPage() {
   const supabase = createClient()
@@ -20,7 +21,7 @@ export default async function CrearGrupoPage() {
         <div className="relative w-full overflow-hidden rounded-3xl" style={{ aspectRatio: '4/3' }}>
           <Image
             src="/images/login-hero.jpg"
-            alt="Amigos cenando juntos"
+            alt={t('common.altHero')}
             fill
             className="object-cover"
             priority
@@ -30,16 +31,16 @@ export default async function CrearGrupoPage() {
         {/* Header editorial */}
         <div className="mb-8">
           <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-            Nuevo grupo
+            {t('group.createGroup.pageEyebrow')}
           </p>
           <h1
             className="mt-1 font-serif text-[28px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
             style={{ fontFamily: 'DM Serif Display, serif' }}
           >
-            ¿Cómo se llama el grupo?
+            {t('group.createGroup.pageHeading')}
           </h1>
           <p className="mt-2 text-sm text-[#585f6c]">
-            Este nombre verán todos los miembros cuando los invites.
+            {t('group.createGroup.pageBody')}
           </p>
         </div>
 

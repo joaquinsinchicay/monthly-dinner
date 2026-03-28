@@ -249,8 +249,8 @@ export default function SettingsMembersSection({
       <div className="rounded-2xl bg-white shadow-[0px_4px_16px_-4px_rgba(28,27,27,0.08)] divide-y divide-[#f0ede8]">
         {membersList.map((member) => {
           const name = member.is_guest
-            ? (member.display_name ?? 'Guest')
-            : (member.profile?.full_name ?? 'Usuario')
+            ? (member.display_name ?? t('settings.fallbackGuest'))
+            : (member.profile?.full_name ?? t('settings.fallbackUser'))
           const isOnlyAdmin = member.role === 'admin' && adminCount <= 1
           const isCurrentUser = member.user_id === currentUserId
           const isRemoving = removingId === member.id

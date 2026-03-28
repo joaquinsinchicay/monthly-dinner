@@ -2,6 +2,7 @@ import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton'
+import { t } from '@/lib/t'
 
 export default async function HomePage() {
   const supabase = createClient()
@@ -21,7 +22,7 @@ export default async function HomePage() {
         <div className="relative w-full overflow-hidden rounded-3xl" style={{ aspectRatio: '4/3' }}>
           <Image
             src="/images/login-hero.jpg"
-            alt="Amigos cenando juntos"
+            alt={t('common.altHero')}
             fill
             className="object-cover"
             priority
@@ -31,16 +32,16 @@ export default async function HomePage() {
         {/* Bloque texto + CTA */}
         <div className="mt-8">
           <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-            monthly-dinner
+            {t('auth.login.eyebrow')}
           </p>
           <h1
             className="mt-3 font-serif text-[32px] leading-tight tracking-[-0.02em] text-[#1c1b1b] whitespace-nowrap"
             style={{ fontFamily: 'DM Serif Display, serif' }}
           >
-            Las cenas del grupo
+            {t('auth.login.heading')}
           </h1>
           <p className="mt-3 text-sm text-[#585f6c]">
-            Coordiná sin perder mensajes en WhatsApp.
+            {t('auth.login.body')}
           </p>
 
           {/* Card sin borde — tonal layering */}

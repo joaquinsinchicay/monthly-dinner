@@ -13,13 +13,15 @@ interface Group {
 
 function formatDay(group: Group): string {
   if (group.frequency === 'mensual' && group.meeting_day_of_month) {
-    return `Día ${group.meeting_day_of_month} de cada mes`
+    return t('group.groupCreated.formatDayMonthly', { day: String(group.meeting_day_of_month) })
   }
   if (group.meeting_day_of_week) {
     const day =
       group.meeting_day_of_week.charAt(0).toUpperCase() +
       group.meeting_day_of_week.slice(1)
-    return group.frequency === 'semanal' ? `Todos los ${day}` : `Cada dos ${day}`
+    return group.frequency === 'semanal'
+      ? t('group.groupCreated.formatDaySemanal', { day })
+      : t('group.groupCreated.formatDayQuincenal', { day })
   }
   return '—'
 }

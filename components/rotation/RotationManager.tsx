@@ -8,14 +8,11 @@ import { t } from '@/lib/t'
 
 // ── Utils ─────────────────────────────────────────────────────────────────────
 
-const MONTH_NAMES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-]
-
 function formatMonth(isoDate: string): string {
-  const parts = isoDate.split('-')
-  return `${MONTH_NAMES[parseInt(parts[1]) - 1]} ${parts[0]}`
+  const [year, monthStr] = isoDate.split('-')
+  const date = new Date(parseInt(year), parseInt(monthStr) - 1, 1)
+  const monthName = date.toLocaleDateString('es-AR', { month: 'long' })
+  return `${monthName.charAt(0).toUpperCase() + monthName.slice(1)} ${year}`
 }
 
 function addMonths(base: Date, n: number): string {
@@ -107,20 +104,20 @@ function MemberAvatar({ name, avatarUrl }: { name: string; avatarUrl: string | n
 function SinCuentaTag() {
   return (
     <span className="inline-flex items-center rounded-full bg-[#dce2f3] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.04em] text-[#585f6c]">
-      SIN CUENTA
+      {t('group.rotation.sinCuentaBadge')}
     </span>
   )
 }
 
 function getMemberName(m: LocalMember): string {
   if (m.is_guest && m.display_name) return m.display_name
-  return m.profile?.full_name ?? 'Miembro'
+  return m.profile?.full_name ?? t('group.rotation.fallbackMember')
 }
 
 function getSlotName(item: RotationItem): string {
   if (item.user_id && item.profile?.full_name) return item.profile.full_name
   if (item.display_name) return item.display_name
-  return 'Miembro'
+  return t('group.rotation.fallbackMember')
 }
 
 function isAccountless(item: RotationItem): boolean {
@@ -316,7 +313,7 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
       </div>
       <div className="mb-4 flex items-end justify-between">
         <h2 className="font-['DM_Serif_Display'] text-[28px] italic font-normal leading-tight text-[#1c1b1b]">
-          Rotación de <em className="text-[#004ac6] not-italic">Responsables</em>
+          {t('settings.rotationTitle')} <em className="text-[#004ac6] not-italic">{t('settings.rotationTitleHighlight')}</em>
         </h2>
 
         {/* "Editar rotación" — only in view mode with existing rotation */}

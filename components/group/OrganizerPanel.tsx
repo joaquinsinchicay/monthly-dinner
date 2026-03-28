@@ -26,7 +26,7 @@ function NextOrganizerBadge({
   currentUserId: string
 }) {
   const isMe = next.userId === currentUserId
-  const name = next.fullName ?? 'Próximo organizador'
+  const name = next.fullName ?? t('group.organizer.fallbackName')
   const monthLabel = formatMonth(next.month)
 
   if (isMe) {
@@ -79,7 +79,7 @@ export default function OrganizerPanel({ organizer, currentUserId, nextOrganizer
   }
 
   const isMe = organizer.userId === currentUserId
-  const displayName = organizer.fullName ?? 'Organizador'
+  const displayName = organizer.fullName ?? t('group.organizer.fallbackOrganizer')
   const monthLabel = formatMonth(organizer.month)
 
   // Scenario: El organizador soy yo
