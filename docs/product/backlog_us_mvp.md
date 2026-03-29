@@ -473,32 +473,13 @@ Feature: US-10 — Estados del card de evento según status
     And existe un evento "closed" para el evento actual
     When accedo al dashboard del grupo
     Then veo el cuadrante de evento con el estado "CERRADO", el resumen final de asistentes y sin botones de confirmación activos
-    And veo el botón "Votar"
-
-  Scenario 04: Completar votación
-    Given existe un evento "closed" para el evento actual
-    And estoy viendo el cuadrante de evento
-    When toco "Votar"
-    Then veo un modal con la votación 1 a 5 estrellas y el campo Comentarios
-    And el botón "Enviar"
-
-  Scenario 05: Enviar votación
-    Given seleccione las estrellas y complete los Comentarios
-    When toco "Enviar"
-    Then se guarda la puntuación enviada
-    And vuelvo al dashboard del grupo activo
-
-  Scenario 06: Usuario ya votó
-    Given ya envié una votación para el evento
-    When accedo al dashboard
-    Then no veo el botón "Votar"
 ```
 
 ---
 
 ### E04 Dashboard / US-11 — Crear evento
 
-> *Como organizador, quiero crear el evento del evento con fecha y lugar tentativo, para que toda la información quede centralizada.*
+> *Como organizador, quiero crear el evento del periodo con fecha y lugar tentativo, para que toda la información quede centralizada.*
 
 **Acceptance Criteria — Gherkin**
 
@@ -601,7 +582,7 @@ Feature: US-13 — Confirmar asistencia
     Then quedo registrado como pendiente y el organizador me ve en categoría separada
 
   Scenario 04: Confirmación después del evento
-    Given el evento ya fue marcado como realizado
+    Given el evento Closed
     When intento cambiar mi estado
     Then el sistema no permite modificaciones y muestra el estado final como solo lectura
 ```
@@ -840,6 +821,44 @@ Feature: US-19 — Vincular miembros sin cuenta a miembros con cuenta
     And deja de aparecer en la configuración del grupo
     And no aparece en historiales ni en eventos pasados
     And toda su participación queda representada únicamente por el miembro con cuenta vinculado  
+```
+
+---
+
+### E04 Dashboard / US-20 — Votación de restaurants
+
+> *Como miembro, quiero que el cuadrante del evento muestre la votación cuando se encuentra en Closed, para elegir los restaurantes favoritos.*
+
+**Acceptance Criteria — Gherkin**
+
+```gherkin
+Feature: US-20 — Votación de restaurants
+
+  Scenario 01: Evento con status "closed"
+    Given el grupo está configurado
+    And soy miembro no organizador
+    And existe un evento "closed" para el evento actual
+    When accedo al dashboard del grupo
+    Then veo el cuadrante de evento con el estado "CERRADO", el resumen final de asistentes y sin botones de confirmación activos
+    And veo el botón "Votar"
+
+  Scenario 02: Completar votación
+    Given existe un evento "closed" para el evento actual
+    And estoy viendo el cuadrante de evento
+    When toco "Votar"
+    Then veo un modal con la votación 1 a 5 estrellas y el campo Comentarios
+    And el botón "Enviar"
+
+  Scenario 03: Enviar votación
+    Given seleccione las estrellas y complete los Comentarios
+    When toco "Enviar"
+    Then se guarda la puntuación enviada
+    And vuelvo al dashboard del grupo activo
+
+  Scenario 04: Usuario ya votó
+    Given ya envié una votación para el evento
+    When accedo al dashboard
+    Then no veo el botón "Votar"
 ```
 
 ---
