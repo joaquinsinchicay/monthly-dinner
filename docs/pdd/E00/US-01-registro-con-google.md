@@ -343,30 +343,30 @@ La cookie `last_group_id` es `httpOnly`, `sameSite: lax`, `maxAge: 30 días`, y 
 
 ## 20. Checklist diseño
 
-- [ ] El botón de ingreso respeta el componente de botón definido en `docs/design/design-system.md`
-- [ ] El estado de carga del botón usa el patrón de loading state del design system (no spinner genérico)
-- [ ] La pantalla de login no usa bordes sólidos de 1px para separar secciones
-- [ ] La jerarquía visual usa tonal layering (cambios de superficie) en lugar de líneas divisorias
-- [ ] Los textos de la pantalla de login provienen de `lib/texts.json` (`auth.login.*`)
-- [ ] El botón usa la tipografía `DM Sans` con peso correcto según el design system
-- [ ] Los colores de error usan el token `error` (`#ba1a1a`) del design system
+- [x] El botón de ingreso respeta el componente de botón definido en `docs/design/design-system.md` — gradiente `primary`/`primary_container`, `rounded-full`, `font-medium`
+- [x] El estado de carga del botón usa el patrón de loading state del design system (no spinner genérico) — muestra texto `auth.redirecting`, sin spinner
+- [x] La pantalla de login no usa bordes sólidos de 1px para separar secciones — card con shadow + `rounded-2xl`, sin borders
+- [x] La jerarquía visual usa tonal layering (cambios de superficie) en lugar de líneas divisorias — `bg-[#fcf9f8]` base → `bg-white` card flotante
+- [x] Los textos de la pantalla de login provienen de `lib/texts.json` (`auth.login.*`) — `eyebrow`, `heading`, `body` correctamente consumidos
+- [x] El botón usa la tipografía `DM Sans` con peso correcto según el design system — `font-medium` (500), alineado con spec de botones
+- [x] Los colores de error usan el token `error` (`#ba1a1a`) del design system — `text-[#ba1a1a]` en error inline de `GoogleSignInButton`
 
 ---
 
 ## 21. Checklist desarrollo
 
-- [ ] `signInWithOAuth` usa `provider: 'google'` con `redirectTo` apuntando a `/auth/callback`
-- [ ] El flujo OAuth usa PKCE (no flujo implícito)
-- [ ] El Route Handler en `/auth/callback` intercambia el `code` por sesión server-side
-- [ ] La creación del perfil en `profiles` ocurre en el servidor (trigger de DB o Route Handler), nunca en el cliente
-- [ ] El Route Handler distingue correctamente entre `error` en URL y ausencia de `code`
-- [ ] Cancelación → redirect a `/` sin parámetros de error en la URL
-- [ ] El middleware redirige usuarios autenticados que acceden a `/` hacia `/dashboard`
-- [ ] La verificación de sesión en el servidor usa `getUser()`, no `getSession()`
-- [ ] La query de membresía post-login usa campos explícitos (no `select(*)`)
-- [ ] RLS en `profiles` permite INSERT solo al `auth.uid()` correspondiente
-- [ ] El botón de Google muestra estado de carga durante el redirect y está deshabilitado para evitar doble clic
-- [ ] Los textos del botón y mensajes se importan desde `lib/texts.json`
+- [x] `signInWithOAuth` usa `provider: 'google'` con `redirectTo` apuntando a `/auth/callback` — `lib/actions/auth.ts:25-28`
+- [x] El flujo OAuth usa PKCE (no flujo implícito) — confirmado por uso de `exchangeCodeForSession` en Route Handler
+- [x] El Route Handler en `/auth/callback` intercambia el `code` por sesión server-side — `app/auth/callback/route.ts:15`
+- [x] La creación del perfil en `profiles` ocurre en el servidor (trigger de DB o Route Handler), nunca en el cliente — trigger `on_auth_user_created` en `supabase/migrations/`
+- [x] El Route Handler distingue correctamente entre `error` en URL y ausencia de `code` — `route.ts:10`: `if (error || !code)`
+- [x] Cancelación → redirect a `/` sin parámetros de error en la URL — `route.ts:11`: `NextResponse.redirect(\`${origin}/\`)`
+- [x] El middleware redirige usuarios autenticados que acceden a `/` hacia `/dashboard` — `middleware.ts:46-49`
+- [x] La verificación de sesión en el servidor usa `getUser()`, no `getSession()` — `middleware.ts:29`, `app/page.tsx:12`, `dashboard/page.tsx:9`
+- [x] La query de membresía post-login usa campos explícitos (no `select(*)`) — `.select('group_id')` en `dashboard/page.tsx`
+- [x] RLS en `profiles` permite INSERT solo al `auth.uid()` correspondiente — policy `profiles: insert own` en schema
+- [x] El botón de Google muestra estado de carga durante el redirect y está deshabilitado para evitar doble clic — `disabled={isPending}` + `useTransition` en `GoogleSignInButton.tsx:27`
+- [x] Los textos del botón y mensajes se importan desde `lib/texts.json` — `t('auth.continueWithGoogle')`, `t('auth.redirecting')`, `t('auth.autoAccountCreation')`
 
 ---
 
