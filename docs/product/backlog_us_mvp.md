@@ -54,7 +54,7 @@ Feature: US-02 — Login con Google
   Scenario 02: Usuario sin grupo
     Given tengo una cuenta registrada
     When selecciono "Ingresar con Google" y no pertenezco a ningún grupo
-    Then soy redirigido a la página de Creación de grupo (grupo/new)
+    Then soy redirigido a la página de Creación de grupo (/onboarding)
 
   Scenario 03: Sesión persistente
     Given ya inicié sesión anteriormente en este dispositivo

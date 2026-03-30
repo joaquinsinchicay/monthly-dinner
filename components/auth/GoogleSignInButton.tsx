@@ -1,17 +1,21 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { signInWithGoogle } from '@/lib/actions/auth'
 import { t } from '@/lib/t'
 
 export default function GoogleSignInButton() {
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const searchParams = useSearchParams()
 
   function handleClick() {
     setError(null)
+    // Scenario 04 (US-02): propagar ?redirect= para restaurar contexto post re-login
+    const redirect = searchParams.get('redirect') ?? undefined
     startTransition(async () => {
-      const result = await signInWithGoogle()
+      const result = await signInWithGoogle(redirect)
       // signInWithGoogle hace redirect() si tiene éxito — solo llega aquí si falla
       if (result && !result.success) {
         setError(result.error)
@@ -25,8 +29,8 @@ export default function GoogleSignInButton() {
       <button
         onClick={handleClick}
         disabled={isPending}
-        className="flex w-full items-center justify-center gap-3 rounded-full px-6 py-4 text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-        style={{ background: 'linear-gradient(135deg, #003594, #2563eb)' }}
+        className="flex w-full items-center justify-center gap-3 rounded-full px-6 py-4 text-base font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+        style={{ background: 'linear-gradient(135deg, #004ac6, #2563eb)' }}
       >
         {isPending ? (
           <span>{t('auth.redirecting')}</span>

@@ -39,6 +39,9 @@ export async function middleware(request: NextRequest) {
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/'
+    // Scenario 04 (US-02): preservar URL solicitada para restaurar contexto post re-login
+    const originalPath = request.nextUrl.pathname + request.nextUrl.search
+    url.searchParams.set('redirect', originalPath)
     return NextResponse.redirect(url)
   }
 

@@ -18,10 +18,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/`)
   }
 
-  // Soportar `next` para flujos con token de invitación (US-04)
-  // Ejemplo: /auth/callback?code=xxx&next=/join/TOKEN
+  // Soportar `next` para flujos con token de invitación (US-04) y redirect post-expiración (US-02 S04)
+  // Validación: solo rutas internas relativas — bloquear //evil.com y URLs absolutas
   const next = searchParams.get('next')
-  if (next && next.startsWith('/')) {
+  const isValidNext = next && next.startsWith('/') && !next.startsWith('//')
+  if (isValidNext) {
     return NextResponse.redirect(`${origin}${next}`)
   }
 

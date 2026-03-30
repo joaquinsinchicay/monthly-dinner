@@ -120,7 +120,7 @@ La cookie `last_group_id` es `httpOnly`, `sameSite: lax`, `maxAge: 30 días`, y 
 6. Google redirige al callback: /auth/callback?code=...
 7. El route handler en /auth/callback intercambia el code por sesión.
 8. Supabase crea el usuario en auth.users.
-9. Trigger on_auth_user_created crea el registro en profiles con id = auth.uid() (ON CONFLICT DO NOTHING si ya existe).
+9. Trigger on_auth_user_created crea o actualiza el registro en profiles con id = auth.uid() (ON CONFLICT DO UPDATE — actualiza full_name y avatar_url si el perfil ya existe).
 10. Callback redirige a /dashboard.
 11. /dashboard lee cookie last_group_id.
 12. Si cookie válida y usuario es miembro → redirige a /dashboard/[groupId] del último grupo visitado.
@@ -207,8 +207,8 @@ La cookie `last_group_id` es `httpOnly`, `sameSite: lax`, `maxAge: 30 días`, y 
 
 | Acción | Operación | Condición |
 |---|---|---|
-| Registro exitoso | `INSERT` vía trigger `on_auth_user_created` (`ON CONFLICT DO NOTHING`) | Solo cuando Supabase crea un nuevo usuario en `auth.users` |
-| Re-login (email ya registrado) | Sin operación | El trigger no se activa — no hay INSERT en `auth.users` |
+| Registro exitoso | `INSERT` vía trigger `on_auth_user_created` (`ON CONFLICT DO UPDATE SET full_name, avatar_url`) | Solo cuando Supabase crea un nuevo usuario en `auth.users` |
+| Re-login (email ya registrado) | Sin operación en la práctica | El trigger no se activa en re-login — Supabase no hace INSERT en `auth.users` para usuarios existentes. El DO UPDATE aplica solo si el perfil fue eliminado manualmente (caso edge). |
 | Cancelación | Sin operación | No se escribe nada |
 | Ya autenticado | Sin operación | No se escribe nada |
 
@@ -217,9 +217,10 @@ La cookie `last_group_id` es `httpOnly`, `sameSite: lax`, `maxAge: 30 días`, y 
 | Campo | Origen |
 |---|---|
 | `id` | `auth.uid()` del usuario recién creado |
+| `email` | Email del proveedor Google (`auth.users.email`) |
 | `full_name` | Datos del proveedor Google (`raw_user_meta_data`) |
 | `avatar_url` | Datos del proveedor Google (`raw_user_meta_data`) |
-| `created_at` | Timestamp del servidor |
+| `created_at` | Timestamp del servidor (auto-generado) |
 
 ### Sesión
 
@@ -277,7 +278,7 @@ La cookie `last_group_id` es `httpOnly`, `sameSite: lax`, `maxAge: 30 días`, y 
 | El callback recibe `error` en la URL (OAuth error param) | Redirigir a `/`. No mostrar el error técnico al usuario |
 | La query de membresía falla después de crear perfil | El callback redirige a `/dashboard`, que a su vez redirige a `/onboarding` como fallback seguro |
 | Usuario tiene múltiples grupos | Redirigir al grupo más recientemente unido (`joined_at DESC`). No se persiste el último grupo visitado |
-| El perfil ya existe pero `full_name` o `avatar_url` cambiaron en Google | El trigger usa `ON CONFLICT DO NOTHING` — si el perfil ya existe, no se modifica. Los datos de Google se capturan solo en la creación del perfil |
+| El perfil ya existe pero `full_name` o `avatar_url` cambiaron en Google | El trigger usa `ON CONFLICT DO UPDATE` — si el perfil ya existe (caso edge: perfil eliminado manualmente y usuario se re-registra), `full_name` y `avatar_url` se actualizan con los datos actuales de Google. En re-login normal el trigger no se activa (no hay INSERT en `auth.users`). |
 | Red interrumpida durante el callback | El callback falla. Supabase no crea sesión. Usuario en estado sin sesión. El sistema redirige a `/` |
 
 ---
@@ -403,7 +404,7 @@ Todas las definiciones abiertas están cerradas. Ver decisiones tomadas:
 | # | Ambigüedad original | Decisión tomada |
 |---|---|---|
 | 1 | "Grupo activo en la última sesión" — cómo se persiste el groupId | ✅ **Cerrado e implementado:** Cookie `last_group_id` (httpOnly, 30 días) seteada por `middleware.ts` en cada visita a `/dashboard/[groupId]`. Smart redirect en `app/(dashboard)/dashboard/page.tsx` la lee y verifica membresía activa antes de redirigir. Fallback: `joined_at DESC`. |
-| 2 | "Perfil creado automáticamente" — trigger DB vs código de aplicación | ✅ **Cerrado:** Trigger de DB `on_auth_user_created` con `ON CONFLICT DO NOTHING`. Implementado en `supabase/migrations/`. |
+| 2 | "Perfil creado automáticamente" — trigger DB vs código de aplicación | ✅ **Cerrado:** Trigger de DB `on_auth_user_created` con `ON CONFLICT DO UPDATE SET full_name, avatar_url`. Implementado en `supabase/migrations/20260326_avatar_url_handle_new_user.sql`. El trigger solo se activa en INSERT en `auth.users` (nuevo registro). En re-login normal no se activa. El DO UPDATE aplica en caso edge (perfil eliminado manualmente). |
 | 3 | "Sin mostrar error" en cancelación — ¿aplica también a la URL? | ✅ **Cerrado:** El redirect es a `/` limpio, sin query params de error. Verificado en `app/auth/callback/route.ts`. |
 
 ---
@@ -422,5 +423,5 @@ US-01 es el punto de entrada de toda la aplicación. Es una US de **una sola int
 
 ---
 
-*PDD generado el 30 de Marzo de 2026 · Versión 1.2 — ISSUE-04 implementado*
-*Fuentes: `docs/product/backlog_us_mvp.md`, `docs/design/design-system.md`, `lib/texts.json`, código fuente del repositorio*
+*PDD generado el 30 de Marzo de 2026 · Versión 1.3 — Auditoría: trigger DO UPDATE, campo email, checklist §21 completado*
+*Fuentes: `docs/product/backlog_us_mvp.md`, `docs/design/design-system.md`, `lib/texts.json`, `supabase/migrations/20260326_avatar_url_handle_new_user.sql`, código fuente del repositorio*
