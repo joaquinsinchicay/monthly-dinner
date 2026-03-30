@@ -1,11 +1,7 @@
 # PRODUCT BACKLOG · MVP
 ## Monthly dinner
 
-User Stories con Acceptance Criteria en formato Gherkin — ordenadas por prioridad de desarrollo
-
-| Versión | Stack | US totales | Completadas | Pendientes | Fecha |
-|---|---|---|---|---|---|
-| MVP v1.0 | Next.js + Supabase | 28 | 26 | 2 | Marzo 2026 |
+User Stories con Acceptance Criteria en formato Gherkin — ordenadas por prioridad de desarrollo.
 
 ---
 
@@ -21,7 +17,7 @@ Feature: US-01 — Registro con Google
   Scenario 01: Registro exitoso
     Given soy un usuario nuevo sin cuenta
     When selecciono "Ingresar con Google" y autorizo el acceso
-    Then se crea mi perfil automáticamente y soy redirigido a la página de Creación de grupo (grupo/new)
+    Then se crea mi perfil automáticamente y soy redirigido a la pantalla de onboarding (/onboarding)
 
   Scenario 02: Email ya registrado
     Given ya existe una cuenta con ese email
@@ -31,7 +27,7 @@ Feature: US-01 — Registro con Google
   Scenario 03: Cancelación del flujo OAuth
     Given estoy en el flujo de autorización de Google
     When cancelo el permiso
-    Then regreso a la pantalla de inicio sin crear cuenta ni mostrar error (/login)
+    Then regreso a la pantalla de inicio sin crear cuenta ni mostrar error (/)
 
   Scenario 04: Usuario ya autenticado
     Given ya tengo una sesión activa
@@ -68,7 +64,7 @@ Feature: US-02 — Login con Google
   Scenario 04: Token expirado
     Given mi sesión expiró por inactividad prolongada
     When intento acceder a cualquier pantalla protegida
-    Then soy redirigido al login sin perder el contexto de navegación (/home)
+    Then soy redirigido al login sin perder el contexto de navegación (/login)
 ```
 
 ---
