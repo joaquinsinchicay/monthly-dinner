@@ -29,7 +29,7 @@ export default function GroupSelector({ groups }: Props) {
   const activeGroup = groups.find((g) => g.id === activeGroupId) ?? groups[0]
   const hasMultiple = groups.length > 1
 
-  // Scenario: Al tocar fuera — cerrar dropdown sin acción
+  // Scenario: Al tocar fuera o presionar ESC — cerrar dropdown sin acción
   useEffect(() => {
     if (!open) return
     function handleClickOutside(e: MouseEvent) {
@@ -37,13 +37,22 @@ export default function GroupSelector({ groups }: Props) {
         setOpen(false)
       }
     }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
   }, [open])
 
   // Scenario: Cambio de grupo activo — redirect a /dashboard/[groupId] y cierre del dropdown
+  // FA-03: si el grupo ya es el activo, solo cierra el dropdown sin navegar
   function handleSelect(groupId: string) {
     setOpen(false)
+    if (groupId === activeGroupId) return
     router.push(`/dashboard/${groupId}`)
   }
 

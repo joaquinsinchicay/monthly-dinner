@@ -182,7 +182,7 @@ Feature: US-04 — Avatar con menú de sesión en el header
     Given el menú del avatar está abierto
     When selecciono "Cerrar sesión"
     Then se muestra un diálogo de confirmación
-    And al confirmar mi sesión se cierra y soy redirigido al login (/home)
+    And al confirmar mi sesión se cierra y soy redirigido al login (/login)
 
   Scenario 06: Cierre del menú sin acción
     Given el menú del avatar está abierto
