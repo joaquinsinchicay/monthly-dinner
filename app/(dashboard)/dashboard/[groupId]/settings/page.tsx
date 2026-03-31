@@ -39,8 +39,9 @@ export default async function SettingsPage({ params }: Props) {
   // Miembros con perfil (incluye guests con is_guest=true y display_name)
   const { data: membersRaw } = await supabase
     .from('members')
-    .select('id, role, user_id, is_guest, display_name, profiles(id, full_name, avatar_url)')
+    .select('id, role, user_id, is_guest, display_name, joined_at, profiles(id, full_name, avatar_url)')
     .eq('group_id', groupId)
+    .order('joined_at', { ascending: true })
 
   const members = (membersRaw ?? []).map((m) => {
     const profile = m.profiles as unknown as {

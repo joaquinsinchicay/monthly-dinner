@@ -63,13 +63,13 @@ function Avatar({
 function RolePill({ role }: { role: MemberRole }) {
   if (role === 'admin') {
     return (
-      <span className="rounded-full bg-[#dce6ff] text-[#004ac6] text-[11px] font-semibold px-2 py-0.5">
+      <span className="rounded-full bg-[#dce6ff] text-[#004ac6] text-[11px] font-semibold uppercase tracking-[0.04em] px-2 py-0.5">
         {t('settings.rolePillAdmin')}
       </span>
     )
   }
   return (
-    <span className="rounded-full bg-[#e8f5e9] text-[#1b5e20] text-[11px] font-semibold px-2 py-0.5">
+    <span className="rounded-full bg-[#e8f5e9] text-[#1b5e20] text-[11px] font-semibold uppercase tracking-[0.04em] px-2 py-0.5">
       {t('settings.rolePillMember')}
     </span>
   )
@@ -226,7 +226,12 @@ export default function SettingsMembersSection({
       </div>
 
       {/* Lista de miembros */}
-      <div className="rounded-2xl bg-white shadow-[0px_4px_16px_-4px_rgba(28,27,27,0.08)] divide-y divide-[#f0ede8]">
+      <div className="rounded-2xl bg-white shadow-[0px_4px_16px_-4px_rgba(28,27,27,0.08)] px-0 py-1">
+        {membersList.length === 0 && (
+          <p className="px-4 py-4 text-[14px] text-[#585f6c] text-center">
+            {t('settings.membersEmpty')}
+          </p>
+        )}
         {membersList.map((member) => {
           const name = member.is_guest
             ? (member.display_name ?? t('settings.fallbackGuest'))
@@ -412,7 +417,7 @@ export default function SettingsMembersSection({
                       <p className="flex-1 text-[12px] text-[#1c1b1b] truncate">{inviteUrl}</p>
                       <button
                         onClick={handleCopyInvite}
-                        className="shrink-0 text-[#004ac6] text-[12px] font-semibold"
+                        className={`shrink-0 text-[12px] font-semibold transition-colors ${copied ? 'text-[#006242]' : 'text-[#004ac6]'}`}
                       >
                         {copied ? t('common.copied') : t('common.copy')}
                       </button>

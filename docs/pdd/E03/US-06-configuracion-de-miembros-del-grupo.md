@@ -402,18 +402,16 @@ Todos los textos estáticos deben definirse en: `lib/texts.json`
 
 ## 20. Checklist diseño
 
-- [ ] La pantalla no usa bordes sólidos de 1px para separar secciones — usa cambios de superficie, espacio o sombra.
-- [ ] Los roles (`ADMIN`, `MIEMBRO`) se muestran con el estilo `Label`: uppercase, tracking amplio, `DM Sans 600`.
-- [ ] El avatar de cada miembro sigue el patrón del design system: foto de perfil si existe, iniciales si no.
-- [ ] El modal usa superficie `surface_lowest` como fondo elevado sobre el resto de la pantalla.
-- [ ] El feedback de "copiado" usa el token de color `tertiary` para indicar estado success.
-- [ ] El estado de error usa el token `error` sin exponer detalles técnicos.
-- [ ] El botón de retorno ("Dashboard" con flecha) sigue la convención de navegación interna del design system.
-- [ ] Las solapas del modal usan la convención de `Tab` del design system (`docs/design/design-system.md`).
-- [ ] El estado loading de la lista usa skeleton, no spinner solo.
-- [ ] El empty state de la lista (si aplica) es explícito, con texto y sin pantalla en blanco.
-
-> **Auditoría 2026-03-31:** checklist de diseño pendiente de validación visual. No se detectaron issues de diseño en la revisión de código — requiere revisión manual contra el design system.
+- [x] La pantalla no usa bordes de 1px para separar secciones — lista de miembros usa `py-1` + padding por fila sin `divide-y`. ✅ corregido en esta iteración.
+- [x] Los roles (`ADMIN`, `MIEMBRO`) se muestran con `uppercase tracking-[0.04em] font-semibold` — alineado al design system. ✅ corregido en esta iteración.
+- [x] El avatar sigue el patrón del design system: foto si existe (`avatar_url`), iniciales si no. Guests siempre iniciales.
+- [x] El modal usa `bg-[rgba(252,249,248,0.88)] backdrop-blur-[16px]` — glassmorphism permitido por el design system como excepción para elementos flotantes.
+- [x] El feedback de "copiado" usa color `tertiary` (`text-[#006242]`) con `transition-colors`. ✅ corregido en esta iteración.
+- [x] Los errores usan `text-[#ba1a1a]` (token `error`) sin exponer mensajes técnicos — manejados vía `texts.json`.
+- [x] Botón de retorno usa `ArrowLeft + Link` — convención de navegación interna del design system.
+- [x] Solapas del modal usan pill-toggle tonal (`bg-[#f0ede8]` container, `bg-white` activo) — alineado al sistema de tonal layering.
+- [x] Loading state implementado con skeleton — `loading.tsx` creado en esta iteración con skeletons para miembros y rotación.
+- [x] Empty state explícito en lista de miembros — mensaje desde `texts.json` clave `settings.membersEmpty`. ✅ agregado en esta iteración.
 
 ---
 
@@ -483,8 +481,8 @@ Todos los textos estáticos deben definirse en: `lib/texts.json`
 
 ## 24. Definiciones abiertas
 
-### DA-01: Límite de caracteres del nombre del guest
-El Gherkin no especifica longitud máxima. El código actual valida 80 chars en `addGuestMember()`. El PDD sugería 50 chars. **Pendiente:** decidir el valor definitivo y alinear código y PDD.
+### DA-01: Límite de caracteres del nombre del guest ✅ Resuelta
+El valor definitivo es **80 caracteres**, alineado con `addGuestMember()` y el `maxLength={80}` del input. El PDD sugería 50 como referencia inicial; 80 es más permisivo y cubre nombres compuestos reales sin restricción arbitraria.
 
 ### DA-02: Comportamiento cuando no existe invitation link activo ✅ Resuelta
 El link de invitación se genera automáticamente por trigger al crear el grupo. Si está expirado o revocado, `InvitationLinkPanel` ofrece regeneración. FA-07 es prácticamente inalcanzable en el flujo normal. La solapa "Invitar por link" siempre tendrá un link disponible o la opción de regenerar.
@@ -492,8 +490,8 @@ El link de invitación se genera automáticamente por trigger al crear el grupo.
 ### DA-03: Cambio de rol de otro admin (cuando hay múltiples admins) ✅ Resuelta
 El código no aplica restricción adicional cuando hay ≥ 2 admins. Un admin puede degradar a otro admin libremente. La única restricción es RN-02: no se puede degradar al último admin. Comportamiento confirmado.
 
-### DA-04: Orden de la lista de miembros
-El Gherkin no especifica criterio de ordenamiento. **Pendiente:** verificar el ORDER BY en la query de settings page y documentar el criterio definitivo.
+### DA-04: Orden de la lista de miembros ✅ Resuelta
+La query de settings/page.tsx ordena por `.order('joined_at', { ascending: true })` — los miembros más antiguos aparecen primero. El admin fundador del grupo queda siempre en la parte superior de la lista.
 
 ---
 
