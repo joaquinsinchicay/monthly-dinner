@@ -2,12 +2,19 @@
 
 import { useState, useRef, useEffect, useTransition } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { Settings, LogOut, Plus } from 'lucide-react'
+import { Settings, LogOut } from 'lucide-react'
 import { signOut } from '@/lib/actions/auth'
 import AvatarUser from '@/components/ui/avatar-user'
 import { t } from '@/lib/t'
 
+interface Membership {
+  id: string
+  name: string
+  role: string
+}
+
 interface Props {
+  memberships: Membership[]
   profile: { full_name: string | null; avatar_url: string | null } | null
 }
 
@@ -16,7 +23,7 @@ interface Props {
 // Scenario: Acceso a configuración del grupo — redirect a /dashboard/[groupId]/settings.
 // Scenario: Cierre de sesión desde el avatar — diálogo de confirmación + signOut.
 // Scenario: Cierre del menú sin acción — click fuera cierra sin ejecutar nada.
-export default function AvatarMenu({ profile }: Props) {
+export default function AvatarMenu({ memberships, profile }: Props) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -27,7 +34,10 @@ export default function AvatarMenu({ profile }: Props) {
   // Lee el grupo activo desde la URL (/dashboard/[groupId])
   const activeGroupId = (params?.groupId as string) ?? ''
 
-  // Scenario: Cierre del menú sin acción
+  // Deriva si el usuario es admin en el grupo activo (RN-02, RN-06)
+  const isAdmin = memberships.find((m) => m.id === activeGroupId)?.role === 'admin'
+
+  // Scenario: Cierre del menú sin acción — click fuera y ESC
   useEffect(() => {
     if (!menuOpen) return
     function handleClickOutside(e: MouseEvent) {
@@ -35,19 +45,21 @@ export default function AvatarMenu({ profile }: Props) {
         setMenuOpen(false)
       }
     }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
   }, [menuOpen])
 
   // Scenario: Acceso a configuración del grupo
   function handleSettings() {
     setMenuOpen(false)
     router.push(`/dashboard/${activeGroupId}/settings`)
-  }
-
-  function handleCreateGroup() {
-    setMenuOpen(false)
-    router.push('/group/new')
   }
 
   function handleSignOutRequest() {
@@ -79,40 +91,32 @@ export default function AvatarMenu({ profile }: Props) {
           />
         </button>
 
-        {/* Scenario: Menú del avatar muestra dos opciones */}
+        {/* Scenario: Menú del avatar — opciones condicionadas por rol */}
         {menuOpen && (
           <div
             role="menu"
             className="absolute right-0 top-full z-50 mt-2 min-w-[200px] overflow-hidden rounded-lg bg-white shadow-[0px_8px_24px_-4px_rgba(28,27,27,0.12)]"
           >
-            {/* Ítem 1: Configuración del grupo */}
-            <button
-              role="menuitem"
-              onClick={handleSettings}
-              className="flex w-full items-center gap-3 rounded-t-lg px-4 py-3 text-left text-[15px] text-[#1c1b1b] transition-colors hover:bg-[#f6f3f2]"
-            >
-              <Settings size={16} className="shrink-0 text-[#585f6c]" />
-              {t('group.avatarMenu.settings')}
-            </button>
-
-            {/* Ítem 2: Crear nuevo grupo */}
-            <button
-              role="menuitem"
-              onClick={handleCreateGroup}
-              className="flex w-full items-center gap-3 px-4 py-3 text-left text-[15px] text-[#1c1b1b] transition-colors hover:bg-[#f6f3f2]"
-            >
-              <Plus size={16} className="shrink-0 text-[#585f6c]" />
-              {t('group.avatarMenu.createGroup')}
-            </button>
+            {/* Scenario SC-03: Configuración del grupo — solo admins */}
+            {isAdmin && (
+              <button
+                role="menuitem"
+                onClick={handleSettings}
+                className="flex w-full items-center gap-3 px-4 py-3 text-left text-[15px] text-[#1c1b1b] transition-colors hover:bg-[#f6f3f2]"
+              >
+                <Settings size={16} className="shrink-0 text-[#585f6c]" />
+                {t('group.avatarMenu.settings')}
+              </button>
+            )}
 
             {/* Separador: espacio en blanco, sin hr */}
             <div className="h-1" />
 
-            {/* Ítem 3: Cerrar sesión */}
+            {/* Scenario SC-02 y SC-03: Cerrar sesión — todos los usuarios */}
             <button
               role="menuitem"
               onClick={handleSignOutRequest}
-              className="flex w-full items-center gap-3 rounded-b-lg px-4 py-3 text-left text-[15px] text-[#ba1a1a] transition-colors hover:bg-[#f6f3f2]"
+              className="flex w-full items-center gap-3 px-4 py-3 text-left text-[15px] text-[#ba1a1a] transition-colors hover:bg-[#f6f3f2]"
             >
               <LogOut size={16} className="shrink-0" />
               {t('auth.signOut.trigger')}
@@ -165,7 +169,7 @@ export default function AvatarMenu({ profile }: Props) {
                 disabled={isPending}
                 className="flex w-full items-center justify-center rounded-full bg-[#ba1a1a] px-6 py-3 text-sm font-semibold text-white transition-opacity disabled:opacity-60"
               >
-                {isPending ? t('auth.signOut.confirmPending') : t('auth.signOut.trigger')}
+                {isPending ? t('auth.signOut.confirmPending') : t('auth.signOut.confirmIdle')}
               </button>
 
               {/* Cancelar */}
