@@ -34,6 +34,16 @@ export async function generateRandomRotation(input: {
     return { success: false, error: 'Solo los admins pueden generar la rotación' }
   }
 
+  // RN-02: grupo debe tener al menos 2 miembros para configurar rotación
+  const { count: memberCount } = await supabase
+    .from('members')
+    .select('id', { count: 'exact', head: true })
+    .eq('group_id', input.group_id)
+
+  if (!memberCount || memberCount < 2) {
+    return { success: false, error: 'Se necesitan al menos dos miembros para configurar la rotación' }
+  }
+
   if (!input.entries || input.entries.length === 0) {
     return { success: false, error: 'No hay entradas para insertar' }
   }

@@ -197,23 +197,20 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
   }
 
   async function confirmManualRotation() {
-    const allAssigned = manualItems.every((i) => i.member_id !== null)
-    if (!allAssigned) {
-      setError(t('group.rotation.errors.allMonthsRequired'))
-      return
-    }
     setLoading(true)
     setError(null)
 
-    const entries = manualItems.map((item) => {
-      const m = allMembers.find((mb) => mb.id === item.member_id)!
-      return {
-        member_id: item.member_id!,
-        user_id: m.user_id ?? null,
-        display_name: m.user_id ? null : (m.display_name ?? getMemberName(m)),
-        month: item.month,
-      }
-    })
+    const entries = manualItems
+      .filter((item) => item.member_id !== null)
+      .map((item) => {
+        const m = allMembers.find((mb) => mb.id === item.member_id)!
+        return {
+          member_id: item.member_id!,
+          user_id: m.user_id ?? null,
+          display_name: m.user_id ? null : (m.display_name ?? getMemberName(m)),
+          month: item.month,
+        }
+      })
 
     const result = await generateRandomRotation({ group_id: groupId, entries })
     setLoading(false)
@@ -302,6 +299,7 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
   }
 
   const isEmpty = rotation.length === 0
+  const isBlocked = members.length <= 1
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -332,9 +330,9 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
       {isEmpty && mode === 'view' && (
         <div className="rounded-2xl bg-white shadow-[0px_4px_16px_-4px_rgba(28,27,27,0.08)] px-6 py-6">
           <p className="text-[14px] text-[#585f6c] text-center mb-5">
-            {t('settings.noRotation')}
+            {isBlocked ? t('group.rotation.blockedMinMembers') : t('settings.noRotation')}
           </p>
-          {isAdmin && (
+          {isAdmin && !isBlocked && (
             <div className="flex justify-center gap-3 flex-wrap">
               <button
                 onClick={generatePreview}
@@ -438,7 +436,7 @@ export default function RotationManager({ groupId, isAdmin, members, rotation }:
             </button>
             <button
               onClick={confirmManualRotation}
-              disabled={loading || manualItems.some((i) => !i.member_id)}
+              disabled={loading || manualItems.every((i) => i.member_id === null)}
               className="inline-flex items-center rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-60"
             >
               {loading ? t('common.saving') : t('group.rotation.saveRotation')}

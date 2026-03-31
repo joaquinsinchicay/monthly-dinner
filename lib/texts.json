@@ -267,7 +267,8 @@
         "confirmPending": "Vinculando..."
       },
       "sinCuentaBadge": "SIN CUENTA",
-      "fallbackMember": "Miembro"
+      "fallbackMember": "Miembro",
+      "blockedMinMembers": "Se necesitan al menos dos miembros para configurar la rotación."
     },
     "pollPanel": {
       "eyebrow": "Votación de restaurantes",
