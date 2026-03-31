@@ -18,7 +18,6 @@ import { getOrCreateChecklist } from '@/lib/actions/checklist'
 import ChecklistPanel from '@/components/group/ChecklistPanel'
 import { getInvitationLinkStatus } from '@/types'
 import type { MemberRole } from '@/types'
-import { t } from '@/lib/t'
 
 interface Props {
   params: { groupId: string }
