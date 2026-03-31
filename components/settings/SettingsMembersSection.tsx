@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { MoreVertical } from 'lucide-react'
-import { updateMemberRole, removeMember } from '@/app/(dashboard)/dashboard/[groupId]/settings/actions'
+import { updateMemberRole } from '@/app/(dashboard)/dashboard/[groupId]/settings/actions'
 import { addGuestMember, deleteGuestMember } from '@/lib/actions/members'
 import { t } from '@/lib/t'
 import type { MemberRole } from '@/types'
@@ -98,11 +98,7 @@ export default function SettingsMembersSection({
   const [removingId, setRemovingId] = useState<string | null>(null)
 
   const [openMenu, setOpenMenu] = useState<string | null>(null)
-  const [pendingAction, setPendingAction] = useState<{
-    memberId: string
-    newRole: MemberRole
-    name: string
-  } | null>(null)
+  const [roleLoading, setRoleLoading] = useState<string | null>(null) // member_id en curso
   const [pendingDelete, setPendingDelete] = useState<{
     memberId: string
     userId: string | null
@@ -124,20 +120,18 @@ export default function SettingsMembersSection({
 
   const adminCount = membersList.filter((m) => m.role === 'admin').length
 
-  // ── Cambio de rol ──────────────────────────────────────────────────────────
-  async function handleRoleChange() {
-    if (!pendingAction) return
-    setLoading(true)
+  // ── Cambio de rol — ejecución directa sin confirmación (PDD RN-07, Scenario 07)
+  async function handleRoleChange(memberId: string, newRole: MemberRole) {
+    setRoleLoading(memberId)
     setError(null)
 
     const result = await updateMemberRole({
       group_id: groupId,
-      member_id: pendingAction.memberId,
-      role: pendingAction.newRole,
+      member_id: memberId,
+      role: newRole,
     })
 
-    setLoading(false)
-    setPendingAction(null)
+    setRoleLoading(null)
 
     if (!result.success) {
       setError(result.error)
@@ -147,30 +141,16 @@ export default function SettingsMembersSection({
     router.refresh()
   }
 
-  // ── Eliminar miembro (guest o no-guest) ────────────────────────────────────
+  // ── Eliminar guest ─────────────────────────────────────────────────────────
   async function handleDelete() {
     if (!pendingDelete) return
     setLoading(true)
     setError(null)
 
-    let result: { success: boolean; error?: string }
-
-    if (pendingDelete.isGuest) {
-      result = await deleteGuestMember({
-        group_id: groupId,
-        member_id: pendingDelete.memberId,
-      })
-    } else {
-      if (!pendingDelete.userId) {
-        setLoading(false)
-        setPendingDelete(null)
-        return
-      }
-      result = await removeMember({
-        group_id: groupId,
-        user_id: pendingDelete.userId,
-      })
-    }
+    const result = await deleteGuestMember({
+      group_id: groupId,
+      member_id: pendingDelete.memberId,
+    })
 
     setLoading(false)
     setPendingDelete(null)
@@ -306,57 +286,40 @@ export default function SettingsMembersSection({
                           {t('settings.removeMember')}
                         </button>
                       ) : (
-                        <>
-                          {/* Cambio de rol */}
-                          {member.role === 'member' ? (
-                            <button
-                              onClick={() => {
-                                setOpenMenu(null)
-                                setPendingAction({ memberId: member.id, newRole: 'admin', name })
-                              }}
-                              className="w-full px-4 py-2.5 text-left text-[14px] text-[#1c1b1b] hover:bg-[#f6f3f2]"
-                            >
-                              {t('settings.makeAdmin')}
-                            </button>
-                          ) : (
-                            <button
-                              disabled={isOnlyAdmin}
-                              onClick={() => {
-                                if (isOnlyAdmin) return
-                                setOpenMenu(null)
-                                setPendingAction({ memberId: member.id, newRole: 'member', name })
-                              }}
-                              className={`w-full px-4 py-2.5 text-left text-[14px] ${
-                                isOnlyAdmin
-                                  ? 'text-[#aaa] cursor-not-allowed'
-                                  : 'text-[#1c1b1b] hover:bg-[#f6f3f2]'
-                              }`}
-                            >
-                              {t('settings.makeMember')}
-                              {isOnlyAdmin && (
-                                <span className="block text-[11px] text-[#aaa]">
-                                  {t('settings.onlyAdminHint')}
-                                </span>
-                              )}
-                            </button>
-                          )}
-
-                          {/* Eliminar — solo para miembros que no son el usuario actual */}
-                          {!isCurrentUser && (
-                            <>
-                              <div className="h-px bg-[#f0ede8] mx-3" />
-                              <button
-                                onClick={() => {
-                                  setOpenMenu(null)
-                                  setPendingDelete({ memberId: member.id, userId: member.user_id, name, isGuest: false })
-                                }}
-                                className="w-full px-4 py-2.5 text-left text-[14px] text-[#ba1a1a] hover:bg-[#fff0f0]"
-                              >
-                                {t('settings.removeMember')}
-                              </button>
-                            </>
-                          )}
-                        </>
+                        // Miembro con cuenta: solo cambio de rol (US-06 scope)
+                        member.role === 'member' ? (
+                          <button
+                            disabled={roleLoading === member.id}
+                            onClick={() => {
+                              setOpenMenu(null)
+                              handleRoleChange(member.id, 'admin')
+                            }}
+                            className="w-full px-4 py-2.5 text-left text-[14px] text-[#1c1b1b] hover:bg-[#f6f3f2] disabled:opacity-50"
+                          >
+                            {t('settings.makeAdmin')}
+                          </button>
+                        ) : (
+                          <button
+                            disabled={isOnlyAdmin || roleLoading === member.id}
+                            onClick={() => {
+                              if (isOnlyAdmin) return
+                              setOpenMenu(null)
+                              handleRoleChange(member.id, 'member')
+                            }}
+                            className={`w-full px-4 py-2.5 text-left text-[14px] ${
+                              isOnlyAdmin
+                                ? 'text-[#aaa] cursor-not-allowed'
+                                : 'text-[#1c1b1b] hover:bg-[#f6f3f2]'
+                            } disabled:opacity-50`}
+                          >
+                            {t('settings.makeMember')}
+                            {isOnlyAdmin && (
+                              <span className="block text-[11px] text-[#aaa]">
+                                {t('settings.onlyAdminHint')}
+                              </span>
+                            )}
+                          </button>
+                        )
                       )}
                     </div>
                   </>
@@ -371,37 +334,7 @@ export default function SettingsMembersSection({
         <p className="mt-2 text-[13px] text-[#ba1a1a]">{error}</p>
       )}
 
-      {/* ── Diálogo de confirmación — cambio de rol ── */}
-      {pendingAction && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-8">
-          <div className="absolute inset-0 bg-black/30" onClick={() => setPendingAction(null)} />
-          <div className="relative w-full max-w-[480px] rounded-2xl bg-[rgba(252,249,248,0.88)] backdrop-blur-[16px] p-6 shadow-[0px_20px_60px_-12px_rgba(28,27,27,0.3)]">
-            <h3 className="text-[18px] font-semibold text-[#1c1b1b] mb-2">{t('settings.changeRoleDialog.title')}</h3>
-            <p className="text-[15px] text-[#585f6c] mb-6">
-              {t('settings.changeRoleDialog.questionPrefix')}{' '}
-              <span className="font-semibold text-[#1c1b1b]">{pendingAction.name}</span>{' '}
-              {pendingAction.newRole === 'admin' ? 'admin' : 'miembro'}?
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setPendingAction(null)}
-                className="flex-1 inline-flex items-center justify-center rounded-full bg-[#f0ede8] px-4 py-2 text-[13px] font-semibold text-[#585f6c]"
-              >
-                {t('common.cancel')}
-              </button>
-              <button
-                onClick={handleRoleChange}
-                disabled={loading}
-                className="flex-1 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-60"
-              >
-                {loading ? t('settings.changeRoleDialog.confirmPending') : t('settings.changeRoleDialog.confirmIdle')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Bottom sheet de confirmación — eliminar miembro ── */}
+      {/* ── Bottom sheet de confirmación — eliminar guest ── */}
       {pendingDelete && (
         <div className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-8">
           <div className="absolute inset-0 bg-black/30" onClick={() => setPendingDelete(null)} />

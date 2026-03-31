@@ -1,27 +1,10 @@
 'use server'
 
-// NOTE — RLS audit (schema.sql verificado):
+// RLS audit (schema.sql verificado):
 // ✅ UPDATE en groups WHERE id: cubierto por "groups: update admin"
 // ✅ UPDATE en invitation_links WHERE group_id: cubierto por "invitation_links: update admin"
-// ⚠️  UPDATE en members WHERE group_id para admin: NO existe política "update admin".
-//    Solo existe "members: update own" (WHERE auth.uid() = user_id).
-//    updateMemberRole hace UPDATE SET role — esto fallará para un admin actualizando a otro miembro.
-//    Para producción, se necesita agregar una política: members: update admin.
-//    Por ahora la acción verifica el rol manualmente y depende de que RLS permita el update.
-//    Solución recomendada en schema.sql:
-//      create policy "members: update admin"
-//        on members for update
-//        using (
-//          exists (
-//            select 1 from members m2
-//            where m2.group_id = members.group_id
-//              and m2.user_id  = auth.uid()
-//              and m2.role     = 'admin'
-//          )
-//        );
-// ⚠️  UPDATE en rotation WHERE group_id para admin: NO existe política "update admin".
-//    Solo existe "rotation: update admin" — sí, EXISTE (verificado en schema.sql línea 340).
-//    ✅ rotation: update admin cubierto.
+// ✅ UPDATE en members WHERE group_id para admin: cubierto por "members: update admin" (migración 20260331)
+// ✅ UPDATE en rotation WHERE group_id para admin: cubierto por "rotation: update admin"
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
