@@ -3,17 +3,15 @@ import { t } from '@/lib/t'
 
 interface Props {
   groupId: string
-  isAdminOrOrganizer: boolean
+  isAdmin: boolean
 }
 
-// Scenario: Admin u organizador ve el estado vacío con CTA — layout sin card, centrado sobre surface.
-// Scenario: Botón redirige a configuración del grupo — href a /dashboard/[groupId]/settings.
-// Scenario: Miembro ve mensaje de espera sin CTA — texto plano sin botón.
-// Scenario: Estado vacío desaparece al crear el primer evento — se oculta cuando hasEvents=true.
-// Scenario: Estado vacío no se muestra si hay historial previo — idem, hasEvents cubre eventos cerrados.
-export default function EmptyDashboard({ groupId, isAdminOrOrganizer }: Props) {
-  // Scenario: Miembro ve mensaje de espera sin CTA
-  if (!isAdminOrOrganizer) {
+// Scenario 01: Admin ve el estado vacío con CTA — layout sin card, centrado sobre surface.
+// Scenario 02: Botón redirige a configuración del grupo — href a /dashboard/[groupId]/settings.
+// Scenario 03: Miembro ve mensaje de espera sin CTA — texto plano sin botón.
+export default function EmptyDashboard({ groupId, isAdmin }: Props) {
+  // Scenario 03: Miembro ve mensaje de espera sin CTA
+  if (!isAdmin) {
     return (
       <p className="text-center text-sm text-[#585f6c]">
         {t('dashboard.emptyMember')}

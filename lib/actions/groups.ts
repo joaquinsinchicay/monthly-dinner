@@ -141,3 +141,29 @@ export async function createGroup(input: {
 
   return { success: true, data: group }
 }
+
+export async function isGroupConfigured(groupId: string): Promise<ActionResult<boolean>> {
+  const supabase = createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
+
+  // Condición 1: al menos 2 miembros
+  const { count: memberCount } = await supabase
+    .from('members')
+    .select('id', { count: 'exact', head: true })
+    .eq('group_id', groupId)
+
+  if ((memberCount ?? 0) < 2) return { success: true, data: false }
+
+  // Condición 2: rotación configurada (al menos 1 fila)
+  const { count: rotationCount } = await supabase
+    .from('rotation')
+    .select('id', { count: 'exact', head: true })
+    .eq('group_id', groupId)
+
+  return { success: true, data: (rotationCount ?? 0) > 0 }
+}

@@ -1,12 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import { headers } from 'next/headers'
+import EmptyDashboard from '@/components/group/EmptyDashboard'
 import InvitationLinkPanel from '@/components/group/InvitationLinkPanel'
 import OrganizerPanel from '@/components/group/OrganizerPanel'
 import EventPanel from '@/components/group/EventPanel'
 import ConvocatoriaNotification from '@/components/group/ConvocatoriaNotification'
 import PollPanel from '@/components/group/PollPanel'
 import RestaurantHistory from '@/components/group/RestaurantHistory'
+import { isGroupConfigured } from '@/lib/actions/groups'
 import { getCurrentOrganizer, getNextOrganizer } from '@/lib/actions/rotation'
 import { getCurrentEvent, getAttendanceCounts } from '@/lib/actions/events'
 import { getUserAttendance } from '@/lib/actions/attendances'
@@ -59,13 +61,19 @@ export default async function GroupDashboardPage({ params }: Props) {
   const activeLink =
     (links ?? []).find((l) => getInvitationLinkStatus(l) === 'active') ?? null
 
-  // US-07b — ¿El grupo tiene algún evento en su historial?
-  const { count: eventsCount } = await supabase
-    .from('events')
-    .select('id', { count: 'exact', head: true })
-    .eq('group_id', params.groupId)
-  const hasEvents = (eventsCount ?? 0) > 0
   const isAdmin = member.role === 'admin'
+
+  // US-09 — ¿El grupo está completamente configurado? (≥2 miembros + rotación existente)
+  const configuredResult = await isGroupConfigured(params.groupId)
+  const groupConfigured = configuredResult.success ? configuredResult.data : true
+
+  if (!groupConfigured) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#fcf9f8] px-4">
+        <EmptyDashboard groupId={params.groupId} isAdmin={isAdmin} />
+      </main>
+    )
+  }
 
   // Organizador del mes actual (US-11)
   const organizerResult = await getCurrentOrganizer(params.groupId)
@@ -115,52 +123,6 @@ export default async function GroupDashboardPage({ params }: Props) {
   const host = headersList.get('host') ?? 'localhost:3000'
   const protocol = host.includes('localhost') ? 'http' : 'https'
   const baseUrl = `${protocol}://${host}`
-
-  // US-NAV-03 — Estado vacío para grupo sin eventos
-  if (!hasEvents) {
-    const isAdminOrOrganizer = isAdmin || isOrganizer
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-[#fcf9f8] px-4">
-        <div className="w-full max-w-[480px] rounded-2xl bg-gradient-to-b from-white to-gray-50 p-10 text-center shadow-[0px_10px_40px_-8px_rgba(28,27,27,0.12)]">
-          {isAdminOrOrganizer ? (
-            <>
-              <h1
-                className="text-[38px] font-normal italic leading-tight tracking-[-0.02em] text-[#1c1b1b]"
-                style={{ fontFamily: 'DM Serif Display, serif' }}
-              >
-                {t('dashboard.emptyAdmin.eyebrow')}{' '}
-                <span className="text-[#004ac6]">{t('dashboard.emptyAdmin.heading')}</span>
-              </h1>
-              <p className="mt-4 text-[15px] leading-relaxed text-[#585f6c]">
-                {t('dashboard.emptyAdmin.body')}
-              </p>
-              <div className="mt-8 flex justify-center">
-                <a
-                  href={`/dashboard/${params.groupId}/settings`}
-                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-8 py-4 text-[15px] font-semibold text-white transition-opacity hover:opacity-90"
-                >
-                  {t('dashboard.emptyAdmin.cta')}
-                </a>
-              </div>
-            </>
-          ) : (
-            <>
-              <h1
-                className="text-[38px] font-normal italic leading-tight tracking-[-0.02em] text-[#1c1b1b]"
-                style={{ fontFamily: 'DM Serif Display, serif' }}
-              >
-                {t('dashboard.emptyMemberCardEyebrow')}{' '}
-                <span className="text-[#004ac6]">{t('dashboard.emptyMemberCardHeading')}</span>
-              </h1>
-              <p className="mt-4 text-[15px] leading-relaxed text-[#585f6c]">
-                {t('dashboard.emptyMember')}
-              </p>
-            </>
-          )}
-        </div>
-      </main>
-    )
-  }
 
   return (
     <main className="min-h-screen bg-[#fcf9f8] px-4 pb-10 pt-6">
