@@ -8,22 +8,22 @@ interface Group {
   name: string
   frequency: 'mensual' | 'quincenal' | 'semanal'
   meeting_day_of_week: string | null
-  meeting_day_of_month: number | null
+  meeting_week: number | null
 }
 
 function formatDay(group: Group): string {
-  if (group.frequency === 'mensual' && group.meeting_day_of_month) {
-    return t('group.groupCreated.formatDayMonthly', { day: String(group.meeting_day_of_month) })
+  if (!group.meeting_day_of_week) return '—'
+  const day =
+    group.meeting_day_of_week.charAt(0).toUpperCase() +
+    group.meeting_day_of_week.slice(1)
+  if (group.frequency === 'semanal') {
+    return t('group.groupCreated.formatDaySemanal', { day })
   }
-  if (group.meeting_day_of_week) {
-    const day =
-      group.meeting_day_of_week.charAt(0).toUpperCase() +
-      group.meeting_day_of_week.slice(1)
-    return group.frequency === 'semanal'
-      ? t('group.groupCreated.formatDaySemanal', { day })
-      : t('group.groupCreated.formatDayQuincenal', { day })
+  if (group.frequency === 'quincenal') {
+    return t('group.groupCreated.formatDayQuincenal', { day })
   }
-  return '—'
+  // mensual — se muestra el día sin el ordinal (el ordinal está en meeting_week, no se usa en esta vista)
+  return t('group.groupCreated.formatDayMonthly', { day })
 }
 
 // Scenario: Próximos pasos visibles — "Invitar miembros" y "Configurar rotación"

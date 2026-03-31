@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { t } from '@/lib/t'
+import { getNextEventDates, toMonthKey } from '@/lib/utils/event-dates'
 import type { ActionResult, Group } from '@/types'
 
 const VALID_FREQUENCIES = ['mensual', 'quincenal', 'semanal'] as const
@@ -105,6 +106,35 @@ export async function createGroup(input: {
   if (selectError || !group) {
     console.error('[createGroup] Supabase select after insert error:', JSON.stringify(selectError, null, 2))
     return { success: false, error: t('errors.groups.createFailed') }
+  }
+
+  // Generar los próximos 3 eventos automáticamente (US-03 Scenario 11)
+  try {
+    const eventDates = getNextEventDates(
+      group.frequency,
+      group.meeting_week ?? null,
+      group.meeting_day_of_week!,
+      new Date(),
+      3,
+    )
+
+    const eventSlots = eventDates.map(date => ({
+      group_id: group.id,
+      organizer_id: null,
+      month: toMonthKey(date),
+      status: 'pending' as const,
+    }))
+
+    const { error: eventsError } = await supabase
+      .from('events')
+      .insert(eventSlots)
+
+    if (eventsError) {
+      console.error('[createGroup] Error al generar eventos automáticos:', JSON.stringify(eventsError, null, 2))
+      // No revertimos el grupo — se creó correctamente. Los eventos pueden regenerarse.
+    }
+  } catch (err) {
+    console.error('[createGroup] Excepción al calcular fechas de eventos:', err)
   }
 
   revalidatePath('/dashboard')

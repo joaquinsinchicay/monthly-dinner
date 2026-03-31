@@ -83,8 +83,8 @@ export default function CreateGroupForm() {
   function handleFrequencyChange(value: Frequency) {
     setFrequency(value)
     setMeetingWeek(null)
-    setMeetingDay('')
-    setErrors(prev => ({ ...prev, frequency: undefined, week: undefined, day: undefined }))
+    // El día aplica a todas las frecuencias — se preserva al cambiar (PDD §9 RN6, Scenario 08)
+    setErrors(prev => ({ ...prev, frequency: undefined, week: undefined }))
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {

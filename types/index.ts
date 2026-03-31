@@ -124,7 +124,7 @@ export interface RotationWithProfile extends Rotation {
 export interface Event {
   id: string
   group_id: string
-  organizer_id: string
+  organizer_id: string | null  // null para eventos generados automáticamente (US-03 Scenario 11)
   month: string            // date — primer día del mes: '2026-04-01'
   status: EventStatus
   event_date: string | null
@@ -136,9 +136,9 @@ export interface Event {
   updated_at: string
 }
 
-// Evento con organizador expandido
+// Evento con organizador expandido (null cuando aún no tiene organizador asignado)
 export interface EventWithOrganizer extends Event {
-  organizer: Profile
+  organizer: Profile | null
 }
 
 // -----------------------------------------------------------------------------
