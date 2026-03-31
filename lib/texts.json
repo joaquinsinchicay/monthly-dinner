@@ -481,6 +481,8 @@
     },
     "settings": {
       "nameEmpty": "El nombre no puede estar vacío",
+      "nameTooShort": "El nombre debe tener al menos 3 caracteres",
+      "nameTooLong": "El nombre no puede superar los 50 caracteres",
       "notAdmin": "Solo los admins pueden modificar el grupo",
       "updateNameFailed": "No se pudo actualizar el nombre. Intentá de nuevo.",
       "notAdminForRole": "Solo los admins pueden cambiar roles",

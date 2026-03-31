@@ -25,6 +25,8 @@ export async function updateGroupName(
 
   const name = input.name?.trim()
   if (!name) return { success: false, error: t('errors.settings.nameEmpty') }
+  if (name.length < 3) return { success: false, error: t('errors.settings.nameTooShort') }
+  if (name.length > 50) return { success: false, error: t('errors.settings.nameTooLong') }
 
   // Verificar que el usuario es admin del grupo
   const { data: membership } = await supabase

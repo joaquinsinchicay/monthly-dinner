@@ -20,6 +20,20 @@ export default function SettingsNameSection({ groupId, initialName }: Props) {
   const [error, setError] = useState<string | null>(null)
 
   async function handleSaveName() {
+    const trimmed = draftName.trim()
+    if (!trimmed) {
+      setError(t('errors.settings.nameEmpty'))
+      return
+    }
+    if (trimmed.length < 3) {
+      setError(t('errors.settings.nameTooShort'))
+      return
+    }
+    if (trimmed.length > 50) {
+      setError(t('errors.settings.nameTooLong'))
+      return
+    }
+
     setLoading(true)
     setError(null)
 
