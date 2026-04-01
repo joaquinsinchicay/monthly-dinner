@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { t } from '@/lib/t'
 import type { ActionResult } from '@/types'
 
 export interface OrganizerInfo {
@@ -21,7 +22,7 @@ export async function getNextOrganizer(
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   const now = new Date()
   const nextMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1))
@@ -36,7 +37,7 @@ export async function getNextOrganizer(
     .maybeSingle()
 
   if (error) {
-    return { success: false, error: 'No se pudo obtener el próximo organizador.' }
+    return { success: false, error: t('errors.rotation.getNextOrganizerFailed') }
   }
 
   if (!data) {
@@ -67,7 +68,7 @@ export async function getCurrentOrganizer(
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   // Primer día del mes actual — formato requerido por la columna `month` (date)
   const now = new Date()
@@ -83,7 +84,7 @@ export async function getCurrentOrganizer(
     .maybeSingle()
 
   if (error) {
-    return { success: false, error: 'No se pudo obtener el organizador del mes.' }
+    return { success: false, error: t('errors.rotation.getOrganizerFailed') }
   }
 
   if (!data) {

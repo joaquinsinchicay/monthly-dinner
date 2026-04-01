@@ -1,4 +1,6 @@
+import CreateEventModal from '@/components/group/CreateEventModal'
 import EventForm from '@/components/group/EventForm'
+import { t } from '@/lib/t'
 import NotifyButton from '@/components/group/NotifyButton'
 import AttendanceSummary from '@/components/group/AttendanceSummary'
 import AttendanceSummaryDetailed from '@/components/group/AttendanceSummaryDetailed'
@@ -29,51 +31,55 @@ function formatDate(dateStr: string): string {
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  pending: 'Pendiente',
-  published: 'Publicado',
-  closed: 'Cerrado',
+  pending: t('group.eventPanel.status.pending'),
+  published: t('group.eventPanel.status.published'),
+  closed: t('group.eventPanel.status.closed'),
 }
 
 export default function EventPanel({ groupId, event, currentUserId, isOrganizer, isAdmin = false, attendanceCounts, userAttendance }: Props) {
 
-  // Scenario: no hay evento + usuario NO es organizador → empty state
-  if (!event && !isOrganizer) {
+  // Scenario: no hay evento (o evento pending) + usuario NO es organizador → empty state
+  if ((!event || event.status === 'pending') && !isOrganizer) {
     return (
       <div className="rounded-2xl bg-white p-6 shadow-[0px_10px_30px_-5px_rgba(28,27,27,0.07)]">
         <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-          Evento del mes
+          {t('group.eventPanel.eyebrow')}
         </p>
         <p
           className="mt-1 font-serif text-[20px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
           style={{ fontFamily: 'DM Serif Display, serif' }}
         >
-          Sin evento este mes
+          {t('group.eventPanel.noEventTitle')}
         </p>
         <p className="mt-2 text-sm text-[#585f6c]">
-          La cena de este mes aún no fue convocada.
+          {t('group.eventPanel.noEventBody')}
         </p>
       </div>
     )
   }
 
-  // Scenario: no hay evento + usuario ES organizador → formulario de creación
-  if (!event && isOrganizer) {
+  // Scenario 01/02: no hay evento Published (null o pending) + usuario ES organizador
+  // → muestra "Sos el organizador" + botón "Organizar" que abre el modal de creación
+  if ((!event || event.status === 'pending') && isOrganizer) {
     return (
       <div className="rounded-2xl bg-white p-6 shadow-[0px_10px_30px_-5px_rgba(28,27,27,0.07)]">
         <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-          Evento del mes
+          {t('group.eventPanel.eyebrow')}
         </p>
         <p
           className="mt-1 font-serif text-[22px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
           style={{ fontFamily: 'DM Serif Display, serif' }}
         >
-          Crear el evento
+          {t('group.organizer.iAmOrganizerTitle')}
         </p>
-        <p className="mb-5 mt-2 text-sm text-[#585f6c]">
-          Completá los datos para convocar al grupo.
+        <p className="mt-2 text-sm text-[#585f6c]">
+          {t('group.organizer.iAmOrganizerBody')}
         </p>
-        {/* Scenario: Creación exitosa + Campos obligatorios vacíos */}
-        <EventForm groupId={groupId} />
+        <p className="mt-1 text-sm text-[#585f6c]">
+          <span className="font-medium text-[#1c1b1b]">{t('group.organizer.nextStepEyebrow')}:</span>{' '}
+          {t('group.organizer.nextStepBody')}
+        </p>
+        <CreateEventModal groupId={groupId} pendingEventId={event?.id} />
       </div>
     )
   }
@@ -86,11 +92,8 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
   // Scenario: Cerrar evento — solo para el organizador, solo si está published
   const canClose = isEventOrganizer && event!.status === 'published'
 
-  // ADJ-01:
-  // pending / published → botones activos (independiente de si el usuario ya confirmó)
-  // closed             → read-only via ConfirmAttendanceButtons con eventClosed=true
+  // US-10 RN-03: botones activos solo en published; closed → read-only via eventClosed=true
   const showAttendanceButtons =
-    event!.status === 'pending' ||
     event!.status === 'published' ||
     event!.status === 'closed'
 
@@ -100,20 +103,20 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
       <div className="flex items-start justify-between">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-            Evento del mes
+            {t('group.eventPanel.eyebrow')}
           </p>
           <p
             className="mt-1 font-serif text-[22px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
             style={{ fontFamily: 'DM Serif Display, serif' }}
           >
-            {event!.event_date ? formatDate(event!.event_date) : 'Fecha por confirmar'}
+            {event!.event_date ? formatDate(event!.event_date) : t('group.eventPanel.dateUnconfirmed')}
           </p>
         </div>
 
         {/* Badge de estado — ADJ-01: "closed" tiene estilo destacado */}
         {event!.status === 'closed' ? (
           <span className="mt-1 shrink-0 rounded-full bg-[#1c1b1b] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.05em] text-white">
-            Cerrado
+            {t('group.eventPanel.status.closed')}
           </span>
         ) : (
           <span className="mt-1 shrink-0 rounded-full bg-[#f0ede9] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
@@ -124,7 +127,7 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
 
       {event!.place && (
         <p className="mt-3 text-sm text-[#585f6c]">
-          <span className="font-medium text-[#1c1b1b]">Lugar:</span> {event!.place}
+          <span className="font-medium text-[#1c1b1b]">{t('group.eventPanel.placeLabel')}</span> {event!.place}
         </p>
       )}
 
@@ -137,7 +140,6 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
 
       {/* US-10: Organizador ve resumen detallado con nombres + compartir (en tiempo real).
           US-07: Miembros ven solo conteos (AttendanceSummary — ya implementado). */}
-      {/* ADJ-01: Confirmaciones visibles para pending y published también */}
       {isOrganizer && (
         <AttendanceSummaryDetailed
           eventId={event!.id}
@@ -149,10 +151,10 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
         <AttendanceSummary
           eventId={event!.id}
           initialCounts={attendanceCounts}
+          eventClosed={event!.status === 'closed'}
         />
       )}
 
-      {/* ADJ-01: Botones activos para pending/published; read-only para closed */}
       {showAttendanceButtons && (
         <ConfirmAttendanceButtons
           eventId={event!.id}
@@ -165,7 +167,7 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
       {canEdit && (
         <details className="mt-5">
           <summary className="cursor-pointer text-[11px] font-semibold uppercase tracking-[0.05em] text-[#004ac6]">
-            Editar evento
+            {t('group.eventPanel.editSummary')}
           </summary>
           <div className="mt-4">
             <EventForm groupId={groupId} existing={event!} />
@@ -177,7 +179,7 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
       {canClose && (
         <details className="mt-3">
           <summary className="cursor-pointer text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-            Cerrar evento
+            {t('group.eventPanel.closeSummary')}
           </summary>
           <div className="mt-4">
             <CloseEventForm eventId={event!.id} />

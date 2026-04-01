@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { ChevronDown } from 'lucide-react'
+import { t } from '@/lib/t'
 
 interface Group {
   id: string
@@ -28,7 +29,7 @@ export default function GroupSelector({ groups }: Props) {
   const activeGroup = groups.find((g) => g.id === activeGroupId) ?? groups[0]
   const hasMultiple = groups.length > 1
 
-  // Scenario: Al tocar fuera — cerrar dropdown sin acción
+  // Scenario: Al tocar fuera o presionar ESC — cerrar dropdown sin acción
   useEffect(() => {
     if (!open) return
     function handleClickOutside(e: MouseEvent) {
@@ -36,13 +37,22 @@ export default function GroupSelector({ groups }: Props) {
         setOpen(false)
       }
     }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
   }, [open])
 
   // Scenario: Cambio de grupo activo — redirect a /dashboard/[groupId] y cierre del dropdown
+  // FA-03: si el grupo ya es el activo, solo cierra el dropdown sin navegar
   function handleSelect(groupId: string) {
     setOpen(false)
+    if (groupId === activeGroupId) return
     router.push(`/dashboard/${groupId}`)
   }
 
@@ -58,7 +68,7 @@ export default function GroupSelector({ groups }: Props) {
         aria-expanded={hasMultiple ? open : undefined}
       >
         <span className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-          Grupo actual
+          {t('group.groupSelector.label')}
         </span>
         <div className="mt-0.5 flex items-center gap-1">
           <span className="text-[15px] font-semibold leading-tight text-[#1c1b1b]">

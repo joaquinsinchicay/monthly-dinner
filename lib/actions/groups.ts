@@ -2,6 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { t } from '@/lib/t'
+import { getNextEventDates, toMonthKey } from '@/lib/utils/event-dates'
 import type { ActionResult, Group } from '@/types'
 
 const VALID_FREQUENCIES = ['mensual', 'quincenal', 'semanal'] as const
@@ -20,44 +22,44 @@ export async function createGroup(input: {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { success: false, error: 'No autenticado' }
+    return { success: false, error: t('common.notAuthenticated') }
   }
 
   const name = input.name?.trim()
 
   if (!name) {
-    return { success: false, error: 'El nombre del grupo es obligatorio' }
+    return { success: false, error: t('errors.groups.nameRequired') }
   }
 
   if (!VALID_FREQUENCIES.includes(input.frequency)) {
-    return { success: false, error: 'La frecuencia seleccionada no es válida' }
+    return { success: false, error: t('errors.groups.invalidFrequency') }
   }
 
   if (
     !input.meeting_day_of_week ||
     !(VALID_DAYS_OF_WEEK as readonly string[]).includes(input.meeting_day_of_week)
   ) {
-    return { success: false, error: 'El día de la semana es obligatorio' }
+    return { success: false, error: t('errors.groups.dayRequired') }
   }
 
   // Validar meeting_week según frecuencia (US-00c cascada)
   if (input.frequency === 'semanal') {
     if (input.meeting_week !== undefined) {
-      return { success: false, error: 'La frecuencia semanal no requiere semana del mes' }
+      return { success: false, error: t('errors.groups.weekNotRequiredForSemanal') }
     }
   } else if (input.frequency === 'mensual') {
     if (
       input.meeting_week === undefined ||
       ![1, 2, 3, 4, 5].includes(input.meeting_week)
     ) {
-      return { success: false, error: 'La frecuencia mensual requiere seleccionar la semana del mes (1° a Última)' }
+      return { success: false, error: t('errors.groups.weekRequiredForMensual') }
     }
   } else if (input.frequency === 'quincenal') {
     if (
       input.meeting_week === undefined ||
       ![1, 2].includes(input.meeting_week)
     ) {
-      return { success: false, error: 'La frecuencia quincenal requiere seleccionar "1° y 3°" o "2° y 4°"' }
+      return { success: false, error: t('errors.groups.weekRequiredForQuincenal') }
     }
   }
 
@@ -72,7 +74,7 @@ export async function createGroup(input: {
   if (existing) {
     return {
       success: false,
-      error: `Ya tenés un grupo llamado "${existing.name}". Probá con un nombre diferente.`,
+      error: t('errors.groups.duplicateName', { name: existing.name }),
     }
   }
 
@@ -90,7 +92,7 @@ export async function createGroup(input: {
 
   if (insertError) {
     console.error('[createGroup] Supabase insert error:', JSON.stringify(insertError, null, 2))
-    return { success: false, error: 'No se pudo crear el grupo. Intentá de nuevo.' }
+    return { success: false, error: t('errors.groups.createFailed') }
   }
 
   const { data: group, error: selectError } = await supabase
@@ -103,10 +105,65 @@ export async function createGroup(input: {
 
   if (selectError || !group) {
     console.error('[createGroup] Supabase select after insert error:', JSON.stringify(selectError, null, 2))
-    return { success: false, error: 'No se pudo crear el grupo. Intentá de nuevo.' }
+    return { success: false, error: t('errors.groups.createFailed') }
+  }
+
+  // Generar los próximos 3 eventos automáticamente (US-03 Scenario 11)
+  try {
+    const eventDates = getNextEventDates(
+      group.frequency,
+      group.meeting_week ?? null,
+      group.meeting_day_of_week!,
+      new Date(),
+      3,
+    )
+
+    const eventSlots = eventDates.map(date => ({
+      group_id: group.id,
+      organizer_id: null,
+      month: toMonthKey(date),
+      status: 'pending' as const,
+    }))
+
+    const { error: eventsError } = await supabase
+      .from('events')
+      .insert(eventSlots)
+
+    if (eventsError) {
+      console.error('[createGroup] Error al generar eventos automáticos:', JSON.stringify(eventsError, null, 2))
+      // No revertimos el grupo — se creó correctamente. Los eventos pueden regenerarse.
+    }
+  } catch (err) {
+    console.error('[createGroup] Excepción al calcular fechas de eventos:', err)
   }
 
   revalidatePath('/dashboard')
 
   return { success: true, data: group }
+}
+
+export async function isGroupConfigured(groupId: string): Promise<ActionResult<boolean>> {
+  const supabase = createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
+
+  // Condición 1: al menos 2 miembros
+  const { count: memberCount } = await supabase
+    .from('members')
+    .select('id', { count: 'exact', head: true })
+    .eq('group_id', groupId)
+
+  if ((memberCount ?? 0) < 2) return { success: true, data: false }
+
+  // Condición 2: rotación configurada (al menos 1 fila)
+  const { count: rotationCount } = await supabase
+    .from('rotation')
+    .select('id', { count: 'exact', head: true })
+    .eq('group_id', groupId)
+
+  return { success: true, data: (rotationCount ?? 0) > 0 }
 }

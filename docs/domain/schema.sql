@@ -390,7 +390,9 @@ create type event_status as enum ('pending', 'published', 'closed');
 create table if not exists events (
   id              uuid primary key default uuid_generate_v4(),
   group_id        uuid not null references groups(id) on delete cascade,
-  organizer_id    uuid not null references profiles(id) on delete restrict,
+  organizer_id    uuid references profiles(id) on delete restrict,
+  -- NULL cuando el evento fue generado automáticamente al crear el grupo (US-03 Scenario 11).
+  -- Se asigna cuando el organizador acepta el turno (US-07 / rotación).
   month           date not null,      -- primer día del mes: 2026-04-01
   status          event_status not null default 'pending',
   event_date      date,
@@ -422,6 +424,20 @@ create policy "events: insert organizer"
   on events for insert
   with check (auth.uid() = organizer_id);
 
+-- Eventos generados automáticamente al crear el grupo (organizer_id IS NULL).
+-- Solo el admin del grupo puede insertarlos.
+create policy "events: insert admin auto"
+  on events for insert
+  with check (
+    organizer_id is null
+    and exists (
+      select 1 from members
+      where members.group_id = events.group_id
+        and members.user_id  = auth.uid()
+        and members.role     = 'admin'
+    )
+  );
+
 -- NOTA: RLS no impide que un UPDATE malicioso modifique organizer_id.
 -- La inmutabilidad de organizer_id debe validarse en el server action
 -- antes de ejecutar el UPDATE — no asumir que RLS lo cubre.
@@ -430,6 +446,21 @@ create policy "events: update organizer"
   using (
     auth.uid() = organizer_id
     and status != 'closed'
+  );
+
+-- US-11: permite al organizador asignado en rotation actualizar un evento
+-- auto-generado (organizer_id IS NULL) para reclamarlo y publicarlo directamente.
+create policy "events: update rotation organizer pending"
+  on events for update
+  using (
+    status = 'pending'
+    and organizer_id is null
+    and exists (
+      select 1 from rotation
+      where rotation.group_id = events.group_id
+        and rotation.user_id  = auth.uid()
+        and rotation.month    = events.month
+    )
   );
 
 

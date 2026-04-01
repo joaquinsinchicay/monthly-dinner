@@ -1,79 +1,89 @@
-# monthly-dinner
+# Documentation System — monthly-dinner
 
-App web mobile-first para grupos de amigos que se reúnen a cenar regularmente. Reemplaza la coordinación por WhatsApp con un panel centralizado que gestiona eventos mensuales, confirmaciones de asistencia, turno rotativo, votación de restaurantes e historial de cenas.
-
----
-
-## Stack
-
-| Capa | Tecnología |
-|---|---|
-| Frontend | Next.js 14 App Router |
-| UI | shadcn/ui + Tailwind CSS |
-| Base de datos + Auth | Supabase (Postgres + Google OAuth) |
-| Deploy | Vercel |
-| Repo | GitHub |
-| IA | Claude + V0 |
+Este repositorio utiliza un sistema de documentación estructurado para alinear producto, contratos, dominio y código.
 
 ---
 
-## Cómo arrancar
+## Source of truth (orden estricto)
 
-```bash
-# 1. Clonar el repo
-git clone https://github.com/monthly-dinner/monthly-dinner.git
-cd monthly-dinner
+1. `docs/product/backlog_us_mvp.md`
+   - Define comportamiento funcional
+   - Define alcance del MVP
+   - Define acceptance criteria (Gherkin)
+   - Es la única fuente de verdad de producto
 
-# 2. Instalar dependencias
-npm install
+2. `docs/features/*.md`
+   - Traduce cada US a una definición completa
+   - Consolida reglas de negocio, estados, permisos, actions y edge cases
+   - Es la capa intermedia entre backlog y código
 
-# 3. Configurar variables de entorno
-cp .env.example .env.local
-# Completar NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY
-# desde el panel de Supabase → Settings → API
+3. `docs/contracts/api-contracts.md`
+   - Define server actions
+   - Define inputs/outputs
+   - Debe reflejar exactamente las features
 
-# 4. Ejecutar el schema en Supabase
-# Abrir Supabase → SQL Editor → pegar y ejecutar docs/architecture/schema.sql
+4. `docs/domain/*`
+   - Modelo de datos
+   - Entidades y relaciones
+   - Schema SQL
 
-# 5. Correr en desarrollo
-npm run dev
-```
+5. `docs/architecture/*`
+   - Reglas transversales
+   - State machine
+   - Roles y permisos
 
-La app queda disponible en `http://localhost:3000`.
+6. `types/index.ts`
+   - Tipos runtime alineados con contracts y domain
+
+7. Código
+   - Implementación final
 
 ---
 
-## Estructura del repo
+## Reglas obligatorias
 
-```
+- El backlog define qué existe en el MVP
+- Todo lo que no esté en el backlog debe eliminarse o deprecarse
+- No se modifica código sin antes definir la US y documentarla
+- No se considera una US terminada si:
+  - no está documentada
+  - contracts no están alineados
+  - código no está alineado
+- No se preserva código solo porque ya está implementado
+
+---
+
+## Flujo de trabajo
+
+Para cada US:
+
+1. Analizar divergencias
+2. Definir versión final
+3. Actualizar documentación
+4. Refactorizar código
+5. Validar con checklist
+6. Registrar en changelog
+
+---
+
+## Estructura
 docs/
-├── architecture/
-│   ├── schema.sql              → Schema SQL completo con RLS — ejecutar en Supabase
-│   ├── domain-model.md         → Entidades, atributos y relaciones
-│   ├── dependencies.md         → Dependencias entre US y orden de implementación
-│   ├── roles-permissions.md    → Matriz de permisos por rol
-│   ├── state-machine.md        → Estados y transiciones de cada entidad
-│   └── technical-decisions.md  → Decisiones técnicas del MVP
-├── design/
-│   └── design-system.md        → Tokens, tipografía, componentes y filosofía visual
-└── product/
-    ├── backlog_us_mvp.md        → 19 User Stories con CA en Gherkin
-    └── casestudy_monthly_dinner.md → Contexto, hipótesis, journey y roadmap
-AGENTS.md                       → Contexto completo para agentes de IA — leer primero
-CHANGELOG.md                    → Estado de implementación por US
-README.md                       → Este archivo
-```
+product/
+features/
+contracts/
+domain/
+architecture/
 
-> **Para agentes de IA:** leer `AGENTS.md` antes de generar cualquier código. Contiene el schema, RLS, design system, backlog y convenciones en un solo archivo.
 
 ---
 
-## Estado del MVP
+## Objetivo
 
-19 User Stories · 7 épicas · 0 mergeadas a `main`.
+Evitar:
+- features inconsistentes
+- backlog desactualizado
+- código fuera de alcance
 
-Ver estado detallado por US → [`CHANGELOG.md`](./CHANGELOG.md)
-
----
-
-*monthly-dinner · MVP v1.0 · Marzo 2026*
+Garantizar:
+- trazabilidad completa
+- coherencia producto ↔ código

@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { t } from '@/lib/t'
 import type { ActionResult, Event } from '@/types'
 
 // Primer día del mes actual — formato 'YYYY-MM-DD'
@@ -21,7 +22,7 @@ export async function getCurrentEvent(
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   const { data, error } = await supabase
     .from('events')
@@ -30,7 +31,7 @@ export async function getCurrentEvent(
     .eq('month', currentMonth())
     .maybeSingle()
 
-  if (error) return { success: false, error: 'No se pudo obtener el evento del mes.' }
+  if (error) return { success: false, error: t('errors.events.getEventFailed') }
 
   return { success: true, data: data ?? null }
 }
@@ -48,7 +49,7 @@ export async function createEvent(
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   // Validar que el usuario es el organizador del mes actual
   const month = currentMonth()
@@ -60,13 +61,13 @@ export async function createEvent(
     .maybeSingle()
 
   if (!rotation || rotation.user_id !== user.id) {
-    return { success: false, error: 'Solo el organizador del mes puede crear el evento.' }
+    return { success: false, error: t('errors.events.notOrganizer') }
   }
 
   // Scenario: Campos obligatorios vacíos
   const eventDate = (formData.get('event_date') as string)?.trim()
   if (!eventDate) {
-    return { success: false, error: 'La fecha del evento es obligatoria.' }
+    return { success: false, error: t('errors.events.dateRequired') }
   }
 
   const place = (formData.get('place') as string)?.trim() || null
@@ -83,7 +84,7 @@ export async function createEvent(
   if (existing) {
     return {
       success: false,
-      error: 'Ya existe un evento para este mes. Podés editarlo desde el panel.',
+      error: t('errors.events.alreadyExists'),
     }
   }
 
@@ -101,7 +102,7 @@ export async function createEvent(
     })
 
   if (insertError) {
-    return { success: false, error: 'No se pudo crear el evento. Intentá de nuevo.' }
+    return { success: false, error: t('errors.events.createFailed') }
   }
 
   const { data: event, error: selectError } = await supabase
@@ -112,7 +113,7 @@ export async function createEvent(
     .single()
 
   if (selectError || !event) {
-    return { success: false, error: 'Evento creado pero no se pudo obtener los datos.' }
+    return { success: false, error: t('errors.events.createButFetchFailed') }
   }
 
   return { success: true, data: event }
@@ -135,14 +136,14 @@ export async function getAttendanceCounts(
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   const { data, error } = await supabase
     .from('attendances')
     .select('status')
     .eq('event_id', eventId)
 
-  if (error) return { success: false, error: 'No se pudieron obtener las confirmaciones.' }
+  if (error) return { success: false, error: t('errors.attendances.confirmationsFetchFailed') }
 
   const rows = data ?? []
   return {
@@ -164,7 +165,7 @@ export async function publishEvent(eventId: string): Promise<ActionResult<void>>
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   const { data: existing } = await supabase
     .from('events')
@@ -172,12 +173,12 @@ export async function publishEvent(eventId: string): Promise<ActionResult<void>>
     .eq('id', eventId)
     .maybeSingle()
 
-  if (!existing) return { success: false, error: 'Evento no encontrado.' }
+  if (!existing) return { success: false, error: t('errors.events.notFound') }
   if (existing.organizer_id !== user.id) {
-    return { success: false, error: 'Solo el organizador puede publicar el evento.' }
+    return { success: false, error: t('errors.events.cannotPublishNotOrganizer') }
   }
   if (existing.status === 'closed') {
-    return { success: false, error: 'No se puede publicar un evento cerrado.' }
+    return { success: false, error: t('errors.events.cannotPublishClosed') }
   }
 
   const { error } = await supabase
@@ -186,9 +187,113 @@ export async function publishEvent(eventId: string): Promise<ActionResult<void>>
     .eq('id', eventId)
     .eq('organizer_id', user.id)
 
-  if (error) return { success: false, error: 'No se pudo publicar el evento. Intentá de nuevo.' }
+  if (error) return { success: false, error: t('errors.events.publishFailed') }
 
   return { success: true, data: undefined }
+}
+
+// US-11: El organizador del mes crea (o completa) el evento del período y lo publica en un solo paso.
+// Maneja dos casos:
+//   - Evento pending auto-generado (organizer_id IS NULL): UPDATE con los datos + status='published'
+//   - Sin evento en el mes: INSERT con status='published'
+// Si ya existe un evento Published, retorna error alreadyExists.
+export async function publishAndCreateEvent(
+  groupId: string,
+  formData: FormData
+): Promise<ActionResult<Event>> {
+  const supabase = createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
+
+  // Verificar que el usuario es el organizador del mes actual
+  const month = currentMonth()
+  const { data: rotation } = await supabase
+    .from('rotation')
+    .select('user_id')
+    .eq('group_id', groupId)
+    .eq('month', month)
+    .maybeSingle()
+
+  if (!rotation || rotation.user_id !== user.id) {
+    return { success: false, error: t('errors.events.notOrganizer') }
+  }
+
+  // Validar fecha obligatoria
+  const eventDate = (formData.get('event_date') as string)?.trim()
+  if (!eventDate) {
+    return { success: false, error: t('errors.events.dateRequired') }
+  }
+
+  const place = (formData.get('place') as string)?.trim() || null
+  const description = (formData.get('description') as string)?.trim() || null
+  const now = new Date().toISOString()
+
+  // Buscar evento existente del mes
+  const { data: existing } = await supabase
+    .from('events')
+    .select('id, status, organizer_id')
+    .eq('group_id', groupId)
+    .eq('month', month)
+    .maybeSingle()
+
+  if (existing?.status === 'published') {
+    return { success: false, error: t('errors.events.alreadyExists') }
+  }
+
+  if (existing?.status === 'pending') {
+    // Evento auto-generado (organizer_id IS NULL) — reclamar y publicar
+    const { error: updateError } = await supabase
+      .from('events')
+      .update({
+        organizer_id: user.id,
+        event_date: eventDate,
+        place,
+        description,
+        status: 'published',
+        notified_at: now,
+        updated_at: now,
+      })
+      .eq('id', existing.id)
+
+    if (updateError) {
+      return { success: false, error: t('errors.events.createFailed') }
+    }
+  } else {
+    // No existe evento — INSERT directo como published
+    const { error: insertError } = await supabase
+      .from('events')
+      .insert({
+        group_id: groupId,
+        organizer_id: user.id,
+        month,
+        event_date: eventDate,
+        place,
+        description,
+        status: 'published',
+        notified_at: now,
+      })
+
+    if (insertError) {
+      return { success: false, error: t('errors.events.createFailed') }
+    }
+  }
+
+  const { data: event, error: selectError } = await supabase
+    .from('events')
+    .select('id, group_id, organizer_id, month, status, event_date, place, description, notified_at, closed_at, created_at, updated_at')
+    .eq('group_id', groupId)
+    .eq('month', month)
+    .single()
+
+  if (selectError || !event) {
+    return { success: false, error: t('errors.events.createButFetchFailed') }
+  }
+
+  return { success: true, data: event }
 }
 
 // Scenario: Edición posterior — solo el organizador puede editar, y el evento no debe estar cerrado.
@@ -203,7 +308,7 @@ export async function updateEvent(
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   // Verificar que el evento existe, no está cerrado y el usuario es el organizador
   const { data: existing } = await supabase
@@ -212,17 +317,17 @@ export async function updateEvent(
     .eq('id', eventId)
     .maybeSingle()
 
-  if (!existing) return { success: false, error: 'Evento no encontrado.' }
+  if (!existing) return { success: false, error: t('errors.events.notFound') }
   if (existing.organizer_id !== user.id) {
-    return { success: false, error: 'Solo el organizador puede editar el evento.' }
+    return { success: false, error: t('errors.events.cannotEditNotOrganizer') }
   }
   if (existing.status === 'closed') {
-    return { success: false, error: 'No se puede editar un evento cerrado.' }
+    return { success: false, error: t('errors.events.cannotEditClosed') }
   }
 
   const eventDate = (formData.get('event_date') as string)?.trim()
   if (!eventDate) {
-    return { success: false, error: 'La fecha del evento es obligatoria.' }
+    return { success: false, error: t('errors.events.dateRequired') }
   }
 
   const place = (formData.get('place') as string)?.trim() || null
@@ -247,7 +352,7 @@ export async function updateEvent(
     .neq('status', 'closed')
 
   if (updateError) {
-    return { success: false, error: 'No se pudo guardar los cambios. Intentá de nuevo.' }
+    return { success: false, error: t('errors.events.saveFailed') }
   }
 
   const { data: event } = await supabase

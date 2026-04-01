@@ -1,16 +1,21 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { signInWithGoogle } from '@/lib/actions/auth'
+import { t } from '@/lib/t'
 
 export default function GoogleSignInButton() {
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const searchParams = useSearchParams()
 
   function handleClick() {
     setError(null)
+    // Scenario 04 (US-02): propagar ?redirect= para restaurar contexto post re-login
+    const redirect = searchParams.get('redirect') ?? undefined
     startTransition(async () => {
-      const result = await signInWithGoogle()
+      const result = await signInWithGoogle(redirect)
       // signInWithGoogle hace redirect() si tiene éxito — solo llega aquí si falla
       if (result && !result.success) {
         setError(result.error)
@@ -24,10 +29,11 @@ export default function GoogleSignInButton() {
       <button
         onClick={handleClick}
         disabled={isPending}
-        className="flex w-full items-center justify-center gap-3 rounded-full bg-[#2563eb] px-6 py-4 text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+        className="flex w-full items-center justify-center gap-3 rounded-full px-6 py-4 text-base font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+        style={{ background: 'linear-gradient(135deg, #004ac6, #2563eb)' }}
       >
         {isPending ? (
-          <span>Redirigiendo...</span>
+          <span>{t('auth.redirecting')}</span>
         ) : (
           <>
             {/* Google icon oficial */}
@@ -37,14 +43,14 @@ export default function GoogleSignInButton() {
               <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z" fill="#fff" fillOpacity=".7"/>
               <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z" fill="#fff" fillOpacity=".6"/>
             </svg>
-            <span>Continuar con Google</span>
+            <span>{t('auth.continueWithGoogle')}</span>
           </>
         )}
       </button>
 
       {/* Texto legal */}
       <p className="text-center text-xs text-[#585f6c]">
-        Si no tenés cuenta se creará automáticamente.
+        {t('auth.autoAccountCreation')}
       </p>
 
       {/* Error inline — nunca alert() */}

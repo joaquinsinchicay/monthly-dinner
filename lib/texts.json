@@ -1,0 +1,552 @@
+{
+  "common": {
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "confirm": "Confirmar",
+    "close": "Cerrar",
+    "back": "Volver",
+    "add": "Agregar",
+    "remove": "Eliminar",
+    "copy": "Copiar",
+    "copied": "¡Copiado!",
+    "notAuthenticated": "No autenticado",
+    "altHero": "Amigos cenando juntos"
+  },
+  "auth": {
+    "continueWithGoogle": "Continuar con Google",
+    "redirecting": "Redirigiendo...",
+    "autoAccountCreation": "Si no tenés cuenta se creará automáticamente.",
+    "signInToJoin": "Iniciá sesión con Google para unirte al grupo.",
+    "signInWithGoogleToJoin": "Ingresar con Google para unirme",
+    "signOut": {
+      "trigger": "Cerrar sesión",
+      "eyebrow": "Sesión",
+      "title": "¿Cerrar sesión?",
+      "body": "Tendrás que volver a iniciar sesión con Google la próxima vez.",
+      "confirmIdle": "Sí, cerrar sesión",
+      "confirmPending": "Cerrando sesión..."
+    },
+    "login": {
+      "eyebrow": "monthly-dinner",
+      "heading": "Las cenas del grupo",
+      "body": "Coordiná sin perder mensajes en WhatsApp.",
+      "brandName": "Monthly",
+      "brandNameItalic": "dinner",
+      "tagline": "Registra las cenas con amigos"
+    },
+    "errors": {
+      "authFlowFailed": "No se pudo iniciar el flujo de autenticación.",
+      "signOutFailed": "No se pudo cerrar la sesión."
+    }
+  },
+  "onboarding": {
+    "welcome": "Bienvenido",
+    "howToStart": "¿Cómo querés empezar?",
+    "subtitle": "Creá un grupo nuevo o unite a uno existente con un link de invitación.",
+    "option1Label": "Opción 1",
+    "option1Title": "Crear un grupo",
+    "option1Subtitle": "Soy el organizador y quiero empezar.",
+    "option2Label": "Opción 2",
+    "option2Title": "Tengo un link de invitación",
+    "option2Subtitle": "Me invitaron a unirme a un grupo existente.",
+    "inviteLinkLabel": "Link de invitación",
+    "inviteLinkPlaceholder": "Pegá el link aquí",
+    "goToLink": "Ir al link",
+    "goingToLink": "Redirigiendo...",
+    "errors": {
+      "emptyLink": "Pegá el link de invitación.",
+      "invalidLink": "El link no parece válido. Pedile uno nuevo al admin del grupo."
+    }
+  },
+  "join": {
+    "invitationLabel": "Invitación al grupo",
+    "authenticatedSubtitle": "Tocá el botón para unirte al grupo.",
+    "joinButton": "Unirme a {groupName}",
+    "joining": "Uniéndote...",
+    "verifyLink": "No se pudo verificar el link.",
+    "invalidTitle": "Link no válido",
+    "invalidBody": "Este link expiró o fue revocado. Pedile uno nuevo al administrador del grupo.",
+    "errors": {
+      "expiredOrInvalid": "El link de invitación no es válido. Pedile uno nuevo al administrador del grupo.",
+      "expired": "El link de invitación expiró. Pedile uno nuevo al administrador del grupo.",
+      "revoked": "El link de invitación fue revocado. Pedile uno nuevo al administrador del grupo.",
+      "mustBeSignedIn": "Debés iniciar sesión para unirte al grupo.",
+      "joinFailed": "No se pudo unirte al grupo. Intentá de nuevo."
+    }
+  },
+  "dashboard": {
+    "emptyAdmin": {
+      "eyebrow": "Configurá",
+      "heading": "el grupo",
+      "body": "Tu clan está listo, finalizá la configuración para dar comienzo a la experiencia culinaria.",
+      "cta": "Completar configuración →"
+    },
+    "emptyMember": "Aún no hay eventos. El organizador del mes está preparando la primera cita.",
+    "emptyMemberCardEyebrow": "Pronto hay",
+    "emptyMemberCardHeading": "novedades",
+    "footer": "Powered by The Digital Maître D'"
+  },
+  "group": {
+    "createGroup": {
+      "pageEyebrow": "Nuevo grupo",
+      "pageHeading": "¿Cómo se llama el grupo?",
+      "pageBody": "Este nombre verán todos los miembros cuando los invites.",
+      "days": {
+        "lunes": "Lun",
+        "martes": "Mar",
+        "miercoles": "Mié",
+        "jueves": "Jue",
+        "viernes": "Vie",
+        "sabado": "Sáb",
+        "domingo": "Dom"
+      },
+      "weeks": {
+        "w1": "1°",
+        "w2": "2°",
+        "w3": "3°",
+        "w4": "4°",
+        "w5": "Última"
+      },
+      "biweeklyWeeks": {
+        "odd": "1° y 3°",
+        "even": "2° y 4°"
+      },
+      "ordinals": {
+        "w1": "primer",
+        "w2": "segundo",
+        "w3": "tercer",
+        "w4": "cuarto",
+        "w5": "último"
+      },
+      "previewSemanal": "Todos los {day}",
+      "previewMensual": "El {ordinal} {day} de cada mes",
+      "previewQuincenal": "El {weeks} {day} de cada mes",
+      "nameLabel": "Nombre del grupo",
+      "namePlaceholder": "Ej: Cenas del Jueves",
+      "frequencyLabel": "Frecuencia",
+      "weekLabel": "Semana del mes",
+      "weeksLabel": "Semanas del mes",
+      "dayLabel": "Día",
+      "submitIdle": "Crear grupo",
+      "submitPending": "Creando...",
+      "creatorNote": "Como creador, tendrás el rol de administrador para gestionar las invitaciones, proponer fechas y coordinar los lugares de encuentro.",
+      "errors": {
+        "nameRequired": "El nombre del grupo es obligatorio",
+        "frequencyRequired": "Seleccioná una frecuencia",
+        "weekRequired": "Seleccioná la semana del mes",
+        "weeksRequired": "Seleccioná las semanas del mes",
+        "dayRequired": "Seleccioná el día de la semana"
+      }
+    },
+    "eventForm": {
+      "dateLabel": "Fecha de la cena",
+      "placeLabel": "Lugar tentativo",
+      "placeLabelOptional": "(opcional)",
+      "placePlaceholder": "Ej: Lo de siempre, por definir…",
+      "descriptionLabel": "Descripción",
+      "descriptionPlaceholder": "Detalles adicionales para el grupo…",
+      "notifyCheckbox": "Notificar al grupo sobre los cambios",
+      "submitCreate": "Crear evento",
+      "submitCreating": "Creando evento…",
+      "submitSave": "Guardar cambios",
+      "submitSaving": "Guardando…"
+    },
+    "pollForm": {
+      "optionsLabel": "Opciones",
+      "optionPlaceholder": "Opción {number}",
+      "addOption": "+ Agregar opción",
+      "removeOption": "Quitar",
+      "closesAtLabel": "Fecha de cierre",
+      "submitIdle": "Abrir votación",
+      "submitPending": "Abriendo votación…",
+      "errors": {
+        "minOptions": "Se necesitan al menos 2 opciones para abrir la votación.",
+        "closesAtRequired": "La fecha de cierre es obligatoria."
+      }
+    },
+    "pollVoting": {
+      "voteSingular": "voto",
+      "votePlural": "votos",
+      "liveBadge": "En vivo",
+      "selectPrompt": "Seleccioná tu opción preferida.",
+      "didNotParticipate": "No participaste en esta votación."
+    },
+    "attendance": {
+      "question": "¿Vas a la cena?",
+      "yourAnswer": "Tu respuesta",
+      "noAnswerBeforeClose": "No respondiste antes del cierre.",
+      "options": {
+        "va": "Voy",
+        "tal_vez": "Tal vez",
+        "no_va": "No voy"
+      }
+    },
+    "checklist": {
+      "eyebrow": "Checklist del mes",
+      "titlePending": "Tus tareas",
+      "titleDone": "¡Todo listo!",
+      "allDoneMessage": "Completaste todas las tareas del mes. ¡Excelente organización!",
+      "notOrganizerTitle": "Solo para el organizador",
+      "notOrganizerBody": "El checklist está disponible únicamente para el organizador del mes."
+    },
+    "organizer": {
+      "eyebrow": "Turno rotativo",
+      "noOrganizerTitle": "Sin organizador asignado",
+      "noOrganizerBody": "El turno de este mes aún no fue asignado. El admin del grupo puede configurarlo.",
+      "iAmOrganizerTitle": "Te toca organizar",
+      "iAmOrganizerBody": "Sos el organizador de este mes.",
+      "nextStepEyebrow": "Próximo paso",
+      "nextStepBody": "Creá el evento del mes para convocar al grupo.",
+      "organizesThisMonth": "Organiza este mes.",
+      "nextTurnSuffix": "· Próximo turno",
+      "myNextTurn": "Te toca organizar el próximo mes",
+      "othersNextTurnPrefix": "Organiza",
+      "fallbackName": "Próximo organizador",
+      "fallbackOrganizer": "Organizador"
+    },
+    "notifyButton": {
+      "idle": "Notificar al grupo",
+      "pending": "Notificando…"
+    },
+    "closeEventForm": {
+      "restaurantLabel": "Restaurante visitado",
+      "restaurantLabelOptional": "(opcional)",
+      "restaurantPlaceholder": "Ej: La Cabrera",
+      "noRestaurantHint": "Si no lo completás, el evento se cierra como \"Sin restaurante registrado\".",
+      "submitIdle": "Cerrar evento",
+      "submitPending": "Cerrando evento…",
+      "confirmAnywayIdle": "Confirmar igual",
+      "confirmAnywayPending": "Cerrando…",
+      "alreadyVisitedTitle": "Este restaurante ya fue visitado",
+      "alreadyVisitedDate": "visitado el",
+      "alreadyVisitedQuestion": "¿Querés registrarlo igual?",
+      "backButton": "Volver"
+    },
+    "restaurantHistory": {
+      "eyebrow": "Historial de cenas",
+      "emptyTitle": "Sin cenas registradas",
+      "emptyBody": "Todavía no hay cenas registradas.",
+      "title": "Restaurantes visitados",
+      "dinnerSingular": "cena",
+      "dinnerPlural": "cenas",
+      "searchPlaceholder": "Buscar restaurante…",
+      "noResults": "No hay resultados para \"{query}\".",
+      "noRestaurant": "Sin restaurante registrado",
+      "attendeesLabel": "Fueron",
+      "noAttendees": "Sin asistentes registrados."
+    },
+    "convocatoria": {
+      "badge": "Convocatoria",
+      "reminderBadge": "Recordatorio",
+      "title": "¡Hay cena este mes!",
+      "reminderTitle": "¿Vas a la cena de este mes?",
+      "body": "El organizador convocó al grupo. Confirmá tu asistencia para que pueda organizar.",
+      "reminderBody": "Todavía no confirmaste tu asistencia. El organizador necesita saber si vas."
+    },
+    "rotation": {
+      "editButton": "Editar rotación",
+      "generateRandom": "Generar aleatoriamente",
+      "configureManual": "Configurar manualmente",
+      "previewLabel": "VISTA PREVIA — AÚN NO GUARDADO",
+      "regenerate": "Regenerar",
+      "confirmRotation": "Confirmar rotación",
+      "saveRotation": "Guardar rotación",
+      "unassigned": "— Sin asignar —",
+      "withoutAccount": "(Sin cuenta)",
+      "errors": {
+        "allMonthsRequired": "Todos los meses deben tener un miembro asignado."
+      },
+      "linkAccount": {
+        "eyebrow": "VINCULAR CUENTA",
+        "subtitle": "Seleccioná el perfil registrado que corresponde a este miembro.",
+        "loading": "Cargando miembros...",
+        "noMembers": "No hay miembros con cuenta disponibles para vincular.",
+        "noName": "Sin nombre",
+        "linkButton": "Vincular",
+        "confirmPending": "Vinculando..."
+      },
+      "sinCuentaBadge": "SIN CUENTA",
+      "fallbackMember": "Miembro",
+      "blockedMinMembers": "Se necesitan al menos dos miembros para configurar la rotación."
+    },
+    "pollPanel": {
+      "eyebrow": "Votación de restaurantes",
+      "noVotingTitle": "Sin votación activa",
+      "noVotingBody": "El organizador aún no abrió la votación de restaurantes.",
+      "openTitle": "Abrir votación",
+      "openBody": "Propone restaurantes y dejá que el grupo decida.",
+      "titleOpen": "¿A dónde vamos?",
+      "titleClosed": "Votación cerrada",
+      "statusOpen": "Abierta",
+      "statusClosed": "Cerrada",
+      "closesPrefix": "Cierra el",
+      "closedPrefix": "Cerró el",
+      "alreadyActive": "Ya hay una votación activa para este evento."
+    },
+    "eventPanel": {
+      "eyebrow": "Evento del mes",
+      "noEventTitle": "Sin evento este mes",
+      "noEventBody": "La cena de este mes aún no fue convocada.",
+      "createTitle": "Crear el evento",
+      "createBody": "Completá los datos para convocar al grupo.",
+      "dateUnconfirmed": "Fecha por confirmar",
+      "placeLabel": "Lugar:",
+      "organizeButton": "Organizar",
+      "editSummary": "Editar evento",
+      "closeSummary": "Cerrar evento",
+      "status": {
+        "pending": "Pendiente",
+        "published": "Publicado",
+        "closed": "Cerrado"
+      }
+    },
+    "groupSelector": {
+      "label": "Grupo actual"
+    },
+    "avatarMenu": {
+      "settings": "Configuración del grupo",
+      "createGroup": "Crear nuevo grupo"
+    },
+    "groupCreated": {
+      "eyebrow": "Grupo creado",
+      "titlePrefix": "¡Listo,",
+      "summaryTitle": "Resumen",
+      "nameLabel": "Nombre",
+      "frequencyLabel": "Frecuencia",
+      "dayLabel": "Día",
+      "adminBadge": "Administrador",
+      "adminBody": "Podés gestionar las invitaciones, proponer fechas y coordinar los lugares de encuentro.",
+      "nextStepsTitle": "Próximos pasos",
+      "step1Title": "Invitar miembros",
+      "step1Description": "Compartí el link de invitación con tu grupo para que se sumen.",
+      "step2Title": "Configurar rotación",
+      "step2Description": "Asigná quién organiza cada mes para distribuir la carga entre todos.",
+      "ctaButton": "Ir al Dashboard",
+      "formatDayMonthly": "Día {day} de cada mes",
+      "formatDaySemanal": "Todos los {day}",
+      "formatDayQuincenal": "Cada dos {day}"
+    },
+    "attendanceSummary": {
+      "title": "Confirmaciones",
+      "nooneYet": "Nadie confirmó todavía.",
+      "noMembers": "Nadie en el grupo todavía.",
+      "loading": "Cargando confirmaciones…",
+      "liveBadge": "En vivo",
+      "allResponded": "Todos respondieron",
+      "shareButton": "Compartir resumen",
+      "guestConfirmTitle": "Confirmar por invitados",
+      "guestBadge": "Sin cuenta",
+      "labels": {
+        "va": "Va",
+        "tal_vez": "Tal vez",
+        "no_va": "No va",
+        "van": "Van",
+        "no_van": "No van",
+        "sinResponder": "Sin responder"
+      }
+    },
+    "invitationLink": {
+      "label": "Link de invitación",
+      "validity": "Válido por 30 días desde la creación.",
+      "revokeIdle": "Revocar link",
+      "revokePending": "Revocando...",
+      "generateIdle": "Generar nuevo link",
+      "generatePending": "Generando...",
+      "unavailable": "El link de invitación no está disponible o expiró.",
+      "noActiveLink": "No hay un enlace de invitación activo. Generá uno en la sección de Ajustes.",
+      "errors": {
+        "copyFailed": "No se pudo copiar. Copiá el link manualmente.",
+        "getLinksError": "No se pudieron obtener los links",
+        "generateFailed": "No se pudo generar el link. Intentá de nuevo.",
+        "revokeFailed": "No se pudo revocar el link. Intentá de nuevo."
+      }
+    }
+  },
+  "settings": {
+    "identityEyebrow": "CONTROL & IDENTIDAD",
+    "sectionTitle": "Ajustes del",
+    "sectionTitleHighlight": "Clan",
+    "ecosystemEyebrow": "ECOSISTEMA",
+    "membersTitle": "Miembros del",
+    "membersTitleHighlight": "Clan",
+    "addMemberButton": "Agregar",
+    "membersEmpty": "No hay miembros en este grupo todavía.",
+    "rotationEyebrow": "PRÓXIMOS ENCUENTROS",
+    "rotationTitle": "Rotación de",
+    "rotationTitleHighlight": "Responsables",
+    "noRotation": "No hay rotación configurada aún.",
+    "reorderButton": "Reordenar",
+    "reorderHint": "Arrastrá los avatares para cambiar el orden.",
+    "saveOrderIdle": "Guardar orden",
+    "saveOrderPending": "Guardando...",
+    "clanNameRow": "Nombre del Clan",
+    "clanNamePlaceholder": "Nombre del grupo",
+    "youSuffix": "(vos)",
+    "rolePillAdmin": "ADMIN",
+    "rolePillMember": "MIEMBRO",
+    "guestPill": "Sin cuenta",
+    "memberOptionsAriaLabel": "Opciones",
+    "makeAdmin": "Hacer admin",
+    "makeMember": "Hacer miembro",
+    "onlyAdminHint": "(debe haber al menos un admin)",
+    "removeMember": "Eliminar del grupo",
+    "addDialog": {
+      "tabInvite": "Invitar por link",
+      "tabGuest": "Agregar sin cuenta",
+      "inviteTitle": "Invitar al Clan",
+      "inviteSubtitle": "Compartí este enlace para que alguien se una al grupo.",
+      "guestTitle": "Agregar sin cuenta",
+      "guestSubtitle": "Esta persona aparecerá en confirmaciones e historial. No tendrá acceso a la app.",
+      "guestNameLabel": "NOMBRE",
+      "guestNamePlaceholder": "Nombre del miembro",
+      "addGuestIdle": "Agregar al clan",
+      "addGuestPending": "Agregando..."
+    },
+    "changeRoleDialog": {
+      "title": "Cambiar rol",
+      "questionPrefix": "¿Querés hacer a",
+      "questionSuffix": "{role}?",
+      "confirmIdle": "Confirmar",
+      "confirmPending": "Guardando..."
+    },
+    "deleteDialog": {
+      "title": "Eliminar del grupo",
+      "questionPrefix": "¿Eliminar a",
+      "questionSuffix": "del grupo? Esta acción no se puede deshacer.",
+      "deleteIdle": "Eliminar",
+      "deletePending": "Eliminando..."
+    },
+    "backToDashboard": "Dashboard",
+    "fallbackGuest": "Guest",
+    "fallbackUser": "Usuario"
+  },
+  "errors": {
+    "events": {
+      "notAuthenticated": "No autenticado",
+      "getEventFailed": "No se pudo obtener el evento del mes.",
+      "notOrganizer": "Solo el organizador del mes puede crear el evento.",
+      "dateRequired": "La fecha del evento es obligatoria.",
+      "alreadyExists": "Ya existe un evento para este mes. Podés editarlo desde el panel.",
+      "createFailed": "No se pudo crear el evento. Intentá de nuevo.",
+      "createButFetchFailed": "Evento creado pero no se pudo obtener los datos.",
+      "notFound": "Evento no encontrado.",
+      "cannotEditNotOrganizer": "Solo el organizador puede editar el evento.",
+      "cannotEditClosed": "No se puede editar un evento cerrado.",
+      "saveFailed": "No se pudo guardar los cambios. Intentá de nuevo.",
+      "cannotPublishNotOrganizer": "Solo el organizador puede publicar el evento.",
+      "cannotPublishClosed": "No se puede publicar un evento cerrado.",
+      "publishFailed": "No se pudo publicar el evento. Intentá de nuevo.",
+      "attendanceFetchFailed": "No se pudieron obtener las confirmaciones.",
+      "attendanceMembersFailed": "No se pudo obtener los miembros del grupo."
+    },
+    "polls": {
+      "voteFetchFailed": "No se pudo obtener los votos.",
+      "pollNotFound": "Votación no encontrada.",
+      "pollClosed": "La votación ya cerró. No se puede emitir o cambiar el voto.",
+      "voteFailed": "No se pudo registrar el voto. Intentá de nuevo.",
+      "getPollFailed": "No se pudo obtener la votación.",
+      "notOrganizerPoll": "Solo el organizador puede abrir la votación.",
+      "minOptions": "Se necesitan al menos 2 opciones para abrir la votación.",
+      "pastCloseDate": "La fecha de cierre debe ser en el futuro.",
+      "pollAlreadyExists": "Ya existe una votación para este evento. Podés editarla desde el panel.",
+      "createPollFailed": "No se pudo crear la votación. Intentá de nuevo.",
+      "pollCreatedButFetchFailed": "Votación creada pero no se pudo obtener los datos.",
+      "saveOptionsFailed": "No se pudieron guardar las opciones."
+    },
+    "members": {
+      "noPermissionAdd": "No tenés permisos para agregar miembros",
+      "nameRequired": "El nombre es obligatorio",
+      "nameTooLong": "El nombre no puede superar los 80 caracteres",
+      "addFailed": "No se pudo agregar el miembro. Intentá de nuevo.",
+      "noPermissionDelete": "No tenés permisos para eliminar miembros",
+      "guestNotFound": "Miembro guest no encontrado en este grupo",
+      "deleteFailed": "No se pudo eliminar el miembro. Intentá de nuevo.",
+      "notMember": "No sos miembro de este grupo",
+      "attendanceClosedEvent": "No se puede modificar la asistencia de un evento cerrado.",
+      "notAdminForGuest": "Solo un admin puede confirmar por otro miembro",
+      "guestMemberNotFound": "Miembro guest no encontrado en este grupo",
+      "eventNotFound": "Evento no encontrado.",
+      "attendanceSaveFailed": "No se pudo guardar tu confirmación. Intentá de nuevo.",
+      "attendanceFetchFailed": "No se pudo obtener la confirmación."
+    },
+    "groups": {
+      "nameRequired": "El nombre del grupo es obligatorio",
+      "invalidFrequency": "La frecuencia seleccionada no es válida",
+      "dayRequired": "El día de la semana es obligatorio",
+      "weekNotRequiredForSemanal": "La frecuencia semanal no requiere semana del mes",
+      "weekRequiredForMensual": "La frecuencia mensual requiere seleccionar la semana del mes (1° a Última)",
+      "weekRequiredForQuincenal": "La frecuencia quincenal requiere seleccionar \"1° y 3°\" o \"2° y 4°\"",
+      "duplicateName": "Ya tenés un grupo llamado \"{name}\". Probá con un nombre diferente.",
+      "createFailed": "No se pudo crear el grupo. Intentá de nuevo."
+    },
+    "settings": {
+      "nameEmpty": "El nombre no puede estar vacío",
+      "nameTooShort": "El nombre debe tener al menos 3 caracteres",
+      "nameTooLong": "El nombre no puede superar los 50 caracteres",
+      "notAdmin": "Solo los admins pueden modificar el grupo",
+      "updateNameFailed": "No se pudo actualizar el nombre. Intentá de nuevo.",
+      "notAdminForRole": "Solo los admins pueden cambiar roles",
+      "mustKeepAdmin": "Debe haber al menos un admin en el grupo",
+      "updateRoleFailed": "No se pudo actualizar el rol. Intentá de nuevo.",
+      "cannotRemoveSelf": "No podés eliminarte a vos mismo del grupo",
+      "notAdminForRemove": "Solo los admins pueden eliminar miembros",
+      "memberNotFound": "Miembro no encontrado en este grupo",
+      "cannotRemoveOnlyAdmin": "No podés eliminar al único admin del grupo",
+      "removeFailed": "No se pudo eliminar el miembro. Intentá de nuevo.",
+      "notAdminForRotation": "Solo los admins pueden reordenar la rotación",
+      "getRotationFailed": "No se pudo obtener la rotación. Intentá de nuevo.",
+      "saveRotationFailed": "No se pudo guardar el orden. Intentá de nuevo.",
+      "removeMemberError": "Error al eliminar el miembro"
+    },
+    "checklist": {
+      "eventNotFound": "Evento no encontrado.",
+      "notOrganizer": "Solo el organizador puede ver el checklist.",
+      "fetchFailed": "No se pudo obtener el checklist.",
+      "noTemplates": "No se encontraron templates para el checklist.",
+      "createFailed": "No se pudo crear el checklist.",
+      "fetchCreatedFailed": "No se pudo obtener el checklist creado.",
+      "toggleFailed": "No se pudo actualizar la tarea."
+    },
+    "restaurant": {
+      "eventNotFound": "Evento no encontrado.",
+      "notOrganizer": "Solo el organizador puede cerrar el evento.",
+      "alreadyClosed": "El evento ya está cerrado.",
+      "historyFailed": "No se pudo guardar el historial. Intentá de nuevo.",
+      "closeFailed": "No se pudo cerrar el evento. Intentá de nuevo.",
+      "getHistoryFailed": "No se pudo obtener el historial."
+    },
+    "rotation": {
+      "getOrganizerFailed": "No se pudo obtener el organizador del mes.",
+      "getNextOrganizerFailed": "No se pudo obtener el próximo organizador."
+    },
+    "auth": {
+      "authFlowFailed": "No se pudo iniciar el flujo de autenticación.",
+      "signOutFailed": "No se pudo cerrar la sesión."
+    },
+    "invitationLinks": {
+      "getLinksError": "No se pudieron obtener los links",
+      "generateFailed": "No se pudo generar el link. Intentá de nuevo.",
+      "revokeFailed": "No se pudo revocar el link. Intentá de nuevo."
+    },
+    "join": {
+      "mustBeSignedIn": "Debés iniciar sesión para unirte al grupo.",
+      "expiredOrInvalid": "El link de invitación no es válido. Pedile uno nuevo al administrador del grupo.",
+      "expired": "El link de invitación expiró. Pedile uno nuevo al administrador del grupo.",
+      "revoked": "El link de invitación fue revocado. Pedile uno nuevo al administrador del grupo.",
+      "joinFailed": "No se pudo unirte al grupo. Intentá de nuevo.",
+      "verifyFailed": "No se pudo verificar el link."
+    },
+    "attendances": {
+      "eventNotFound": "Evento no encontrado.",
+      "closedEvent": "No se puede modificar la asistencia de un evento cerrado.",
+      "notAdminForGuest": "Solo un admin puede confirmar por otro miembro",
+      "guestNotFound": "Miembro guest no encontrado en este grupo",
+      "notMember": "No sos miembro de este grupo",
+      "saveFailed": "No se pudo guardar tu confirmación. Intentá de nuevo.",
+      "fetchFailed": "No se pudo obtener la confirmación.",
+      "confirmationsFetchFailed": "No se pudo obtener las confirmaciones.",
+      "membersFetchFailed": "No se pudo obtener los miembros del grupo."
+    }
+  }
+}

@@ -2,6 +2,7 @@ import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton'
+import { t } from '@/lib/t'
 
 export default async function LoginPage() {
   const supabase = createClient()
@@ -21,7 +22,7 @@ export default async function LoginPage() {
         <div className="relative w-full overflow-hidden rounded-3xl" style={{ aspectRatio: '4/3' }}>
           <Image
             src="/images/login-hero.jpg"
-            alt="Amigos cenando juntos"
+            alt={t('common.altHero')}
             fill
             className="object-cover"
             priority
@@ -31,13 +32,18 @@ export default async function LoginPage() {
         {/* Bloque texto + CTA */}
         <div className="mt-8">
 
-          {/* Título Display Large */}
+          {/* Título Display — nombre del producto */}
           <h1
-            className="text-center font-serif text-[36px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
+            className="font-serif text-[42px] leading-[1.1] tracking-[-0.02em] text-[#1b1c1b]"
             style={{ fontFamily: 'DM Serif Display, serif' }}
           >
-            Registra las cenas con amigos
+            {t('auth.login.brandName')} <em>{t('auth.login.brandNameItalic')}</em>
           </h1>
+
+          {/* Subtítulo Label Signature */}
+          <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.05em] text-[#585f6c]">
+            {t('auth.login.tagline')}
+          </p>
 
           {/* Botón Google + texto legal */}
           <div className="mt-8">

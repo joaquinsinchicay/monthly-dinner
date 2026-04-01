@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useEffect } from 'react'
 import { toggleChecklistItem, getOrCreateChecklist } from '@/lib/actions/checklist'
+import { t } from '@/lib/t'
 import type { ChecklistItem } from '@/lib/actions/checklist'
 
 interface Props {
@@ -39,16 +40,16 @@ export default function ChecklistPanel({ eventId, isOrganizer, initialItems }: P
     return (
       <div className="rounded-2xl bg-white p-6 shadow-[0px_10px_30px_-5px_rgba(28,27,27,0.07)]">
         <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-          Checklist del mes
+          {t('group.checklist.eyebrow')}
         </p>
         <p
           className="mt-1 font-serif text-[22px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
           style={{ fontFamily: 'DM Serif Display, serif' }}
         >
-          Solo para el organizador
+          {t('group.checklist.notOrganizerTitle')}
         </p>
         <p className="mt-2 text-sm text-[#585f6c]">
-          El checklist está disponible únicamente para el organizador del mes.
+          {t('group.checklist.notOrganizerBody')}
         </p>
       </div>
     )
@@ -97,13 +98,13 @@ export default function ChecklistPanel({ eventId, isOrganizer, initialItems }: P
       <div className="mb-4 flex items-start justify-between">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-            Checklist del mes
+            {t('group.checklist.eyebrow')}
           </p>
           <p
             className="mt-1 font-serif text-[22px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
             style={{ fontFamily: 'DM Serif Display, serif' }}
           >
-            {allDone ? '¡Todo listo!' : 'Tus tareas'}
+            {allDone ? t('group.checklist.titleDone') : t('group.checklist.titlePending')}
           </p>
         </div>
 
@@ -198,7 +199,7 @@ export default function ChecklistPanel({ eventId, isOrganizer, initialItems }: P
       {/* All done message */}
       {allDone && (
         <p className="mt-4 text-center text-sm text-[#585f6c]">
-          Completaste todas las tareas del mes. ¡Excelente organización!
+          {t('group.checklist.allDoneMessage')}
         </p>
       )}
     </div>

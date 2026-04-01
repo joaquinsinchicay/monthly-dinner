@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
+import { t } from '@/lib/t'
 import type { ActionResult } from '@/types'
 
 // Inicia el flujo OAuth con Google.
@@ -33,7 +34,7 @@ export async function signInWithGoogle(next?: string): Promise<ActionResult<void
   })
 
   if (error || !data.url) {
-    return { success: false, error: 'No se pudo iniciar el flujo de autenticación.' }
+    return { success: false, error: t('errors.auth.authFlowFailed') }
   }
 
   redirect(data.url)
@@ -46,7 +47,7 @@ export async function signOut(): Promise<ActionResult<void>> {
   const { error } = await supabase.auth.signOut()
 
   if (error) {
-    return { success: false, error: 'No se pudo cerrar la sesión.' }
+    return { success: false, error: t('errors.auth.signOutFailed') }
   }
 
   redirect('/')

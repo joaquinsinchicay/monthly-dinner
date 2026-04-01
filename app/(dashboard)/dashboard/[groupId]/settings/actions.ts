@@ -1,30 +1,14 @@
 'use server'
 
-// NOTE — RLS audit (schema.sql verificado):
+// RLS audit (schema.sql verificado):
 // ✅ UPDATE en groups WHERE id: cubierto por "groups: update admin"
 // ✅ UPDATE en invitation_links WHERE group_id: cubierto por "invitation_links: update admin"
-// ⚠️  UPDATE en members WHERE group_id para admin: NO existe política "update admin".
-//    Solo existe "members: update own" (WHERE auth.uid() = user_id).
-//    updateMemberRole hace UPDATE SET role — esto fallará para un admin actualizando a otro miembro.
-//    Para producción, se necesita agregar una política: members: update admin.
-//    Por ahora la acción verifica el rol manualmente y depende de que RLS permita el update.
-//    Solución recomendada en schema.sql:
-//      create policy "members: update admin"
-//        on members for update
-//        using (
-//          exists (
-//            select 1 from members m2
-//            where m2.group_id = members.group_id
-//              and m2.user_id  = auth.uid()
-//              and m2.role     = 'admin'
-//          )
-//        );
-// ⚠️  UPDATE en rotation WHERE group_id para admin: NO existe política "update admin".
-//    Solo existe "rotation: update admin" — sí, EXISTE (verificado en schema.sql línea 340).
-//    ✅ rotation: update admin cubierto.
+// ✅ UPDATE en members WHERE group_id para admin: cubierto por "members: update admin" (migración 20260331)
+// ✅ UPDATE en rotation WHERE group_id para admin: cubierto por "rotation: update admin"
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { t } from '@/lib/t'
 import type { ActionResult, MemberRole } from '@/types'
 
 // ACTION 1 — updateGroupName
@@ -37,10 +21,12 @@ export async function updateGroupName(
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   const name = input.name?.trim()
-  if (!name) return { success: false, error: 'El nombre no puede estar vacío' }
+  if (!name) return { success: false, error: t('errors.settings.nameEmpty') }
+  if (name.length < 3) return { success: false, error: t('errors.settings.nameTooShort') }
+  if (name.length > 50) return { success: false, error: t('errors.settings.nameTooLong') }
 
   // Verificar que el usuario es admin del grupo
   const { data: membership } = await supabase
@@ -51,7 +37,7 @@ export async function updateGroupName(
     .maybeSingle()
 
   if (!membership || membership.role !== 'admin') {
-    return { success: false, error: 'Solo los admins pueden modificar el grupo' }
+    return { success: false, error: t('errors.settings.notAdmin') }
   }
 
   const { data: group, error } = await supabase
@@ -62,7 +48,7 @@ export async function updateGroupName(
     .single()
 
   if (error || !group) {
-    return { success: false, error: 'No se pudo actualizar el nombre. Intentá de nuevo.' }
+    return { success: false, error: t('errors.settings.updateNameFailed') }
   }
 
   revalidatePath(`/dashboard/${input.group_id}/settings`)
@@ -81,7 +67,7 @@ export async function updateMemberRole(
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   // Verificar que el usuario es admin del grupo
   const { data: myMembership } = await supabase
@@ -92,7 +78,7 @@ export async function updateMemberRole(
     .maybeSingle()
 
   if (!myMembership || myMembership.role !== 'admin') {
-    return { success: false, error: 'Solo los admins pueden cambiar roles' }
+    return { success: false, error: t('errors.settings.notAdminForRole') }
   }
 
   // Si estamos degradando a 'member', verificar que no sea el único admin
@@ -104,7 +90,7 @@ export async function updateMemberRole(
       .eq('role', 'admin')
 
     if ((adminCount ?? 0) <= 1) {
-      return { success: false, error: 'Debe haber al menos un admin en el grupo' }
+      return { success: false, error: t('errors.settings.mustKeepAdmin') }
     }
   }
 
@@ -117,7 +103,7 @@ export async function updateMemberRole(
     .single()
 
   if (error || !updated) {
-    return { success: false, error: 'No se pudo actualizar el rol. Intentá de nuevo.' }
+    return { success: false, error: t('errors.settings.updateRoleFailed') }
   }
 
   revalidatePath(`/dashboard/${input.group_id}/settings`)
@@ -135,11 +121,11 @@ export async function removeMember(
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   // No puede eliminar a sí mismo
   if (input.user_id === user.id) {
-    return { success: false, error: 'No podés eliminarte a vos mismo del grupo' }
+    return { success: false, error: t('errors.settings.cannotRemoveSelf') }
   }
 
   // Verificar que el usuario autenticado es admin del grupo
@@ -151,7 +137,7 @@ export async function removeMember(
     .maybeSingle()
 
   if (!myMembership || myMembership.role !== 'admin') {
-    return { success: false, error: 'Solo los admins pueden eliminar miembros' }
+    return { success: false, error: t('errors.settings.notAdminForRemove') }
   }
 
   // Obtener el member record del usuario a eliminar
@@ -164,7 +150,7 @@ export async function removeMember(
     .maybeSingle()
 
   if (!targetMember) {
-    return { success: false, error: 'Miembro no encontrado en este grupo' }
+    return { success: false, error: t('errors.settings.memberNotFound') }
   }
 
   // Si el miembro a eliminar es admin, verificar que quede al menos 1 admin
@@ -176,7 +162,7 @@ export async function removeMember(
       .eq('role', 'admin')
 
     if ((adminCount ?? 0) <= 1) {
-      return { success: false, error: 'No podés eliminar al único admin del grupo' }
+      return { success: false, error: t('errors.settings.cannotRemoveOnlyAdmin') }
     }
   }
 
@@ -218,7 +204,7 @@ export async function removeMember(
     .eq('group_id', input.group_id)
 
   if (error) {
-    return { success: false, error: 'No se pudo eliminar el miembro. Intentá de nuevo.' }
+    return { success: false, error: t('errors.settings.removeFailed') }
   }
 
   revalidatePath(`/dashboard/${input.group_id}/settings`)
@@ -239,7 +225,7 @@ export async function reorderRotation(
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   // Verificar que el usuario es admin del grupo
   const { data: membership } = await supabase
@@ -250,7 +236,7 @@ export async function reorderRotation(
     .maybeSingle()
 
   if (!membership || membership.role !== 'admin') {
-    return { success: false, error: 'Solo los admins pueden reordenar la rotación' }
+    return { success: false, error: t('errors.settings.notAdminForRotation') }
   }
 
   // NOTE: `month` (date) is the ordering key — unique(group_id, month) enforced in DB.
@@ -263,7 +249,7 @@ export async function reorderRotation(
     .order('month', { ascending: true })
 
   if (fetchError || !existing) {
-    return { success: false, error: 'No se pudo obtener la rotación. Intentá de nuevo.' }
+    return { success: false, error: t('errors.settings.getRotationFailed') }
   }
 
   if (existing.length === 0) {
@@ -304,7 +290,7 @@ export async function reorderRotation(
       .single()
 
     if (updateError || !updated) {
-      return { success: false, error: 'No se pudo guardar el orden. Intentá de nuevo.' }
+      return { success: false, error: t('errors.settings.saveRotationFailed') }
     }
 
     results.push({ id: updated.id, order_index: upd.order_index })

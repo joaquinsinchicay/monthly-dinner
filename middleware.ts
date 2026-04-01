@@ -39,6 +39,9 @@ export async function middleware(request: NextRequest) {
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/'
+    // Scenario 04 (US-02): preservar URL solicitada para restaurar contexto post re-login
+    const originalPath = request.nextUrl.pathname + request.nextUrl.search
+    url.searchParams.set('redirect', originalPath)
     return NextResponse.redirect(url)
   }
 
@@ -47,6 +50,19 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
+  }
+
+  // Persistir el último grupo visitado para el smart redirect post-login (US-01 §8)
+  // Captura /dashboard/[groupId] y /dashboard/[groupId]/subrutas
+  const groupMatch = pathname.match(/^\/dashboard\/([^/]+)/)
+  if (user && groupMatch?.[1]) {
+    supabaseResponse.cookies.set('last_group_id', groupMatch[1], {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 30, // 30 días
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+    })
   }
 
   return supabaseResponse

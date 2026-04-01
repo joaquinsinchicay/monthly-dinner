@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { t } from '@/lib/t'
 import type { ActionResult, Member } from '@/types'
 
 // Agrega un miembro guest al grupo (sin cuenta).
@@ -15,7 +16,7 @@ export async function addGuestMember(
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   // Validar que el usuario autenticado sea admin del grupo
   const { data: adminCheck } = await supabase
@@ -26,11 +27,11 @@ export async function addGuestMember(
     .eq('role', 'admin')
     .maybeSingle()
 
-  if (!adminCheck) return { success: false, error: 'No tenés permisos para agregar miembros' }
+  if (!adminCheck) return { success: false, error: t('errors.members.noPermissionAdd') }
 
   const name = input.display_name.trim()
-  if (!name) return { success: false, error: 'El nombre es obligatorio' }
-  if (name.length > 80) return { success: false, error: 'El nombre no puede superar los 80 caracteres' }
+  if (!name) return { success: false, error: t('errors.members.nameRequired') }
+  if (name.length > 80) return { success: false, error: t('errors.members.nameTooLong') }
 
   const { data, error } = await supabase
     .from('members')
@@ -45,7 +46,7 @@ export async function addGuestMember(
     .single()
 
   if (error || !data) {
-    return { success: false, error: 'No se pudo agregar el miembro. Intentá de nuevo.' }
+    return { success: false, error: t('errors.members.addFailed') }
   }
 
   revalidatePath(`/dashboard/${input.group_id}/settings`)
@@ -75,7 +76,7 @@ export async function deleteGuestMember(
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
 
   // Validar que el usuario autenticado sea admin del grupo
   const { data: adminCheck } = await supabase
@@ -86,7 +87,7 @@ export async function deleteGuestMember(
     .eq('role', 'admin')
     .maybeSingle()
 
-  if (!adminCheck) return { success: false, error: 'No tenés permisos para eliminar miembros' }
+  if (!adminCheck) return { success: false, error: t('errors.members.noPermissionDelete') }
 
   // Validar que el miembro a eliminar existe, es guest y pertenece al grupo
   const { data: guestCheck } = await supabase
@@ -97,7 +98,7 @@ export async function deleteGuestMember(
     .eq('is_guest', true)
     .maybeSingle()
 
-  if (!guestCheck) return { success: false, error: 'Miembro guest no encontrado en este grupo' }
+  if (!guestCheck) return { success: false, error: t('errors.members.guestNotFound') }
 
   const { error } = await supabase
     .from('members')
@@ -107,7 +108,7 @@ export async function deleteGuestMember(
     .eq('is_guest', true)
 
   if (error) {
-    return { success: false, error: 'No se pudo eliminar el miembro. Intentá de nuevo.' }
+    return { success: false, error: t('errors.members.deleteFailed') }
   }
 
   revalidatePath(`/dashboard/${input.group_id}/settings`)

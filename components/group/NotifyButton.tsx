@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { publishEvent } from '@/lib/actions/events'
+import { t } from '@/lib/t'
 
 interface Props {
   eventId: string
@@ -35,7 +36,7 @@ export default function NotifyButton({ eventId }: Props) {
         className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(0,74,198,0.25)] transition-opacity disabled:opacity-60"
       >
         {isPending ? (
-          'Notificando…'
+          t('group.notifyButton.pending')
         ) : (
           <>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -48,7 +49,7 @@ export default function NotifyButton({ eventId }: Props) {
                 stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
               />
             </svg>
-            Notificar al grupo
+            {t('group.notifyButton.idle')}
           </>
         )}
       </button>

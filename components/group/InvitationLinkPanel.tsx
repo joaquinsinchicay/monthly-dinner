@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { generateInvitationLink, revokeInvitationLink } from '@/lib/actions/invitation-links'
 import type { InvitationLink, MemberRole } from '@/types'
+import { t } from '@/lib/t'
 
 interface Props {
   groupId: string
@@ -33,7 +34,7 @@ export default function InvitationLinkPanel({
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      setError('No se pudo copiar. Copiá el link manualmente.')
+      setError(t('group.invitationLink.errors.copyFailed'))
     }
   }
 
@@ -69,7 +70,7 @@ export default function InvitationLinkPanel({
 
       {/* Label — uppercase + tracking (design-system.md) */}
       <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-        Link de invitación
+        {t('group.invitationLink.label')}
       </p>
 
       {inviteUrl ? (
@@ -86,13 +87,13 @@ export default function InvitationLinkPanel({
               disabled={isPending}
               className="shrink-0 rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-4 py-1.5 text-xs font-semibold text-white shadow-[0_4px_16px_rgba(0,74,198,0.25)] transition-opacity disabled:opacity-60"
             >
-              {copied ? '¡Copiado!' : 'Copiar'}
+              {copied ? t('common.copied') : t('common.copy')}
             </button>
           </div>
 
           {/* Expiración */}
           <p className="text-xs text-[#585f6c]">
-            Válido por 30 días desde la creación.
+            {t('group.invitationLink.validity')}
           </p>
 
           {/* Revocar — solo admin */}
@@ -102,7 +103,7 @@ export default function InvitationLinkPanel({
               disabled={isPending}
               className="text-xs text-[#ba1a1a] disabled:opacity-60"
             >
-              {isPending ? 'Revocando...' : 'Revocar link'}
+              {isPending ? t('group.invitationLink.revokePending') : t('group.invitationLink.revokeIdle')}
             </button>
           )}
         </>
@@ -111,7 +112,7 @@ export default function InvitationLinkPanel({
           {/* Scenario: Link expirado o revocado */}
           <div className="rounded-xl bg-[#ffdad6] px-4 py-3">
             <p className="text-sm text-[#ba1a1a]">
-              El link de invitación no está disponible o expiró.
+              {t('group.invitationLink.unavailable')}
             </p>
           </div>
 
@@ -122,7 +123,7 @@ export default function InvitationLinkPanel({
               disabled={isPending}
               className="w-full rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(0,74,198,0.25)] disabled:opacity-60 transition-opacity"
             >
-              {isPending ? 'Generando...' : 'Generar nuevo link'}
+              {isPending ? t('group.invitationLink.generatePending') : t('group.invitationLink.generateIdle')}
             </button>
           )}
         </>

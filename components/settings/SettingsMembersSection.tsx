@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { MoreVertical } from 'lucide-react'
-import { updateMemberRole, removeMember } from '@/app/(dashboard)/dashboard/[groupId]/settings/actions'
+import { updateMemberRole } from '@/app/(dashboard)/dashboard/[groupId]/settings/actions'
 import { addGuestMember, deleteGuestMember } from '@/lib/actions/members'
+import { t } from '@/lib/t'
 import type { MemberRole } from '@/types'
 import { useRouter } from 'next/navigation'
 
@@ -62,14 +63,14 @@ function Avatar({
 function RolePill({ role }: { role: MemberRole }) {
   if (role === 'admin') {
     return (
-      <span className="rounded-full bg-[#dce6ff] text-[#004ac6] text-[11px] font-semibold px-2 py-0.5">
-        ADMIN
+      <span className="rounded-full bg-[#dce6ff] text-[#004ac6] text-[11px] font-semibold uppercase tracking-[0.04em] px-2 py-0.5">
+        {t('settings.rolePillAdmin')}
       </span>
     )
   }
   return (
-    <span className="rounded-full bg-[#e8f5e9] text-[#1b5e20] text-[11px] font-semibold px-2 py-0.5">
-      MIEMBRO
+    <span className="rounded-full bg-[#e8f5e9] text-[#1b5e20] text-[11px] font-semibold uppercase tracking-[0.04em] px-2 py-0.5">
+      {t('settings.rolePillMember')}
     </span>
   )
 }
@@ -77,7 +78,7 @@ function RolePill({ role }: { role: MemberRole }) {
 function GuestPill() {
   return (
     <span className="rounded-full bg-[#ede9e8] text-[#585f6c] text-[11px] font-semibold px-2 py-0.5 uppercase tracking-[0.03em]">
-      Sin cuenta
+      {t('settings.guestPill')}
     </span>
   )
 }
@@ -97,11 +98,7 @@ export default function SettingsMembersSection({
   const [removingId, setRemovingId] = useState<string | null>(null)
 
   const [openMenu, setOpenMenu] = useState<string | null>(null)
-  const [pendingAction, setPendingAction] = useState<{
-    memberId: string
-    newRole: MemberRole
-    name: string
-  } | null>(null)
+  const [roleLoading, setRoleLoading] = useState<string | null>(null) // member_id en curso
   const [pendingDelete, setPendingDelete] = useState<{
     memberId: string
     userId: string | null
@@ -123,20 +120,18 @@ export default function SettingsMembersSection({
 
   const adminCount = membersList.filter((m) => m.role === 'admin').length
 
-  // ── Cambio de rol ──────────────────────────────────────────────────────────
-  async function handleRoleChange() {
-    if (!pendingAction) return
-    setLoading(true)
+  // ── Cambio de rol — ejecución directa sin confirmación (PDD RN-07, Scenario 07)
+  async function handleRoleChange(memberId: string, newRole: MemberRole) {
+    setRoleLoading(memberId)
     setError(null)
 
     const result = await updateMemberRole({
       group_id: groupId,
-      member_id: pendingAction.memberId,
-      role: pendingAction.newRole,
+      member_id: memberId,
+      role: newRole,
     })
 
-    setLoading(false)
-    setPendingAction(null)
+    setRoleLoading(null)
 
     if (!result.success) {
       setError(result.error)
@@ -146,36 +141,22 @@ export default function SettingsMembersSection({
     router.refresh()
   }
 
-  // ── Eliminar miembro (guest o no-guest) ────────────────────────────────────
+  // ── Eliminar guest ─────────────────────────────────────────────────────────
   async function handleDelete() {
     if (!pendingDelete) return
     setLoading(true)
     setError(null)
 
-    let result: { success: boolean; error?: string }
-
-    if (pendingDelete.isGuest) {
-      result = await deleteGuestMember({
-        group_id: groupId,
-        member_id: pendingDelete.memberId,
-      })
-    } else {
-      if (!pendingDelete.userId) {
-        setLoading(false)
-        setPendingDelete(null)
-        return
-      }
-      result = await removeMember({
-        group_id: groupId,
-        user_id: pendingDelete.userId,
-      })
-    }
+    const result = await deleteGuestMember({
+      group_id: groupId,
+      member_id: pendingDelete.memberId,
+    })
 
     setLoading(false)
     setPendingDelete(null)
 
     if (!result.success) {
-      setError(result.error ?? 'Error al eliminar el miembro')
+      setError(result.error ?? t('errors.settings.removeMemberError'))
       return
     }
 
@@ -197,7 +178,7 @@ export default function SettingsMembersSection({
 
     const name = guestName.trim()
     if (!name) {
-      setGuestError('El nombre es obligatorio')
+      setGuestError(t('errors.members.nameRequired'))
       return
     }
 
@@ -230,26 +211,31 @@ export default function SettingsMembersSection({
   return (
     <section>
       <div className="mb-1 text-[11px] font-medium tracking-[0.05em] uppercase text-[#585f6c]">
-        ECOSISTEMA
+        {t('settings.ecosystemEyebrow')}
       </div>
       <div className="mb-4 flex items-end justify-between">
         <h2 className="font-['DM_Serif_Display'] text-[28px] italic font-normal leading-tight text-[#1c1b1b]">
-          Miembros del <em className="text-[#004ac6] not-italic">Clan</em>
+          {t('settings.membersTitle')} <em className="text-[#004ac6] not-italic">{t('settings.membersTitleHighlight')}</em>
         </h2>
         <button
           onClick={() => { setAddTab('invite'); setShowAddDialog(true) }}
           className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-4 py-2 text-[13px] font-semibold text-white"
         >
-          Agregar
+          {t('settings.addMemberButton')}
         </button>
       </div>
 
       {/* Lista de miembros */}
-      <div className="rounded-2xl bg-white shadow-[0px_4px_16px_-4px_rgba(28,27,27,0.08)] divide-y divide-[#f0ede8]">
+      <div className="rounded-2xl bg-white shadow-[0px_4px_16px_-4px_rgba(28,27,27,0.08)] px-0 py-1">
+        {membersList.length === 0 && (
+          <p className="px-4 py-4 text-[14px] text-[#585f6c] text-center">
+            {t('settings.membersEmpty')}
+          </p>
+        )}
         {membersList.map((member) => {
           const name = member.is_guest
-            ? (member.display_name ?? 'Guest')
-            : (member.profile?.full_name ?? 'Usuario')
+            ? (member.display_name ?? t('settings.fallbackGuest'))
+            : (member.profile?.full_name ?? t('settings.fallbackUser'))
           const isOnlyAdmin = member.role === 'admin' && adminCount <= 1
           const isCurrentUser = member.user_id === currentUserId
           const isRemoving = removingId === member.id
@@ -269,7 +255,7 @@ export default function SettingsMembersSection({
                 <p className="text-[15px] text-[#1c1b1b] truncate">
                   {name}
                   {isCurrentUser && (
-                    <span className="ml-1 text-[12px] text-[#585f6c]">(vos)</span>
+                    <span className="ml-1 text-[12px] text-[#585f6c]">{t('settings.youSuffix')}</span>
                   )}
                 </p>
               </div>
@@ -284,7 +270,7 @@ export default function SettingsMembersSection({
                 <button
                   onClick={() => setOpenMenu(openMenu === member.id ? null : member.id)}
                   className="p-1 rounded-full text-[#585f6c] hover:bg-[#f0ede8] transition-colors"
-                  aria-label="Opciones"
+                  aria-label={t('settings.memberOptionsAriaLabel')}
                 >
                   <MoreVertical size={16} />
                 </button>
@@ -302,60 +288,43 @@ export default function SettingsMembersSection({
                           }}
                           className="w-full px-4 py-2.5 text-left text-[14px] text-[#ba1a1a] hover:bg-[#fff0f0]"
                         >
-                          Eliminar del grupo
+                          {t('settings.removeMember')}
                         </button>
                       ) : (
-                        <>
-                          {/* Cambio de rol */}
-                          {member.role === 'member' ? (
-                            <button
-                              onClick={() => {
-                                setOpenMenu(null)
-                                setPendingAction({ memberId: member.id, newRole: 'admin', name })
-                              }}
-                              className="w-full px-4 py-2.5 text-left text-[14px] text-[#1c1b1b] hover:bg-[#f6f3f2]"
-                            >
-                              Hacer admin
-                            </button>
-                          ) : (
-                            <button
-                              disabled={isOnlyAdmin}
-                              onClick={() => {
-                                if (isOnlyAdmin) return
-                                setOpenMenu(null)
-                                setPendingAction({ memberId: member.id, newRole: 'member', name })
-                              }}
-                              className={`w-full px-4 py-2.5 text-left text-[14px] ${
-                                isOnlyAdmin
-                                  ? 'text-[#aaa] cursor-not-allowed'
-                                  : 'text-[#1c1b1b] hover:bg-[#f6f3f2]'
-                              }`}
-                            >
-                              Hacer miembro
-                              {isOnlyAdmin && (
-                                <span className="block text-[11px] text-[#aaa]">
-                                  (debe haber al menos un admin)
-                                </span>
-                              )}
-                            </button>
-                          )}
-
-                          {/* Eliminar — solo para miembros que no son el usuario actual */}
-                          {!isCurrentUser && (
-                            <>
-                              <div className="h-px bg-[#f0ede8] mx-3" />
-                              <button
-                                onClick={() => {
-                                  setOpenMenu(null)
-                                  setPendingDelete({ memberId: member.id, userId: member.user_id, name, isGuest: false })
-                                }}
-                                className="w-full px-4 py-2.5 text-left text-[14px] text-[#ba1a1a] hover:bg-[#fff0f0]"
-                              >
-                                Eliminar del grupo
-                              </button>
-                            </>
-                          )}
-                        </>
+                        // Miembro con cuenta: solo cambio de rol (US-06 scope)
+                        member.role === 'member' ? (
+                          <button
+                            disabled={roleLoading === member.id}
+                            onClick={() => {
+                              setOpenMenu(null)
+                              handleRoleChange(member.id, 'admin')
+                            }}
+                            className="w-full px-4 py-2.5 text-left text-[14px] text-[#1c1b1b] hover:bg-[#f6f3f2] disabled:opacity-50"
+                          >
+                            {t('settings.makeAdmin')}
+                          </button>
+                        ) : (
+                          <button
+                            disabled={isOnlyAdmin || roleLoading === member.id}
+                            onClick={() => {
+                              if (isOnlyAdmin) return
+                              setOpenMenu(null)
+                              handleRoleChange(member.id, 'member')
+                            }}
+                            className={`w-full px-4 py-2.5 text-left text-[14px] ${
+                              isOnlyAdmin
+                                ? 'text-[#aaa] cursor-not-allowed'
+                                : 'text-[#1c1b1b] hover:bg-[#f6f3f2]'
+                            } disabled:opacity-50`}
+                          >
+                            {t('settings.makeMember')}
+                            {isOnlyAdmin && (
+                              <span className="block text-[11px] text-[#aaa]">
+                                {t('settings.onlyAdminHint')}
+                              </span>
+                            )}
+                          </button>
+                        )
                       )}
                     </div>
                   </>
@@ -370,60 +339,30 @@ export default function SettingsMembersSection({
         <p className="mt-2 text-[13px] text-[#ba1a1a]">{error}</p>
       )}
 
-      {/* ── Diálogo de confirmación — cambio de rol ── */}
-      {pendingAction && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-8">
-          <div className="absolute inset-0 bg-black/30" onClick={() => setPendingAction(null)} />
-          <div className="relative w-full max-w-[480px] rounded-2xl bg-[rgba(252,249,248,0.88)] backdrop-blur-[16px] p-6 shadow-[0px_20px_60px_-12px_rgba(28,27,27,0.3)]">
-            <h3 className="text-[18px] font-semibold text-[#1c1b1b] mb-2">Cambiar rol</h3>
-            <p className="text-[15px] text-[#585f6c] mb-6">
-              ¿Querés hacer a{' '}
-              <span className="font-semibold text-[#1c1b1b]">{pendingAction.name}</span>{' '}
-              {pendingAction.newRole === 'admin' ? 'admin' : 'miembro'}?
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setPendingAction(null)}
-                className="flex-1 inline-flex items-center justify-center rounded-full bg-[#f0ede8] px-4 py-2 text-[13px] font-semibold text-[#585f6c]"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleRoleChange}
-                disabled={loading}
-                className="flex-1 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-60"
-              >
-                {loading ? 'Guardando...' : 'Confirmar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Bottom sheet de confirmación — eliminar miembro ── */}
+      {/* ── Bottom sheet de confirmación — eliminar guest ── */}
       {pendingDelete && (
         <div className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-8">
           <div className="absolute inset-0 bg-black/30" onClick={() => setPendingDelete(null)} />
           <div className="relative w-full max-w-[480px] rounded-2xl bg-[rgba(252,249,248,0.88)] backdrop-blur-[16px] p-6 shadow-[0px_20px_60px_-12px_rgba(28,27,27,0.3)]">
-            <h3 className="text-[18px] font-semibold text-[#1c1b1b] mb-2">Eliminar del grupo</h3>
+            <h3 className="text-[18px] font-semibold text-[#1c1b1b] mb-2">{t('settings.deleteDialog.title')}</h3>
             <p className="text-[15px] text-[#585f6c] mb-6">
-              ¿Eliminar a{' '}
+              {t('settings.deleteDialog.questionPrefix')}{' '}
               <span className="font-semibold text-[#1c1b1b]">{pendingDelete.name}</span>{' '}
-              del grupo? Esta acción no se puede deshacer.
+              {t('settings.deleteDialog.questionSuffix')}
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setPendingDelete(null)}
                 className="flex-1 inline-flex items-center justify-center rounded-full bg-[#f0ede8] px-4 py-2 text-[13px] font-semibold text-[#585f6c]"
               >
-                Cancelar
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleDelete}
                 disabled={loading}
                 className="flex-1 inline-flex items-center justify-center rounded-full bg-[#ba1a1a] px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-60"
               >
-                {loading ? 'Eliminando...' : 'Eliminar'}
+                {loading ? t('settings.deleteDialog.deletePending') : t('settings.deleteDialog.deleteIdle')}
               </button>
             </div>
           </div>
@@ -449,7 +388,7 @@ export default function SettingsMembersSection({
                     : 'text-[#585f6c] hover:text-[#1c1b1b]'
                 }`}
               >
-                Invitar por link
+                {t('settings.addDialog.tabInvite')}
               </button>
               <button
                 onClick={() => setAddTab('guest')}
@@ -459,7 +398,7 @@ export default function SettingsMembersSection({
                     : 'text-[#585f6c] hover:text-[#1c1b1b]'
                 }`}
               >
-                Agregar sin cuenta
+                {t('settings.addDialog.tabGuest')}
               </button>
             </div>
 
@@ -467,33 +406,33 @@ export default function SettingsMembersSection({
             {addTab === 'invite' && (
               <>
                 <h3 className="text-[18px] font-semibold text-[#1c1b1b] mb-2">
-                  Invitar al Clan
+                  {t('settings.addDialog.inviteTitle')}
                 </h3>
                 {inviteUrl ? (
                   <>
                     <p className="text-[13px] text-[#585f6c] mb-4">
-                      Compartí este enlace para que alguien se una al grupo.
+                      {t('settings.addDialog.inviteSubtitle')}
                     </p>
                     <div className="flex items-center gap-2 rounded-xl bg-[#f4f0eb] px-3 py-2.5">
                       <p className="flex-1 text-[12px] text-[#1c1b1b] truncate">{inviteUrl}</p>
                       <button
                         onClick={handleCopyInvite}
-                        className="shrink-0 text-[#004ac6] text-[12px] font-semibold"
+                        className={`shrink-0 text-[12px] font-semibold transition-colors ${copied ? 'text-[#006242]' : 'text-[#004ac6]'}`}
                       >
-                        {copied ? '¡Copiado!' : 'Copiar'}
+                        {copied ? t('common.copied') : t('common.copy')}
                       </button>
                     </div>
                   </>
                 ) : (
                   <p className="text-[14px] text-[#ba1a1a]">
-                    No hay un enlace de invitación activo. Generá uno en la sección de Ajustes.
+                    {t('group.invitationLink.noActiveLink')}
                   </p>
                 )}
                 <button
                   onClick={() => setShowAddDialog(false)}
                   className="mt-4 w-full inline-flex items-center justify-center rounded-full bg-[#f0ede8] px-4 py-2 text-[13px] font-semibold text-[#585f6c]"
                 >
-                  Cerrar
+                  {t('common.close')}
                 </button>
               </>
             )}
@@ -502,21 +441,21 @@ export default function SettingsMembersSection({
             {addTab === 'guest' && (
               <form onSubmit={handleAddGuest}>
                 <h3 className="text-[18px] font-semibold text-[#1c1b1b] mb-1">
-                  Agregar sin cuenta
+                  {t('settings.addDialog.guestTitle')}
                 </h3>
                 <p className="text-[13px] text-[#585f6c] mb-4">
-                  Esta persona aparecerá en confirmaciones e historial. No tendrá acceso a la app.
+                  {t('settings.addDialog.guestSubtitle')}
                 </p>
 
                 <div className="mb-4">
                   <label className="block text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c] mb-1.5">
-                    NOMBRE
+                    {t('settings.addDialog.guestNameLabel')}
                   </label>
                   <input
                     type="text"
                     value={guestName}
                     onChange={(e) => { setGuestName(e.target.value); setGuestError(null) }}
-                    placeholder="Nombre del miembro"
+                    placeholder={t('settings.addDialog.guestNamePlaceholder')}
                     maxLength={80}
                     className="w-full rounded-xl bg-[#f6f3f2] px-4 py-3 text-[15px] text-[#1c1b1b] placeholder-[#aaa] focus:outline-none focus:ring-2 focus:ring-[#004ac6]"
                     autoFocus
@@ -532,14 +471,14 @@ export default function SettingsMembersSection({
                     onClick={() => { setShowAddDialog(false); setGuestName(''); setGuestError(null) }}
                     className="flex-1 inline-flex items-center justify-center rounded-full bg-[#f0ede8] px-4 py-2 text-[13px] font-semibold text-[#585f6c]"
                   >
-                    Cancelar
+                    {t('common.cancel')}
                   </button>
                   <button
                     type="submit"
                     disabled={guestLoading}
                     className="flex-1 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-60"
                   >
-                    {guestLoading ? 'Agregando...' : 'Agregar al clan'}
+                    {guestLoading ? t('settings.addDialog.addGuestPending') : t('settings.addDialog.addGuestIdle')}
                   </button>
                 </div>
               </form>

@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createPoll } from '@/lib/actions/polls'
+import { t } from '@/lib/t'
 
 interface Props {
   eventId: string
@@ -35,11 +36,11 @@ export default function PollForm({ eventId, groupId }: Props) {
     // Client-side pre-validation — el server action valida también
     const valid = options.map((o) => o.trim()).filter(Boolean)
     if (valid.length < 2) {
-      setError('Se necesitan al menos 2 opciones para abrir la votación.')
+      setError(t('group.pollForm.errors.minOptions'))
       return
     }
     if (!closesAt) {
-      setError('La fecha de cierre es obligatoria.')
+      setError(t('group.pollForm.errors.closesAtRequired'))
       return
     }
 
@@ -64,7 +65,7 @@ export default function PollForm({ eventId, groupId }: Props) {
       {/* Opciones dinámicas */}
       <div>
         <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-          Opciones
+          {t('group.pollForm.optionsLabel')}
         </p>
         <div className="space-y-2">
           {options.map((opt, i) => (
@@ -73,7 +74,7 @@ export default function PollForm({ eventId, groupId }: Props) {
                 type="text"
                 value={opt}
                 onChange={(e) => updateOption(i, e.target.value)}
-                placeholder={`Opción ${i + 1}`}
+                placeholder={t('group.pollForm.optionPlaceholder', { number: i + 1 })}
                 disabled={isPending}
                 className="flex-1 rounded-xl bg-[#f6f3f2] px-4 py-2.5 text-sm text-[#1c1b1b] placeholder:text-[#585f6c] focus:outline-none focus:ring-2 focus:ring-[#004ac6] disabled:opacity-60"
               />
@@ -85,7 +86,7 @@ export default function PollForm({ eventId, groupId }: Props) {
                   disabled={isPending}
                   className="shrink-0 rounded-full px-3 py-2 text-xs text-[#585f6c] hover:bg-[#f0ede9] disabled:opacity-60"
                 >
-                  Quitar
+                  {t('group.pollForm.removeOption')}
                 </button>
               )}
             </div>
@@ -97,14 +98,14 @@ export default function PollForm({ eventId, groupId }: Props) {
           disabled={isPending}
           className="mt-2 text-[11px] font-semibold uppercase tracking-[0.05em] text-[#004ac6] disabled:opacity-60"
         >
-          + Agregar opción
+          {t('group.pollForm.addOption')}
         </button>
       </div>
 
       {/* Fecha de cierre */}
       <div>
         <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-          Fecha de cierre
+          {t('group.pollForm.closesAtLabel')}
         </label>
         {/* Scenario: Fecha de cierre en el pasado — min evita selección en el pasado en UI */}
         <input
@@ -127,7 +128,7 @@ export default function PollForm({ eventId, groupId }: Props) {
         disabled={isPending}
         className="w-full rounded-full bg-[#1c1b1b] py-3 text-sm font-semibold text-white transition-opacity hover:opacity-80 disabled:opacity-60"
       >
-        {isPending ? 'Abriendo votación…' : 'Abrir votación'}
+        {isPending ? t('group.pollForm.submitPending') : t('group.pollForm.submitIdle')}
       </button>
     </div>
   )

@@ -4,6 +4,7 @@ import { useTransition, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { upsertAttendance } from '@/lib/actions/attendances'
 import type { AttendanceStatus } from '@/lib/actions/attendances'
+import { t } from '@/lib/t'
 
 interface Props {
   eventId: string
@@ -14,32 +15,32 @@ interface Props {
 const OPTIONS: { status: AttendanceStatus; label: string; selectedClass: string }[] = [
   {
     status: 'va',
-    label: 'Voy',
+    label: t('group.attendance.options.va'),
     selectedClass: 'bg-[#6ffbbe] text-[#006242]',
   },
   {
     status: 'tal_vez',
-    label: 'Tal vez',
+    label: t('group.attendance.options.tal_vez'),
     selectedClass: 'bg-[#dce2f3] text-[#004ac6]',
   },
   {
     status: 'no_va',
-    label: 'No voy',
+    label: t('group.attendance.options.no_va'),
     selectedClass: 'bg-[#ffdad6] text-[#ba1a1a]',
   },
 ]
 
 const STATUS_LABEL: Record<AttendanceStatus, string> = {
-  va: 'Voy',
-  tal_vez: 'Tal vez',
-  no_va: 'No voy',
+  va: t('group.attendance.options.va'),
+  tal_vez: t('group.attendance.options.tal_vez'),
+  no_va: t('group.attendance.options.no_va'),
 }
 
 // Scenario: Confirmación después del evento — muestra estado como solo lectura.
 function ReadOnlyBadge({ status }: { status: AttendanceStatus | null }) {
   if (!status) {
     return (
-      <p className="text-sm text-[#585f6c]">No respondiste antes del cierre.</p>
+      <p className="text-sm text-[#585f6c]">{t('group.attendance.noAnswerBeforeClose')}</p>
     )
   }
   const opt = OPTIONS.find((o) => o.status === status)
@@ -69,7 +70,7 @@ export default function ConfirmAttendanceButtons({
     return (
       <div className="mt-4">
         <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-          Tu respuesta
+          {t('group.attendance.yourAnswer')}
         </p>
         <ReadOnlyBadge status={optimisticStatus} />
       </div>
@@ -94,7 +95,7 @@ export default function ConfirmAttendanceButtons({
   return (
     <div className="mt-4">
       <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-        {optimisticStatus ? 'Tu respuesta' : '¿Vas a la cena?'}
+        {optimisticStatus ? t('group.attendance.yourAnswer') : t('group.attendance.question')}
       </p>
 
       {/* Scenario: Confirmación exitosa / Cambio de estado / Tal vez */}

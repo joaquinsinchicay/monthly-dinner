@@ -15,18 +15,20 @@ export default async function DashboardLayout({
 
   if (!user) redirect('/')
 
-  // Query — grupos del usuario autenticado (para GroupSelector)
+  // Query — grupos del usuario autenticado (para GroupSelector y AvatarMenu)
   const { data: memberships } = await supabase
     .from('members')
-    .select('group_id, groups(id, name)')
+    .select('group_id, role, groups(id, name)')
     .eq('user_id', user.id)
 
-  const userGroups = (memberships ?? [])
+  const userMemberships = (memberships ?? [])
     .map((m) => {
       const g = m.groups as unknown as { id: string; name: string } | null
-      return g ? { id: g.id, name: g.name } : null
+      return g ? { id: g.id, name: g.name, role: m.role as string } : null
     })
-    .filter((g): g is { id: string; name: string } => g !== null)
+    .filter((m): m is { id: string; name: string; role: string } => m !== null)
+
+  const userGroups = userMemberships.map(({ id, name }) => ({ id, name }))
 
   // Query — perfil del usuario autenticado (para AvatarMenu)
   const { data: profile } = await supabase
@@ -37,7 +39,7 @@ export default async function DashboardLayout({
 
   return (
     <>
-      <DashboardHeader groups={userGroups} profile={profile ?? null} />
+      <DashboardHeader memberships={userMemberships} groups={userGroups} profile={profile ?? null} />
       {/* pt-14 compensa el header fijo de 56px */}
       <div className="pt-14">{children}</div>
     </>

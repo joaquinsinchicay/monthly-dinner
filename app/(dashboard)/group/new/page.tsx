@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import CreateGroupForm from '@/components/group/CreateGroupForm'
+import { t } from '@/lib/t'
 
 export default function NuevoGrupoPage() {
   return (
@@ -9,18 +10,16 @@ export default function NuevoGrupoPage() {
         {/* Header editorial */}
         <div className="mb-8">
           <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
-            Nuevo grupo
+            {t('group.createGroup.pageEyebrow')}
           </p>
           <h1
             className="mt-1 font-serif text-[28px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
             style={{ fontFamily: 'DM Serif Display, serif' }}
           >
-            Creá un espacio
-            <br />
-            para el grupo
+            {t('group.createGroup.pageHeading')}
           </h1>
           <p className="mt-2 text-sm text-[#585f6c]">
-            Configurá el nombre y la frecuencia de encuentro.
+            {t('group.createGroup.pageBody')}
           </p>
         </div>
 
@@ -35,7 +34,7 @@ export default function NuevoGrupoPage() {
             href="/dashboard"
             className="text-sm text-[#004ac6] transition-opacity hover:opacity-70"
           >
-            Cancelar
+            {t('common.cancel')}
           </Link>
         </div>
 

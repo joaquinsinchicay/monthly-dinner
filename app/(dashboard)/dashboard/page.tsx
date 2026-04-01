@@ -1,7 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 
-// Smart redirect: si el usuario tiene grupo → /grupo/[id], si no → /onboarding
+// Smart redirect (US-01 §8):
+// 1. Último grupo visitado (cookie last_group_id, seteada por middleware)
+// 2. Fallback: grupo más recientemente unido (joined_at DESC)
+// 3. Sin grupos → /onboarding
 export default async function DashboardPage() {
   const supabase = createClient()
 
@@ -11,7 +15,23 @@ export default async function DashboardPage() {
 
   if (!user) redirect('/')
 
-  const { data: membership } = await supabase
+  // Intentar redirigir al último grupo visitado
+  const lastGroupId = cookies().get('last_group_id')?.value
+  if (lastGroupId) {
+    const { data: lastMembership } = await supabase
+      .from('members')
+      .select('group_id')
+      .eq('group_id', lastGroupId)
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (lastMembership?.group_id) {
+      redirect(`/dashboard/${lastMembership.group_id}`)
+    }
+  }
+
+  // Fallback: grupo más recientemente unido
+  const { data: latestMembership } = await supabase
     .from('members')
     .select('group_id')
     .eq('user_id', user.id)
@@ -19,8 +39,8 @@ export default async function DashboardPage() {
     .limit(1)
     .maybeSingle()
 
-  if (membership?.group_id) {
-    redirect(`/dashboard/${membership.group_id}`)
+  if (latestMembership?.group_id) {
+    redirect(`/dashboard/${latestMembership.group_id}`)
   }
 
   redirect('/onboarding')

@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createEvent, updateEvent } from '@/lib/actions/events'
+import { t } from '@/lib/t'
 import type { Event } from '@/types'
 
 interface Props {
@@ -42,7 +43,7 @@ export default function EventForm({ groupId, existing }: Props) {
           htmlFor="event_date"
           className="block text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]"
         >
-          Fecha de la cena
+          {t('group.eventForm.dateLabel')}
         </label>
         <input
           id="event_date"
@@ -60,14 +61,14 @@ export default function EventForm({ groupId, existing }: Props) {
           htmlFor="place"
           className="block text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]"
         >
-          Lugar tentativo <span className="normal-case font-normal">(opcional)</span>
+          {t('group.eventForm.placeLabel')} <span className="normal-case font-normal">{t('group.eventForm.placeLabelOptional')}</span>
         </label>
         <input
           id="place"
           name="place"
           type="text"
           defaultValue={existing?.place ?? ''}
-          placeholder="Ej: Lo de siempre, por definir…"
+          placeholder={t('group.eventForm.placePlaceholder')}
           className="mt-2 w-full rounded-xl bg-[#f0ede9] px-4 py-3 text-sm text-[#1c1b1b] placeholder:text-[#9ba3b0] focus:outline-none focus:ring-2 focus:ring-[#004ac6]"
         />
       </div>
@@ -78,14 +79,14 @@ export default function EventForm({ groupId, existing }: Props) {
           htmlFor="description"
           className="block text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]"
         >
-          Descripción <span className="normal-case font-normal">(opcional)</span>
+          {t('group.eventForm.descriptionLabel')} <span className="normal-case font-normal">{t('group.eventForm.placeLabelOptional')}</span>
         </label>
         <textarea
           id="description"
           name="description"
           rows={3}
           defaultValue={existing?.description ?? ''}
-          placeholder="Detalles adicionales para el grupo…"
+          placeholder={t('group.eventForm.descriptionPlaceholder')}
           className="mt-2 w-full resize-none rounded-xl bg-[#f0ede9] px-4 py-3 text-sm text-[#1c1b1b] placeholder:text-[#9ba3b0] focus:outline-none focus:ring-2 focus:ring-[#004ac6]"
         />
       </div>
@@ -100,7 +101,7 @@ export default function EventForm({ groupId, existing }: Props) {
             className="mt-0.5 h-4 w-4 shrink-0 accent-[#004ac6]"
           />
           <span className="text-sm text-[#1c1b1b]">
-            Notificar al grupo sobre los cambios
+            {t('group.eventForm.notifyCheckbox')}
           </span>
         </label>
       )}
@@ -116,8 +117,8 @@ export default function EventForm({ groupId, existing }: Props) {
         className="flex w-full items-center justify-center rounded-full bg-gradient-to-r from-[#004ac6] to-[#2563eb] px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(0,74,198,0.25)] transition-opacity disabled:opacity-60"
       >
         {isPending
-          ? isEdit ? 'Guardando…' : 'Creando evento…'
-          : isEdit ? 'Guardar cambios' : 'Crear evento'}
+          ? isEdit ? t('group.eventForm.submitSaving') : t('group.eventForm.submitCreating')
+          : isEdit ? t('group.eventForm.submitSave') : t('group.eventForm.submitCreate')}
       </button>
     </form>
   )

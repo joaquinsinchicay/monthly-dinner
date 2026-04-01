@@ -32,7 +32,7 @@ export default async function GrupoCreado({ params }: Props) {
 
   const { data: group } = await supabase
     .from('groups')
-    .select('id, name, frequency, meeting_day_of_week, meeting_day_of_month, created_at')
+    .select('id, name, frequency, meeting_day_of_week, meeting_week, created_at')
     .eq('id', params.id)
     .single()
 
