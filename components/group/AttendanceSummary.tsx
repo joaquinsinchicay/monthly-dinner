@@ -8,15 +8,18 @@ import { t } from '@/lib/t'
 interface Props {
   eventId: string
   initialCounts: AttendanceCounts
+  eventClosed?: boolean
 }
 
 // Scenario: Actualización en tiempo real — el contador se actualiza sin recargar.
 // Requiere habilitar en Supabase:
 //   alter publication supabase_realtime add table attendances;
-export default function AttendanceSummary({ eventId, initialCounts }: Props) {
+export default function AttendanceSummary({ eventId, initialCounts, eventClosed }: Props) {
   const [counts, setCounts] = useState<AttendanceCounts>(initialCounts)
 
   useEffect(() => {
+    if (eventClosed) return
+
     const supabase = createClient()
 
     async function fetchCounts() {
@@ -55,7 +58,7 @@ export default function AttendanceSummary({ eventId, initialCounts }: Props) {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [eventId])
+  }, [eventId, eventClosed])
 
   const total = counts.va + counts.no_va + counts.tal_vez
 
@@ -94,14 +97,16 @@ export default function AttendanceSummary({ eventId, initialCounts }: Props) {
         </div>
       )}
 
-      {/* Indicador de live — pulso cuando hay subscripción activa */}
-      <div className="flex items-center gap-1.5 pt-1">
-        <span className="relative flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#004ac6] opacity-40" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-[#004ac6]" />
-        </span>
-        <span className="text-[10px] text-[#585f6c]">{t('group.attendanceSummary.liveBadge')}</span>
-      </div>
+      {/* US-10: badge "En vivo" solo cuando el evento está publicado (no cerrado) */}
+      {!eventClosed && (
+        <div className="flex items-center gap-1.5 pt-1">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#004ac6] opacity-40" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-[#004ac6]" />
+          </span>
+          <span className="text-[10px] text-[#585f6c]">{t('group.attendanceSummary.liveBadge')}</span>
+        </div>
+      )}
     </div>
   )
 }

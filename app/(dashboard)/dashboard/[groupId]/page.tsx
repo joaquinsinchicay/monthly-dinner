@@ -87,14 +87,13 @@ export default async function GroupDashboardPage({ params }: Props) {
   const eventResult = await getCurrentEvent(params.groupId)
   const currentEvent = eventResult.success ? eventResult.data : null
 
-  // Conteos de asistencia para realtime (US-07) — solo si hay evento
-  const countsResult = currentEvent ? await getAttendanceCounts(currentEvent.id) : null
+  // US-10: solo consultar counts y attendance cuando el evento está activo (published o closed)
+  const isEventActive = currentEvent?.status === 'published' || currentEvent?.status === 'closed'
+  const countsResult = isEventActive ? await getAttendanceCounts(currentEvent!.id) : null
   const attendanceCounts = countsResult?.success ? countsResult.data : undefined
 
   // Confirmación del usuario actual
-  const attendanceResult = currentEvent
-    ? await getUserAttendance(currentEvent.id)
-    : null
+  const attendanceResult = isEventActive ? await getUserAttendance(currentEvent!.id) : null
   const userAttendance = attendanceResult?.success ? attendanceResult.data : null
 
   const showNotification = currentEvent?.status === 'published' && !userAttendance && !isOrganizer

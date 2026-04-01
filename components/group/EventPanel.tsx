@@ -37,8 +37,8 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default function EventPanel({ groupId, event, currentUserId, isOrganizer, isAdmin = false, attendanceCounts, userAttendance }: Props) {
 
-  // Scenario: no hay evento + usuario NO es organizador → empty state
-  if (!event && !isOrganizer) {
+  // Scenario: no hay evento (o evento pending) + usuario NO es organizador → empty state
+  if ((!event || event.status === 'pending') && !isOrganizer) {
     return (
       <div className="rounded-2xl bg-white p-6 shadow-[0px_10px_30px_-5px_rgba(28,27,27,0.07)]">
         <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
@@ -87,11 +87,8 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
   // Scenario: Cerrar evento — solo para el organizador, solo si está published
   const canClose = isEventOrganizer && event!.status === 'published'
 
-  // ADJ-01:
-  // pending / published → botones activos (independiente de si el usuario ya confirmó)
-  // closed             → read-only via ConfirmAttendanceButtons con eventClosed=true
+  // US-10 RN-03: botones activos solo en published; closed → read-only via eventClosed=true
   const showAttendanceButtons =
-    event!.status === 'pending' ||
     event!.status === 'published' ||
     event!.status === 'closed'
 
@@ -138,7 +135,6 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
 
       {/* US-10: Organizador ve resumen detallado con nombres + compartir (en tiempo real).
           US-07: Miembros ven solo conteos (AttendanceSummary — ya implementado). */}
-      {/* ADJ-01: Confirmaciones visibles para pending y published también */}
       {isOrganizer && (
         <AttendanceSummaryDetailed
           eventId={event!.id}
@@ -150,10 +146,10 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
         <AttendanceSummary
           eventId={event!.id}
           initialCounts={attendanceCounts}
+          eventClosed={event!.status === 'closed'}
         />
       )}
 
-      {/* ADJ-01: Botones activos para pending/published; read-only para closed */}
       {showAttendanceButtons && (
         <ConfirmAttendanceButtons
           eventId={event!.id}
