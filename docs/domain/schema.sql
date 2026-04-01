@@ -448,6 +448,21 @@ create policy "events: update organizer"
     and status != 'closed'
   );
 
+-- US-11: permite al organizador asignado en rotation actualizar un evento
+-- auto-generado (organizer_id IS NULL) para reclamarlo y publicarlo directamente.
+create policy "events: update rotation organizer pending"
+  on events for update
+  using (
+    status = 'pending'
+    and organizer_id is null
+    and exists (
+      select 1 from rotation
+      where rotation.group_id = events.group_id
+        and rotation.user_id  = auth.uid()
+        and rotation.month    = events.month
+    )
+  );
+
 
 -- -----------------------------------------------------------------------------
 -- 07. attendances

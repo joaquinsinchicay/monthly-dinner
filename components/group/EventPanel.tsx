@@ -1,3 +1,4 @@
+import CreateEventModal from '@/components/group/CreateEventModal'
 import EventForm from '@/components/group/EventForm'
 import { t } from '@/lib/t'
 import NotifyButton from '@/components/group/NotifyButton'
@@ -57,8 +58,9 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
     )
   }
 
-  // Scenario: no hay evento + usuario ES organizador → formulario de creación
-  if (!event && isOrganizer) {
+  // Scenario 01/02: no hay evento Published (null o pending) + usuario ES organizador
+  // → muestra "Sos el organizador" + botón "Organizar" que abre el modal de creación
+  if ((!event || event.status === 'pending') && isOrganizer) {
     return (
       <div className="rounded-2xl bg-white p-6 shadow-[0px_10px_30px_-5px_rgba(28,27,27,0.07)]">
         <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#585f6c]">
@@ -68,13 +70,16 @@ export default function EventPanel({ groupId, event, currentUserId, isOrganizer,
           className="mt-1 font-serif text-[22px] leading-tight tracking-[-0.02em] text-[#1c1b1b]"
           style={{ fontFamily: 'DM Serif Display, serif' }}
         >
-          {t('group.eventPanel.createTitle')}
+          {t('group.organizer.iAmOrganizerTitle')}
         </p>
-        <p className="mb-5 mt-2 text-sm text-[#585f6c]">
-          {t('group.eventPanel.createBody')}
+        <p className="mt-2 text-sm text-[#585f6c]">
+          {t('group.organizer.iAmOrganizerBody')}
         </p>
-        {/* Scenario: Creación exitosa + Campos obligatorios vacíos */}
-        <EventForm groupId={groupId} />
+        <p className="mt-1 text-sm text-[#585f6c]">
+          <span className="font-medium text-[#1c1b1b]">{t('group.organizer.nextStepEyebrow')}:</span>{' '}
+          {t('group.organizer.nextStepBody')}
+        </p>
+        <CreateEventModal groupId={groupId} pendingEventId={event?.id} />
       </div>
     )
   }

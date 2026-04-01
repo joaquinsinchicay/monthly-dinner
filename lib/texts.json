@@ -292,6 +292,7 @@
       "createBody": "Completá los datos para convocar al grupo.",
       "dateUnconfirmed": "Fecha por confirmar",
       "placeLabel": "Lugar:",
+      "organizeButton": "Organizar",
       "editSummary": "Editar evento",
       "closeSummary": "Cerrar evento",
       "status": {

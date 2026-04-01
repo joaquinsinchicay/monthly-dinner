@@ -192,6 +192,110 @@ export async function publishEvent(eventId: string): Promise<ActionResult<void>>
   return { success: true, data: undefined }
 }
 
+// US-11: El organizador del mes crea (o completa) el evento del período y lo publica en un solo paso.
+// Maneja dos casos:
+//   - Evento pending auto-generado (organizer_id IS NULL): UPDATE con los datos + status='published'
+//   - Sin evento en el mes: INSERT con status='published'
+// Si ya existe un evento Published, retorna error alreadyExists.
+export async function publishAndCreateEvent(
+  groupId: string,
+  formData: FormData
+): Promise<ActionResult<Event>> {
+  const supabase = createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return { success: false, error: t('common.notAuthenticated') }
+
+  // Verificar que el usuario es el organizador del mes actual
+  const month = currentMonth()
+  const { data: rotation } = await supabase
+    .from('rotation')
+    .select('user_id')
+    .eq('group_id', groupId)
+    .eq('month', month)
+    .maybeSingle()
+
+  if (!rotation || rotation.user_id !== user.id) {
+    return { success: false, error: t('errors.events.notOrganizer') }
+  }
+
+  // Validar fecha obligatoria
+  const eventDate = (formData.get('event_date') as string)?.trim()
+  if (!eventDate) {
+    return { success: false, error: t('errors.events.dateRequired') }
+  }
+
+  const place = (formData.get('place') as string)?.trim() || null
+  const description = (formData.get('description') as string)?.trim() || null
+  const now = new Date().toISOString()
+
+  // Buscar evento existente del mes
+  const { data: existing } = await supabase
+    .from('events')
+    .select('id, status, organizer_id')
+    .eq('group_id', groupId)
+    .eq('month', month)
+    .maybeSingle()
+
+  if (existing?.status === 'published') {
+    return { success: false, error: t('errors.events.alreadyExists') }
+  }
+
+  if (existing?.status === 'pending') {
+    // Evento auto-generado (organizer_id IS NULL) — reclamar y publicar
+    const { error: updateError } = await supabase
+      .from('events')
+      .update({
+        organizer_id: user.id,
+        event_date: eventDate,
+        place,
+        description,
+        status: 'published',
+        notified_at: now,
+        updated_at: now,
+      })
+      .eq('id', existing.id)
+
+    if (updateError) {
+      return { success: false, error: t('errors.events.createFailed') }
+    }
+  } else {
+    // No existe evento — INSERT directo como published
+    const { error: insertError } = await supabase
+      .from('events')
+      .insert({
+        group_id: groupId,
+        organizer_id: user.id,
+        month,
+        event_date: eventDate,
+        place,
+        description,
+        status: 'published',
+        notified_at: now,
+      })
+
+    if (insertError) {
+      return { success: false, error: t('errors.events.createFailed') }
+    }
+  }
+
+  const { data: event, error: selectError } = await supabase
+    .from('events')
+    .select('id, group_id, organizer_id, month, status, event_date, place, description, notified_at, closed_at, created_at, updated_at')
+    .eq('group_id', groupId)
+    .eq('month', month)
+    .single()
+
+  if (selectError || !event) {
+    return { success: false, error: t('errors.events.createButFetchFailed') }
+  }
+
+  return { success: true, data: event }
+}
+
 // Scenario: Edición posterior — solo el organizador puede editar, y el evento no debe estar cerrado.
 // organizer_id es inmutable — validación en server action, RLS no lo garantiza en UPDATE.
 export async function updateEvent(
